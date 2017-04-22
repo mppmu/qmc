@@ -60,6 +60,6 @@ The default generating vectors have been generated with lattice size chosen as t
 
 ## Authors
 
-* Stephan Jahn @jPhy
-* Stephen Jones @spj101
-* Matthias Kerner @MKerner
+* Stephan Jahn (@jPhy)
+* Stephen Jones (@spj101)
+* Matthias Kerner (@KernerM)
