@@ -16,7 +16,7 @@ The Qmc can then be installed into your `$SECDEC_CONTRIB` directory.
 
 ```shell
 autoreconf -i
-./configure --prefix=$(SECDEC_CONTRIB)
+./configure --prefix=${SECDEC_CONTRIB}
 make
 make check
 make install
