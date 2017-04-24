@@ -114,3 +114,4 @@ check/test_qmc
 include/qmc.hpp
 examples/cuba_demo
 examples/accuracy_demo
+examples/basic_demo

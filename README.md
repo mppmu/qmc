@@ -36,12 +36,32 @@ This will create the usual `lib` and `include` in the default paths.
 
 ## Usage
 
+Example:
 ```cpp
 #include <qmc.hpp>
-int main()
+#include <iostream>
+
+double my_function(double x[])
 {
-// TODO - example
+    return x[0]*x[1]*x[2];
 }
+
+int main() {
+    integrators::Qmc<double,double> integrator;
+    integrator.minN = 10000; // (optional) set parameters
+    integrators::result<double> result = integrator.integrate(my_function,3);
+    std::cout << "integral = " << result.integral << ", error = " << result.error << std::endl;
+}
+```
+
+Compile and Run:
+```shell
+$ c++ -std=c++11 -lqmc basic_demo.cpp -o basic_demo
+```
+
+Output:
+```shell
+integral = 0.125, error = 4.36255e-11
 ```
 
 ## API Documentation
