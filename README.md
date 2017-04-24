@@ -144,6 +144,7 @@ If you think your generating vectors will be widely useful for other people then
 With your permission we may include them in the code by default.
 
 **Do you apply an integral transform to make my integrand periodic on [0,1], can I use another one?**
+
 By default we use the polynomial transform of Korobov, `\int_{[0,1]^d} f(\vec{x}) \mathrm{d} \vec{x} = \int_{[0,1]^d} F(\vec{t}) \mathrm{d} \vec{t}` with `F(\vec{t}) := f(\psi(\vec{t})) w_d(\vec{t})` where `w_d(\vec{t}) = \Prod_{j=1}^d w(t_j)`. Specifically we use the `r=3` transform which sets `w(t)=140 t^3 (1-t)^3` and `\psi(t) = 35t^4 -84t^5+70t^6-20t^7` for each variable. If you prefer another integral transform inherit from the `Qmc` class and implement the protected virtual function `virtual void integralTransform(std::vector<D>& x, D& wgt, const U dim) const` to do what you want.
 ```cpp
 // TODO, also add test case and demo
