@@ -1,6 +1,5 @@
 # qmc
 
-
 A Quasi-Monte-Carlo integrator library.
 
 The library can be used to integrate multi-dimensional real or complex functions numerically.
@@ -85,19 +84,24 @@ The Qmc class has 4 template parameters:
 A C++11 style pseudo-random number engine. Default: `std::mt19937_64` seeded with a call to `std::random_device`.
 
 `U getN()`
+
 Returns the lattice size `n` that will be used for integration.
 
 `U minN`
+
 The minimum lattice size that should be used for integration. If a lattice of the requested size is not available then `n` will be the size of the next available lattice with at least `minN` points. Default: `8191`.
 
 `U m`
+
 The number of random shifts of the lattice `m` that should be used to estimate the error of the result. Typically 10 to 50. Default: `32`.
 
 `U blockSize`
+
 Controls the memory used to store the result of integrand evaluations and the number of threads launched.
 The samples of the function to be integrated are stored in an array with `blockSize*m` elements. If multi-threading is available then `blockSize` many threads will be launched, each thread will compute `n/blockSize` (or `n/blockSize+1` if `n` is not divisible by `blockSize`) points storing their mean in the threads allocated address in the array. This is repeated for each random shift `m`.
 
 `std::map<U,std::vector<U>> generatingVectors`
+
 A map of available generating vectors which can be used to generate a lattice. By default the library uses generating vectors with 100 components, thus it supports integration of functions with up to 100 dimensions.
 The implemented QMC algorithm requires that the generating vectors be generated with a prime lattice size.
 The default generating vectors have been generated with lattice size chosen as the next prime number below `2^p` with `p` the natural numbers between 10 to 28.
@@ -105,6 +109,7 @@ The default generating vectors have been generated with lattice size chosen as t
 ## FAQ
 
 **I want to set the seed of the random numbers, how do I do that?**
+
 Set `randomGenerator` to a pseudo-random number engine with the seed you want.
 Probably you also want to set `blockSize = 1` which disabled multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
 For example:
@@ -115,31 +120,43 @@ integrator.blockSize = 1; // no multi-threading
 ```
 
 **Does this code support multi-threading?**
-Yes, if your compiler supports the C++11 thread library then by default the code will try to determine the number of cores or hyper-threads that your hardware supports (via a call to `std::thread::hardware_concurrency()`) and launch this many threads. The precise number of threads that will be launched is equal to the `blockSize` variable.
+
+Yes, if your compiler supports the C++11 thread library then by default the code will try to determine the number of cores or hyper-threads that your hardware supports (via a call to `std::thread::hardware_concurrency()`) and launch this many threads. 
+The precise number of threads that will be launched is equal to the `blockSize` variable.
 
 **I want to integrate another floating point type (e.g. quadruple precision, arbitrary precision, microsoft binary format, etc) can I do that with your code?**
-Possibly. By default `libqmc.cpp` (the code used to build the library) instantiates instances of type `template class integrators::Qmc< std::complex<double>, double >` and `template class integrators::Qmc< double , double >`. Try adding an instance of the type you have in mind and be sure to include the correct header to support this type. If this fails then it is likely that your type is not supported by some standard library function such as `std::sqrt`, `std::abs`, `std::isfinite`, `std::modf`, try defining them. If this fails then take a look at `qmc_default.cpp` it defines a relatively small number of simple functions that may need to be reimplemented for your specific type. If this also fails then you may need to edit `qmc.cpp`, it is a relatively short code and we hope it is quite easy to understand and modify.
+
+Possibly. By default `libqmc.cpp` (the code used to build the library) instantiates instances of type `template class integrators::Qmc< std::complex<double>, double >` and `template class integrators::Qmc< double , double >`. 
+Try adding an instance of the type you have in mind and be sure to include the correct header to support this type. 
+If this fails then it is likely that your type is not supported by some standard library function such as `std::sqrt`, `std::abs`, `std::isfinite`, `std::modf`, try defining them. 
+If this fails then take a look at `qmc_default.cpp` it defines a relatively small number of simple functions that may need to be reimplemented for your specific type. 
+If this also fails then you may need to edit `qmc.cpp`, it is a relatively short code and we hope it is quite easy to understand and modify.
 
 **I do not like your generating vectors and/or 100 dimensions and/or 268435399 lattice points is not enough for me, can I still use your code?**
+
 Yes, but you need to supply your own generating vectors. Compute them using another tool then put them in a map and set `generatingVectors`. For example
 ```cpp
-std::map<unsigned long long int,std::vector<unsigned long long int>> my_generating_vectors = { {7, {1,3}}, {11, {1,7}} };
+std::map<unsigned long long int,std::vector<unsigned long long int>> myGeneratingVectors = { {7, {1,3}}, {11, {1,7}} };
 integrators::Qmc<double,double> integrator;
-integrator.generatingVectors = my_generating_vectors;
+integrator.generatingVectors = myGeneratingVectors;
 ```
-If you think your generating vectors will be widely useful for other people then please let us know! 
+If you think your generating vectors will be widely useful for other people then please let us know!
 With your permission we may include them in the code by default.
 
 **How does this code compare to other integration libraries (e.g. CUBA, NIntegrate)?**
+
 TODO
 
 **Can I call your code in a similar manner to CUBA?**
+
 TODO
 
 **Can I call your code from FORTRAN and Mathematica?**
+
 TODO
 
 **Can I call your code from python?**
+
 TODO
 
 ## Authors
