@@ -3,6 +3,7 @@
 #include <complex>
 #include <limits> // numeric_limits
 #include <cmath> // sin, cos, exp, pow
+#include <functional> // function
 
 //// function from http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 //template<class T>

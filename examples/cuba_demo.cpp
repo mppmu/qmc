@@ -2,6 +2,7 @@
 #include <iostream>
 #include <complex>
 #include <cmath> // sin, cos, exp
+#include <functional> // function
 
 int main() {
 
