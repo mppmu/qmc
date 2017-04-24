@@ -1,5 +1,5 @@
 #include <complex>
-#include <cmath> // fabs, sqrt, isfinite
+#include <cmath> // abs, sqrt, isfinite
 
 namespace integrators {
 
@@ -12,7 +12,7 @@ namespace integrators {
     template <typename T>
     std::complex<T> computeError(const std::complex<T>& svariance)
     {
-        return std::complex<T>(std::sqrt(fabs(svariance.real())), std::sqrt(fabs(svariance.imag())));
+        return std::complex<T>(std::sqrt(std::abs(svariance.real())), std::sqrt(std::abs(svariance.imag())));
     };
 
     template <typename T, typename D>

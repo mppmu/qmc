@@ -1,8 +1,9 @@
 #include "qmc.hpp"
 
-#include <cmath> // modf, fabs, sqrt
+#include <cmath> // modf, abs, sqrt
 #include <stdexcept> // domain_error, invalid_argument
 #include <thread> // thread
+#include <algorithm> // min
 
 #include "qmc_default.cpp"
 #include "qmc_complex.cpp"

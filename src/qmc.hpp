@@ -4,7 +4,8 @@
 
 #include <vector>
 #include <map>
-#include <random> // std::mt19937_64
+#include <random> // mt19937_64
+#include <functional> // function
 
 namespace integrators {
 

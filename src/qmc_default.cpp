@@ -1,4 +1,4 @@
-#include <cmath> // fabs, sqrt, isfinite
+#include <cmath> // abs, sqrt, isfinite
 
 namespace integrators {
 
@@ -11,7 +11,7 @@ namespace integrators {
     template <typename T>
     T computeError(const T& variance)
     {
-        return T(std::sqrt(fabs(variance)));
+        return T(std::sqrt(std::abs(variance)));
     };
 
     template <typename T, typename D>
