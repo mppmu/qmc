@@ -16,7 +16,7 @@ The Qmc can then be installed into your `$SECDEC_CONTRIB` directory.
 
 ```shell
 autoreconf -i
-./configure --prefix=${SECDEC_CONTRIB}
+./configure --prefix=${SECDEC_CONTRIB}/install --libdir=${SECDEC_CONTRIB}/lib --includedir=${SECDEC_CONTRIB}/include --bindir=${SECDEC_CONTRIB}/bin
 make
 make check
 make install
@@ -32,8 +32,7 @@ make check
 make install
 ```
 
-This will create the usual `lib` and `include` folders. 
-Put them into the relevant paths for your system or include them when compiling your own code.
+This will create the usual `lib` and `include` in the default paths. 
 
 ## Usage
 
