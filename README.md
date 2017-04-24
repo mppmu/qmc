@@ -111,7 +111,7 @@ The default generating vectors have been generated with lattice size chosen as t
 **I want to set the seed of the random numbers, how do I do that?**
 
 Set `randomGenerator` to a pseudo-random number engine with the seed you want.
-Probably you also want to set `blockSize = 1` which disabled multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
+Probably you also want to set `blockSize = 1` which disables multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
 For example:
 ```cpp
 integrators::Qmc<double,double> integrator;
