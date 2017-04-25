@@ -138,20 +138,24 @@ namespace integrators {
     template <typename T, typename D, typename U, typename G>
     U Qmc<T,D,U,G>::getN() const
     {
-        if ( generatingVectors.lower_bound(minN) != generatingVectors.end() )
+        U n;
+
+        if ( generatingVectors.lower_bound(minN) == generatingVectors.end() )
         {
-            return generatingVectors.lower_bound(minN)->first;
-        } else
-        {
-            return generatingVectors.rbegin()->first;
+            n = generatingVectors.rbegin()->first;
+            throw std::domain_error("Qmc integrator does not have generating vector with n larger than the requested minN. Please decrease minN to less than " + std::to_string(n) + " or provide a generating vector with a larger n.");
         }
+
+        n = generatingVectors.lower_bound(minN)->first;
+
+        return n;
     };
 
     template <typename T, typename D, typename U, typename G>
     result<T> Qmc<T,D,U,G>::integrate(const std::function<T(D[])>& func, const U dim)
     {
         if ( dim < 1 ) throw std::invalid_argument("Qmc integrator constructed with dim < 1. Check that your integrand depends on at least one variable of integration.");
-        if ( m < 2 ) throw std::invalid_argument("Qmc integrator called with m < 2. This algorithm can not be used with less than 2 random shifts. Please increase m.");
+        if ( m < 2 ) throw std::domain_error("Qmc integrator called with m < 2. This algorithm can not be used with less than 2 random shifts. Please increase m.");
 
         // Set block and blocks, generate z, d, r. Increase n if it does not match any generating vector.
         std::vector<U> z;

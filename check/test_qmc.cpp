@@ -75,7 +75,7 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         real_integrator.minN = 4;
         // minN larger than any generating vector
         REQUIRE( real_integrator.minN == 4 );
-        REQUIRE( real_integrator.getN() == 3 ); // Decreased to largest generating vector
+        REQUIRE_THROWS_AS( real_integrator.getN(), std::domain_error );
 
     };
     
@@ -97,7 +97,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
     SECTION( "Invalid Number of Random Shifts", "[Qmc]" ) {
 
         real_integrator.m = 1;
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,3) , std::invalid_argument);
+        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,3) , std::domain_error);
 
     };
 
@@ -178,6 +178,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         real_integrator.generatingVectors = gv;
 
+        real_integrator.minN = 1;
         real_integrator.blockSize = 5;
 
         real_result = real_integrator.integrate(univariate_real_function,1);
@@ -235,6 +236,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         complex_integrator.generatingVectors = gv;
 
+        complex_integrator.minN = 1;
         complex_integrator.blockSize = 5;
 
         complex_result = complex_integrator.integrate(univariate_complex_function,1);
