@@ -1,14 +1,35 @@
 #include "qmc.hpp"
 
-#include <cmath> // modf, abs, sqrt
+#include <cmath> // modf, abs, sqrt, pow
 #include <stdexcept> // domain_error, invalid_argument
 #include <thread> // thread
 #include <algorithm> // min
+#include <type_traits> // make_signed
+#include <limits> // numeric_limits
+#include <string>
 
 #include "qmc_default.cpp"
 #include "qmc_complex.cpp"
 
 namespace integrators {
+
+    template <typename T, typename D, typename U, typename G>
+    template <typename R>
+    R Qmc<T,D,U,G>::mul_mod(U a, U b, U k) const
+    {
+        // Computes: (a*b % k) correctly even when a*b overflows std::numeric_limits<typename std::make_signed<U>>
+        // Assumes:
+        // 1) std::numeric_limits<U>::is_modulo
+        // 2) a < k
+        // 3) b < k
+        // 4) k < std::numeric_limits<typename std::make_signed<U>::type>::max()
+        // 5) k < pow(std::numeric_limits<D>::radix,std::numeric_limits<D>::digits-1)
+        using S = typename std::make_signed<U>::type;
+        D x = static_cast<D>(a);
+        U c = static_cast<U>( (x*b) / k );
+        S r = static_cast<S>( (a*b) - (c*k) ) % static_cast<S>(k);
+        return static_cast<R>(r < 0 ? (r+k) : r);
+    };
 
     template <typename T, typename D, typename U, typename G>
     void Qmc<T,D,U,G>::integralTransform(std::vector<D>& x, D& wgt, const U dim) const
@@ -115,8 +136,11 @@ namespace integrators {
                 std::vector<D> x(dim, 0.);
 
                 // TODO, prevent needless overflow on this line by using modular arithmetic
+//                for (U sDim = 0; sDim < dim; sDim++)
+//                    x[sDim] = std::modf(static_cast<D>(i+offset)*static_cast<D>(z.at(sDim))/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
+
                 for (U sDim = 0; sDim < dim; sDim++)
-                    x[sDim] = std::modf(static_cast<D>(i+offset)*static_cast<D>(z.at(sDim))/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
+                    x[sDim] = std::modf( mul_mod<D>(i+offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
 
                 integralTransform(x, wgt, dim);
 
@@ -147,6 +171,16 @@ namespace integrators {
         }
 
         n = generatingVectors.lower_bound(minN)->first;
+
+        // Check n satisfies requirements of mod_mul implementation
+        if ( n >= std::numeric_limits<typename std::make_signed<U>::type>::max() )
+        {
+            throw std::domain_error("Qmc integrator called with n larger than the largest finite value representable with the signed type corresponding to U. Please decrease minN or use a larger unsigned integer type for U.");
+        }
+        if ( n >= std::pow(std::numeric_limits<D>::radix,std::numeric_limits<D>::digits-1) )
+        {
+            throw std::domain_error("Qmc integrator called with n larger than the largest finite value representable by the mantiassa ");
+        }
 
         return n;
     };
@@ -195,6 +229,10 @@ namespace integrators {
     Qmc<T,D,U,G>::Qmc() :
     randomGenerator( G((std::random_device())()) ), minN(8191), m(32), blockSize(std::thread::hardware_concurrency())
     {
+        // Check U satisfies requirements of mod_mul implementation
+        static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
+        static_assert( std::numeric_limits<D>::radix == 2, "Qmc integrator constructed with a type D that does not have radix == 2. Please use a different floating point type for D.");
+
         if ( blockSize == 0 ) blockSize = 1; // Correct blockSize if hardware_concurrency is 0, i.e. not well defined or not computable
         initg();
     };
