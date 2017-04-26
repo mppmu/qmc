@@ -156,6 +156,7 @@ namespace integrators {
     {
         if ( dim < 1 ) throw std::invalid_argument("Qmc integrator constructed with dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( m < 2 ) throw std::domain_error("Qmc integrator called with m < 2. This algorithm can not be used with less than 2 random shifts. Please increase m.");
+        if ( blockSize == 0 ) throw std::domain_error("Qmc integrator called with blockSize = 0. Please set blockSize to a positive integer.");
 
         // Set block and blocks, generate z, d, r. Increase n if it does not match any generating vector.
         std::vector<U> z;

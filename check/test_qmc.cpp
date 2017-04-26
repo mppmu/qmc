@@ -275,6 +275,16 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
+    SECTION( "Set blockSize to zero (invalid)")
+    {
+        real_integrator.blockSize = 0;
+        complex_integrator.blockSize = 0;
+
+        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,2), std::domain_error );
+        REQUIRE_THROWS_AS( complex_integrator.integrate(complex_function,2), std::domain_error );
+
+    };
+
 };
 
 TEST_CASE( "Transform Validity", "[Qmc]" ) {
