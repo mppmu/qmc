@@ -26,9 +26,6 @@ namespace integrators {
 
         std::uniform_real_distribution<D> uniformDistribution = std::uniform_real_distribution<D>(0,1);
 
-        template <typename R>
-        R mul_mod(U a, U b, U k) const;
-
         void initg();
         void initzn(std::vector<U>& z, U& n, const U dim) const;
         void initd(std::vector<D>& d, const U dim);

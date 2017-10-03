@@ -309,5 +309,3 @@ TEST_CASE( "Transform Validity", "[Qmc]" ) {
 };
 
 // TODO : Check that we can derive from the class and implement a different integralTransform <--- also make an example
-
-// TODO : add checks for mod_mul

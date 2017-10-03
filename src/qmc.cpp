@@ -1,4 +1,5 @@
 #include "qmc.hpp"
+#include "mul_mod.hpp"
 
 #include <cmath> // modf, abs, sqrt, pow
 #include <stdexcept> // domain_error, invalid_argument
@@ -12,24 +13,6 @@
 #include "qmc_complex.cpp"
 
 namespace integrators {
-
-    template <typename T, typename D, typename U, typename G>
-    template <typename R>
-    R Qmc<T,D,U,G>::mul_mod(U a, U b, U k) const
-    {
-        // Computes: (a*b % k) correctly even when a*b overflows std::numeric_limits<typename std::make_signed<U>>
-        // Assumes:
-        // 1) std::numeric_limits<U>::is_modulo
-        // 2) a < k
-        // 3) b < k
-        // 4) k < std::numeric_limits<typename std::make_signed<U>::type>::max()
-        // 5) k < pow(std::numeric_limits<D>::radix,std::numeric_limits<D>::digits-1)
-        using S = typename std::make_signed<U>::type;
-        D x = static_cast<D>(a);
-        U c = static_cast<U>( (x*b) / k );
-        S r = static_cast<S>( (a*b) - (c*k) ) % static_cast<S>(k);
-        return static_cast<R>(r < 0 ? (r+k) : r);
-    };
 
     template <typename T, typename D, typename U, typename G>
     void Qmc<T,D,U,G>::integralTransform(std::vector<D>& x, D& wgt, const U dim) const
@@ -140,7 +123,7 @@ namespace integrators {
 //                    x[sDim] = std::modf(static_cast<D>(i+offset)*static_cast<D>(z.at(sDim))/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
 
                 for (U sDim = 0; sDim < dim; sDim++)
-                    x[sDim] = std::modf( mul_mod<D>(i+offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
+                    x[sDim] = std::modf( qmcutil::mul_mod<D,D,U>(i+offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
 
                 integralTransform(x, wgt, dim);
 

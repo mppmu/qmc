@@ -111,6 +111,7 @@ libtool
 *.log
 *.trs
 check/test_qmc
+check/test_mul_mod
 include/qmc.hpp
 examples/cuba_demo
 examples/accuracy_demo
