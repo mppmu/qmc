@@ -116,3 +116,5 @@ include/qmc.hpp
 examples/cuba_demo
 examples/accuracy_demo
 examples/basic_demo
+examples/complex_demo
+examples/hh_sector
