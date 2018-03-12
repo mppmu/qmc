@@ -104,8 +104,14 @@ namespace integrators
                     std::vector<D> x(dim,0);
                     
                     for (U sDim = 0; sDim < dim; sDim++)
+                    {
                         x[sDim] = std::modf( integrators::mul_mod<D,D,U>(i+offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
-                    
+                        if( x[sDim] < border)
+                            x[sDim] = border;
+                        if( x[sDim] > 1.-border)
+                            x[sDim] = 1.-border;
+                    }
+
                     integralTransform(x.data(), wgt, dim);
                     
                     T point = func(x.data());
@@ -343,7 +349,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    randomGenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), maxeval(std::numeric_limits<U>::max()), max_work_packages(2560000), cputhreads(std::thread::hardware_concurrency()), cudablocks(1000), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    randomGenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), max_work_packages(2560000), cputhreads(std::thread::hardware_concurrency()), cudablocks(1000), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

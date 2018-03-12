@@ -57,6 +57,7 @@ namespace integrators
         U minm;
         D epsrel;
         D epsabs;
+        D border;
         U maxeval;
         U max_work_packages;
         U cputhreads;

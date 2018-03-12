@@ -40,7 +40,7 @@ namespace integrators
     // TODO - make use of restricted pointers?
     template <typename T, typename D, typename U, typename F1, typename F2>
     __global__
-    void compute_kernel_gpu(const U work_offset, const U points_per_package, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1 func, const U dim, F2 integralTransform)
+    void compute_kernel_gpu(const U work_offset, const U points_per_package, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1 func, const U dim, F2 integralTransform, D border)
     {
         U i = blockIdx.x*blockDim.x + threadIdx.x;
         if (i < work_this_iteration)
@@ -57,7 +57,13 @@ namespace integrators
                         D x[25]; // TODO - template parameter?
                         
                         for (U sDim = 0; sDim < dim; sDim++)
+                        {
                             x[sDim] = modf(integrators::mul_mod<D, D, U>(i + offset, z[sDim], n) / n + d[k*dim + sDim], &mynull);
+                            if( x[sDim] < border)
+                                x[sDim] = border;
+                            if( x[sDim] > 1.-border)
+                                x[sDim] = 1.-border;
+                        }
                         
                         integralTransform(x, wgt, dim);
                         
@@ -100,7 +106,7 @@ namespace integrators
         if(verbosity > 1) std::cout << "- (" << device << ") allocated d_r " << m*work_this_iteration << std::endl;
         if(verbosity > 2) std::cout << "- (" << device << ") launching gpu kernel<<<" << cudablocks << "," << cudathreadsperblock << ">>>" << std::endl;
         
-        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i,points_per_package, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, func, dim, integralTransform);
+        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i,points_per_package, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, func, dim, integralTransform, border);
 //        CUDA_SAFE_CALL(cudaPeekAtLastError());
 //        CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
