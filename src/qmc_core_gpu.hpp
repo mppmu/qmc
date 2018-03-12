@@ -40,7 +40,7 @@ namespace integrators
     // TODO - make use of restricted pointers?
     template <typename T, typename D, typename U, typename F1, typename F2>
     __global__
-    void compute_kernel_gpu(const U work_offset, const U points_per_package, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1 func, const U dim, F2 integralTransform, D border)
+    void compute_kernel_gpu(const U work_offset, const U points_per_package, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1 func, const U dim, F2 integralTransform, const D border)
     {
         U i = blockIdx.x*blockDim.x + threadIdx.x;
         if (i < work_this_iteration)
@@ -78,7 +78,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, const F1& func, const U dim, const F2& integralTransform, const int device, const U cudablocks, const U cudathreadsperblock)
+    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device, const U cudablocks, const U cudathreadsperblock)
     {
         if (verbosity > 1) std::cout << "- (" << device << ") computing work_package " << i << ", work_this_iteration " << work_this_iteration << ", total_work_packages " << total_work_packages << std::endl;
         // Set Device
