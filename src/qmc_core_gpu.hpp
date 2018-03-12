@@ -59,13 +59,18 @@ namespace integrators
                         for (U sDim = 0; sDim < dim; sDim++)
                         {
                             x[sDim] = modf(integrators::mul_mod<D, D, U>(i + offset, z[sDim], n) / n + d[k*dim + sDim], &mynull);
+                        }
+                        
+                        integralTransform(x, wgt, dim);
+                        
+                        // Nudge point inside border (for numerical stability)
+                        for (U sDim = 0; sDim < dim; sDim++)
+                        {
                             if( x[sDim] < border)
                                 x[sDim] = border;
                             if( x[sDim] > 1.-border)
                                 x[sDim] = 1.-border;
                         }
-                        
-                        integralTransform(x, wgt, dim);
                         
                         T point = func(x);
 

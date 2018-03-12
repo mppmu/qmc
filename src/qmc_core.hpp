@@ -106,14 +106,19 @@ namespace integrators
                     for (U sDim = 0; sDim < dim; sDim++)
                     {
                         x[sDim] = std::modf( integrators::mul_mod<D,D,U>(i+offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
+                    }
+
+                    integralTransform(x.data(), wgt, dim);
+                    
+                    // Nudge point inside border (for numerical stability)
+                    for (U sDim = 0; sDim < dim; sDim++)
+                    {
                         if( x[sDim] < border)
                             x[sDim] = border;
                         if( x[sDim] > 1.-border)
                             x[sDim] = 1.-border;
                     }
-
-                    integralTransform(x.data(), wgt, dim);
-                    
+                
                     T point = func(x.data());
                     
                     // Compute sum using Kahan summation
