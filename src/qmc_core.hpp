@@ -16,12 +16,12 @@ namespace integrators
     U Qmc<T,D,U,G>::getNextN(U preferred_n) const
     {
         U n;
-        if ( generatingVectors.lower_bound(minn) == generatingVectors.end() )
+        if ( generatingVectors.lower_bound(preferred_n) == generatingVectors.end() )
         {
             n = generatingVectors.rbegin()->first;
             if (verbosity > 0) std::cout << "Qmc integrator does not have generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
         } else {
-            n = generatingVectors.lower_bound(minn)->first;
+            n = generatingVectors.lower_bound(preferred_n)->first;
         }
         
         // Check n satisfies requirements of mod_mul implementation
@@ -285,12 +285,16 @@ namespace integrators
         D errorRatio = computeErrorRatio(res, epsrel, epsabs);
         errorRatio = std::min(errorRatio,20.); // TODO - magic number
         errorRatio = std::max(errorRatio,1.1); // TODO - magic number
-        U newM = m;
-        U newN = getNextN(static_cast<U>(static_cast<D>(n)*errorRatio)); // TODO - here we assume 1/n scaling
-        if ( newN <= n)
+        D expectedScaling=0.8; // assume error scales as n^(-expectedScaling) // TODO - magic number
+				D additionalMIncreaseFactor = 1.0;  // TODO - magic number
+        U newM = minm;
+        U newN = getNextN(static_cast<U>(static_cast<D>(n)*pow(errorRatio,1./expectedScaling)));
+        if ( newN <= n or ( additionalMIncreaseFactor *errorRatio*errorRatio < static_cast<D>(newN)/static_cast<D>(n)))
         {
-            // n did not increase, increase m
-            newM = static_cast<U>(static_cast<D>(m)*errorRatio*errorRatio); // TODO - here we asume 1/sqrt(m) scaling
+            // n did not increase, or increasing m will be faster
+            // increase m
+            newN = n;
+            newM = additionalMIncreaseFactor * static_cast<U>(static_cast<D>(m)*errorRatio*errorRatio);
         }
         if ( maxeval < newN*newM)
         {
@@ -325,7 +329,7 @@ namespace integrators
             res = sample(func,dim,integralTransform,n,m);
             if (verbosity > 1) std::cout << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m);
-        } while  ( !computeErrorGoalReached(res,epsrel,epsabs) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
+        } while  ( computeErrorRatio(res,epsrel,epsabs) > 1. && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
         return res;
     };
     

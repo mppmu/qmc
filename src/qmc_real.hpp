@@ -21,16 +21,8 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U>
-    bool computeErrorGoalReached(const result<T,U>& res, const D& epsrel, const D& epsabs)
-    {
-        if (std::abs(res.error) <= std::max(std::abs(epsabs), std::abs(epsrel)*std::abs(res.integral)) )
-            return true;
-        return false;
-    };
-    
-    template <typename T, typename D, typename U>
     D computeErrorRatio(const result<T,U>& res, const D& epsrel, const D&epsabs)
     {
-        return std::max(res.error/epsabs, res.error*res.integral/epsrel);
+        return std::min(res.error/epsabs, std::abs(res.error/(res.integralr*epsrel)));
     };
 }
