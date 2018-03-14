@@ -40,14 +40,14 @@ namespace integrators
         void initd(std::vector<D>& d, const U m, const U dim);
         void initr(std::vector<T>& r, const U m, const U r_size) const;
         
-        result<T,U> reduce(const std::vector<T>& r, const U n, const U m) const;
+        result<T,U> reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
         template <typename F1, typename F2> void compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform);
         template <typename F1, typename F2> void compute_worker(const U thread_id, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m,  F1& func, const U dim, F2& integralTransform, const int device);
 #ifdef __CUDACC__
         template <typename F1, typename F2> void compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device, const U cudablocks, const U cudathreadsperblock);
 #endif
-        template <typename F1, typename F2> result<T,U> sample(F1& func, const U dim, F2& integralTransform, const U n, const U m);
-        void update(result<T,U>& res, U& n, U& m);
+        template <typename F1, typename F2> result<T,U> sample(F1& func, const U dim, F2& integralTransform, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
+        void update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations);
 
     public:
 

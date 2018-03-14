@@ -19,7 +19,7 @@ namespace integrators
     {
         return T(std::sqrt(std::abs(svariance.real())), std::sqrt(std::abs(svariance.imag())));
     };
-    
+
     template <typename T, typename D>
     bool computeIsFinite_complex(const T& point, const D& wgt)
     {

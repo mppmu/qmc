@@ -56,10 +56,24 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    result<T,U> Qmc<T,D,U,G>::reduce(const std::vector<T>& r, const U n, const U m) const
+    result<T,U> Qmc<T,D,U,G>::reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
     {
         T mean = {0.};
         T variance = {0.};
+        U previousM = 0;
+        if(!previous_iterations.empty())
+        {
+            result<T,U> & previousRes = previous_iterations.back();
+            if(previousRes.n == n)
+            {
+                if (verbosity>2) std::cout << "using additional shifts to improve previous iteration" << std::endl;
+                previousM = previousRes.m;
+                mean = previousRes.integral*static_cast<T>(n);
+                variance = previousRes.error; // this is really the variance
+                variance *= static_cast<T>(previousRes.m-1) * static_cast<T>(previousRes.m) * static_cast<T>(previousRes.n) * static_cast<T>(previousRes.n);
+                previous_iterations.pop_back();
+            }
+        }
         for(U k = 0; k < m; k++)
         {
             T sum = {0.};
@@ -75,16 +89,18 @@ namespace integrators
                 kahanC = kahanD - kahanY;
                 sum = kahanT;
             }
-            if (verbosity > 2) std::cout << "shift " << k << " result: " << sum/static_cast<T>(n) << std::endl;
+            if (verbosity > 2) std::cout << "shift " << k+previousM << " result: " << sum/static_cast<T>(n) << std::endl;
             // Compute Variance using online algorithm (Knuth, The Art of Computer Programming)
             delta = sum - mean;
-            mean = mean + delta/(static_cast<T>(k+1));
+            mean = mean + delta/(static_cast<T>(k+previousM+1));
             variance = computeVariance(mean, variance, sum, delta);
         }
         T integral = mean/(static_cast<T>(n));
-        variance = variance/( static_cast<T>(m-1) * static_cast<T>(m) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
+        variance = variance/( static_cast<T>(m+previousM-1) * static_cast<T>(m+previousM) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
         T error = computeError(variance);
-        return {integral, error, n, m};
+//        result<T,U> tempREs = {integral, error, n, m};
+        previous_iterations.push_back({integral, variance, n, m+previousM});
+        return {integral, error, n, m+previousM};
     };
     
     template <typename T, typename D, typename U, typename G>
@@ -187,7 +203,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    result<T,U> Qmc<T,D,U,G>::sample(F1& func, const U dim, F2& integralTransform, const U n, const U m)
+    result<T,U> Qmc<T,D,U,G>::sample(F1& func, const U dim, F2& integralTransform, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
     {
         std::vector<U> z;
         std::vector<D> d;
@@ -286,26 +302,27 @@ namespace integrators
                 thread.join();
             thread_pool.clear();
         }
-        return reduce(r, n, m);
+        return reduce(r, n, m,  previous_iterations);
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m)
+    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations)
+
     {
         if (verbosity > 2) std::cout << "-- qmc::update called --" << std::endl;
         D errorRatio = computeErrorRatio(res, epsrel, epsabs);
         errorRatio = std::min(errorRatio,20.); // TODO - magic number
-        errorRatio = std::max(errorRatio,1.1); // TODO - magic number
+        if (errorRatio < 1.)
+            return;
         D expectedScaling=0.8; // assume error scales as n^(-expectedScaling) // TODO - magic number
-				D additionalMIncreaseFactor = 1.0;  // TODO - magic number
         U newM = minm;
         U newN = getNextN(static_cast<U>(static_cast<D>(n)*pow(errorRatio,1./expectedScaling)));
-        if ( newN <= n or ( additionalMIncreaseFactor *errorRatio*errorRatio < static_cast<D>(newN)/static_cast<D>(n)))
+        if ( newN <= n or ( errorRatio*errorRatio - 1. < static_cast<D>(newN)/static_cast<D>(n)))
         {
             // n did not increase, or increasing m will be faster
             // increase m
             newN = n;
-            newM = additionalMIncreaseFactor * static_cast<U>(static_cast<D>(m)*errorRatio*errorRatio);
+            newM = static_cast<U>(static_cast<D>(m)*errorRatio*errorRatio)+1-m;
         }
         if ( maxeval < newN*newM)
         {
@@ -326,6 +343,9 @@ namespace integrators
         if ( max_work_packages == 0 ) throw std::domain_error("qmc::integrate called with max_work_packages = 0. Please set max_work_packages to a positive integer.");
 
         if (verbosity > 2) std::cout << "-- qmc::integrate called --" << std::endl;
+
+        std::vector<result<T,U>> previous_iterations; // keep track of the different interations, but here result.err will contain variance!
+
         U n = getNextN(minn); // Increase minn to next available n
         U m = minm;
         if ( maxeval < minn*minm)
@@ -337,9 +357,9 @@ namespace integrators
         do
         {
             if (verbosity > 1) std::cout << "iterating" << std::endl;
-            res = sample(func,dim,integralTransform,n,m);
+            res = sample(func,dim,integralTransform,n,m, previous_iterations);
             if (verbosity > 1) std::cout << "result " << res.integral << " " << res.error << std::endl;
-            update(res,n,m);
+            update(res,n,m,previous_iterations);
         } while  ( computeErrorRatio(res,epsrel,epsabs) > 1. && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
         return res;
     };
