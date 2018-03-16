@@ -209,7 +209,7 @@ namespace integrators
         std::vector<D> d;
         std::vector<T> r;
         
-        U total_work_packages = std::min(max_work_packages, n); // Set total number of work packages to be computed
+        U total_work_packages = std::min(maxworkpackages, n); // Set total number of work packages to be computed
         U points_per_package = (n+total_work_packages-1)/total_work_packages; // Points to compute per thread per work_package
         U extra_threads = devices.size() - devices.count(-1);
         
@@ -235,7 +235,7 @@ namespace integrators
             std::cout << "epsabs " << epsabs << std::endl;
             std::cout << "maxeval " << maxeval << std::endl;
             std::cout << "cputhreads " << cputhreads << std::endl;
-            std::cout << "max_work_packages " << max_work_packages << std::endl;
+            std::cout << "maxworkpackages " << maxworkpackages << std::endl;
             std::cout << "cudablocks " << cudablocks << std::endl;
             std::cout << "cudathreadsperblock " << cudathreadsperblock << std::endl;
             std::cout << "devices ";
@@ -340,7 +340,7 @@ namespace integrators
     {
         if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
-        if ( max_work_packages == 0 ) throw std::domain_error("qmc::integrate called with max_work_packages = 0. Please set max_work_packages to a positive integer.");
+        if ( maxworkpackages == 0 ) throw std::domain_error("qmc::integrate called with maxworkpackages = 0. Please set maxworkpackages to a positive integer.");
 
         if (verbosity > 2) std::cout << "-- qmc::integrate called --" << std::endl;
 
@@ -374,7 +374,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    randomGenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), max_work_packages(2560000), cputhreads(std::thread::hardware_concurrency()), cudablocks(1000), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    randomGenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), cputhreads(std::thread::hardware_concurrency()), cudablocks(1000), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
