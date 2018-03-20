@@ -23,7 +23,6 @@ namespace integrators
     template <typename T, typename D, typename U>
     D computeErrorRatio(const result<T,U>& res, const D& epsrel, const D&epsabs)
     {
-        return std::min(res.error/epsabs, std::abs(res.error/(res.integralr*epsrel)));
         return std::min(res.error/epsabs, std::abs(res.error/(res.integral*epsrel)));
     };
 }
