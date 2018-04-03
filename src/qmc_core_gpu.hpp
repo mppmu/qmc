@@ -106,6 +106,9 @@ namespace integrators
         integrators::detail::cuda_memory<F2> d_integralTransform(1); // TODO: copy only once per device
         if (verbosity > 1) std::cout << "- (" << device << ") allocated device memory" << std::endl;
 
+        
+        //        CUDA_SAFE_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // TODO - investigate if this helps
+        //        cudaOccupancyMaxPotentialBlockSize( &minGridSize, &blockSize, MyKernel, 0, 0); // TODO - investigate if this helps - https://devblogs.nvidia.com/cuda-pro-tip-occupancy-api-simplifies-launch-configuration/
         // Copy z,d,r,func,integralTransform to device
         CUDA_SAFE_CALL(cudaMemcpy(d_z, z.data(), z.size() * sizeof(U), cudaMemcpyHostToDevice));
         CUDA_SAFE_CALL(cudaMemcpy(d_d, d.data(), d.size() * sizeof(D), cudaMemcpyHostToDevice));
