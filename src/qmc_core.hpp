@@ -9,6 +9,8 @@
 #include <vector>
 #include <iostream>
 #include <iterator> // advance
+#include <mutex>
+
 namespace integrators
 {
     
@@ -151,7 +153,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute_worker(const U thread_id, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device)
+    void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device)
     {
         if(verbosity > 1) std::cout << "-(" << thread_id << ") Thread started for device" << device << std::endl;
         
@@ -271,7 +273,8 @@ namespace integrators
             }
             
             // Setup work queue
-            work_queue = total_work_packages;
+            std::mutex work_queue_mutex;
+            U work_queue = total_work_packages;
             
             // Launch worker threads
             U thread_id = 0;
@@ -282,7 +285,7 @@ namespace integrators
                 if( device != -1)
                 {
 #ifdef __CUDACC__
-                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, m, std::ref(func), dim, std::ref(integralTransform), device ) ); // Launch non-cpu workers
+                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, m, std::ref(func), dim, std::ref(integralTransform), device ) ); // Launch non-cpu workers
                     thread_id += cudablocks*cudathreadsperblock;
 #else
                     throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
@@ -293,7 +296,7 @@ namespace integrators
             {
                 for ( U i=0; i < cputhreads; i++)
                 {
-                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, m, std::ref(func), dim, std::ref(integralTransform), -1 ) ); // Launch cpu workers
+                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, m, std::ref(func), dim, std::ref(integralTransform), -1 ) ); // Launch cpu workers
                     thread_id += 1;
                 }
             }
@@ -307,7 +310,6 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations)
-
     {
         if (verbosity > 2) std::cout << "-- qmc::update called --" << std::endl;
         D errorRatio = computeErrorRatio(res, epsrel, epsabs);

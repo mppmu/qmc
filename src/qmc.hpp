@@ -30,8 +30,6 @@ namespace integrators
     private:
 
         std::uniform_real_distribution<D> uniformDistribution = std::uniform_real_distribution<D>(0,1);
-        std::mutex work_queue_mutex;
-        U work_queue;
 
         U getNextN(U preferred_n) const;
         
@@ -42,7 +40,7 @@ namespace integrators
         
         result<T,U> reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
         template <typename F1, typename F2> void compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform);
-        template <typename F1, typename F2> void compute_worker(const U thread_id, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m,  F1& func, const U dim, F2& integralTransform, const int device);
+        template <typename F1, typename F2> void compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m,  F1& func, const U dim, F2& integralTransform, const int device);
 #ifdef __CUDACC__
         template <typename F1, typename F2> void compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device, const U cudablocks, const U cudathreadsperblock);
 #endif
