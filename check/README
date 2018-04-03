@@ -1,0 +1,32 @@
+HOW TO RUN THE TESTS
+====================
+
+Each test can be run by executing 'make <dirname>'. 
+'make runtests' can be invoked to run all tests.
+'make runselected' runs a selection of tests.
+'make summarize' gives a one-line summary for each example:
+
+make runtests:
+   This command runs 'make test' for all subdirectories.
+
+make summarize:
+   By running "make summarize" the user obtains a printout of the status
+   of all integrals for which 'make test' has been run earlier.
+   Note that this command does not run any test.
+
+make clean, make very-clean:
+   Delete all generated files; i.e. run 'make very-clean'
+   in every test directory.
+
+make <dirname>:
+   Run 'make test' in the directory <dirname>.
+
+
+FUTHER OPTIONS
+==============
+
+Make's "-j<jmake>" option controls how many recipes make executes in parallel. 
+
+In order to change the c++ compiler, you can set the environment variables CXX. 
+For example, to run an with the clang++ compiler type
+'CXX=clang++ make <example>'.
