@@ -1,4 +1,4 @@
-#include <cmath> // abs, sqrt, isfinite
+#include <cmath> // abs, sqrt
 
 namespace integrators
 {
@@ -12,12 +12,6 @@ namespace integrators
     T computeError(const T& variance)
     {
         return T(std::sqrt(std::abs(variance)));
-    };
-
-    template <typename T, typename D>
-    bool computeIsFinite(const T& point, const D& wgt)
-    {
-        return ( std::isfinite(point) && std::isfinite(wgt) );
     };
     
     template <typename T, typename D, typename U>
