@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iterator> // advance
 #include <mutex>
+#include <memory> // unique_ptr
 
 namespace integrators
 {
@@ -156,14 +157,24 @@ namespace integrators
     void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device)
     {
         if(verbosity > 1) std::cout << "-(" << thread_id << ") Thread started for device" << device << std::endl;
-        
+
+#ifdef __CUDACC__
+        // define device pointers (must be accessible in local scope of the entire function)
+        std::unique_ptr<integrators::detail::cuda_memory<F1>> d_func;
+        std::unique_ptr<integrators::detail::cuda_memory<F2>> d_integralTransform;
+#endif
+
         U i;
         U  work_this_iteration;
-        if (device == -1)
+        if (device == -1) {
             work_this_iteration = 1;
-        else
+        } else {
             work_this_iteration = cudablocks*cudathreadsperblock;
-        
+#ifdef __CUDACC__
+            setup_gpu(d_func, func, d_integralTransform, integralTransform, device, verbosity);
+#endif
+        }
+
         bool work_remaining = true;
         while( work_remaining )
         {
@@ -197,7 +208,9 @@ namespace integrators
             else
             {
 #ifdef __CUDACC__
-                compute_gpu(i, z, d, &r[thread_id], r.size()/m, work_this_iteration, total_work_packages, points_per_package, n, m, func, dim, integralTransform, device, cudablocks, cudathreadsperblock);
+                compute_gpu(i, z, d, &r[thread_id], r.size()/m, work_this_iteration, total_work_packages, points_per_package, n, m,
+                            static_cast<typename std::remove_const<F1>::type*>(*d_func), dim,
+                            static_cast<typename std::remove_const<F2>::type*>(*d_integralTransform), device, cudablocks, cudathreadsperblock);
 #endif
             }
         }

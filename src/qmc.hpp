@@ -5,6 +5,7 @@
 #include <mutex>
 #include <vector>
 #include <map>
+#include <memory> // unique_ptr
 #include <set>
 #include <random> // mt19937_64, uniform_real_distribution
 #include <type_traits> // make_signed
@@ -42,7 +43,7 @@ namespace integrators
         template <typename F1, typename F2> void compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform);
         template <typename F1, typename F2> void compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m,  F1& func, const U dim, F2& integralTransform, const int device);
 #ifdef __CUDACC__
-        template <typename F1, typename F2> void compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device, const U cudablocks, const U cudathreadsperblock);
+        template <typename F1, typename F2> void compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1* d_func, const U dim, F2* d_integralTransform, const int device, const U cudablocks, const U cudathreadsperblock);
 #endif
         template <typename F1, typename F2> result<T,U> sample(F1& func, const U dim, F2& integralTransform, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
         void update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations);
@@ -81,10 +82,9 @@ namespace integrators
 #include "qmc_complex.hpp"
 #include "qmc_transform.hpp"
 #include "qmc_generating_vectors.hpp"
-#include "qmc_core.hpp"
-
 #ifdef __CUDACC__
 #include "qmc_core_gpu.hpp"
 #endif
+#include "qmc_core.hpp"
 
 #endif

@@ -1,4 +1,5 @@
 #ifdef __CUDACC__
+#include <iostream>
 #include <stdexcept>
 #include <exception>
 #include <utility>
@@ -6,6 +7,7 @@
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
+#include <memory> // unique_ptr
 
 #include <cuda_runtime_api.h>
 
@@ -86,27 +88,16 @@ namespace integrators
 
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device, const U cudablocks, const U cudathreadsperblock)
+    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1* d_func, const U dim, F2* d_integralTransform, const int device, const U cudablocks, const U cudathreadsperblock)
     {
         if (verbosity > 1) std::cout << "- (" << device << ") computing work_package " << i << ", work_this_iteration " << work_this_iteration << ", total_work_packages " << total_work_packages << std::endl;
-        // Set Device
-        if (verbosity > 1) std::cout << "- (" << device << ") setting device" << std::endl;
-        CUDA_SAFE_CALL(cudaSetDevice(device));
-        if (verbosity > 1) std::cout << "- (" << device << ") device set" << std::endl;
-
-        // copy func and integralTransform (initialize on new active device)
-        F1 func_copy = func;
-        F2 integralTransform_copy = integralTransform;
 
         // Allocate Device Memory
         integrators::detail::cuda_memory<U> d_z(z.size());
         integrators::detail::cuda_memory<D> d_d(d.size());
         integrators::detail::cuda_memory<T> d_r(m*work_this_iteration);
-        integrators::detail::cuda_memory<F1> d_func(1); // TODO: copy only once per device
-        integrators::detail::cuda_memory<F2> d_integralTransform(1); // TODO: copy only once per device
         if (verbosity > 1) std::cout << "- (" << device << ") allocated device memory" << std::endl;
 
-        
         //        CUDA_SAFE_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // TODO - investigate if this helps
         //        cudaOccupancyMaxPotentialBlockSize( &minGridSize, &blockSize, MyKernel, 0, 0); // TODO - investigate if this helps - https://devblogs.nvidia.com/cuda-pro-tip-occupancy-api-simplifies-launch-configuration/
         // Copy z,d,r,func,integralTransform to device
@@ -116,8 +107,6 @@ namespace integrators
         {
             CUDA_SAFE_CALL(cudaMemcpy(&(static_cast<T*>(d_r)[k*work_this_iteration]), &r_element[k*r_size], work_this_iteration * sizeof(T), cudaMemcpyHostToDevice));
         }
-        CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F1>::type*>(d_func), &func_copy, sizeof(F1), cudaMemcpyHostToDevice));
-        CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F2>::type*>(d_integralTransform), &integralTransform_copy, sizeof(F2), cudaMemcpyHostToDevice));
 
         if(verbosity > 1) std::cout << "- (" << device << ") copied z,d,r to device memory" << std::endl;
         if(verbosity > 1) std::cout << "- (" << device << ") allocated d_z " << z.size() << std::endl;
@@ -135,6 +124,27 @@ namespace integrators
             CUDA_SAFE_CALL(cudaMemcpy(&r_element[k*r_size], &(static_cast<T*>(d_r)[k*work_this_iteration]), work_this_iteration * sizeof(T), cudaMemcpyDeviceToHost));
         }
         if (verbosity > 1) std::cout << "- (" << device << ") copied r to host memory" << std::endl;
+    };
+
+    template <typename F1, typename F2, typename U>
+    void setup_gpu(std::unique_ptr<integrators::detail::cuda_memory<F1>>& d_func, F1& func, std::unique_ptr<integrators::detail::cuda_memory<F2>>& d_integralTransform, F2& integralTransform, const int device, const U verbosity)
+    {
+        // Set Device
+        if (verbosity > 1) std::cout << "- (" << device << ") setting device" << std::endl;
+        CUDA_SAFE_CALL(cudaSetDevice(device));
+        if (verbosity > 1) std::cout << "- (" << device << ") device set" << std::endl;
+
+        d_func.reset( new integrators::detail::cuda_memory<F1>(1) );
+        d_integralTransform.reset( new integrators::detail::cuda_memory<F2>(1) );
+        if(verbosity > 1) std::cout << "- (" << device << ") allocated d_func,d_integralTransform" << std::endl;
+
+        // copy func and integralTransform (initialize on new active device)
+        F1 func_copy = func;
+        F2 integralTransform_copy = integralTransform;
+
+        CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F1>::type*>(*d_func), &func_copy, sizeof(F1), cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F2>::type*>(*d_integralTransform), &integralTransform_copy, sizeof(F2), cudaMemcpyHostToDevice));
+        if(verbosity > 1) std::cout << "- (" << device << ") copied d_func,d_integralTransform to device memory" << std::endl;
     };
 };
 #endif
