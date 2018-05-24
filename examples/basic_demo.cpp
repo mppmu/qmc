@@ -22,7 +22,7 @@ struct my_functor {
 int main() {
     
     integrators::Qmc<double,double> integrator;
-    integrator.minN = 10000; // (optional) set parameters
+    integrator.minn = 10000; // (optional) set parameters
     my_functor my_functor_instance;
     integrators::result<double> result = integrator.integrate(my_functor_instance,3);
     std::cout << "integral = " << result.integral << ", error = " << result.error << std::endl;
