@@ -11,6 +11,7 @@
 #include <iterator> // advance
 #include <mutex>
 #include <memory> // unique_ptr
+#include <cassert> // assert
 
 namespace integrators
 {
@@ -220,6 +221,8 @@ namespace integrators
     template <typename F1, typename F2>
     result<T,U> Qmc<T,D,U,G>::sample(F1& func, const U dim, F2& integralTransform, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
     {
+        assert(maxworkpackages>0);
+
         std::vector<U> z;
         std::vector<D> d;
         std::vector<T> r;
