@@ -398,7 +398,11 @@ namespace integrators
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
         static_assert( std::numeric_limits<D>::radix == 2, "Qmc integrator constructed with a type D that does not have radix == 2. Please use a different floating point type for D.");
         
-        if ( cputhreads == 0 ) cputhreads = 1; // Correct cputhreads if hardware_concurrency is 0, i.e. not well defined or not computable
+        if ( cputhreads == 0 )
+        {
+            cputhreads = 1; // Correct cputhreads if hardware_concurrency is 0, i.e. not well defined or not computable
+            if (verbosity > 1) std::cout << "Qmc increased cputhreads from 0 to 1." << std::endl;
+        }
 
 #ifdef __CUDACC__
         // Get available gpus and add to devices
