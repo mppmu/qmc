@@ -30,3 +30,23 @@ Make's "-j<jmake>" option controls how many recipes make executes in parallel.
 In order to change the c++ compiler, you can set the environment variables CXX. 
 For example, to run an with the clang++ compiler type
 'CXX=clang++ make <example>'.
+
+ADDING NEW TESTS
+================
+
+All directories with a file called "test.log" are considered when invoking
+'make runtests'. A test directory should have a "Makefile" that defines the
+targets 'test' and 'clean':
+
+make test:
+    Should compile and run a test program. A log should be written into the file
+    "test.log". If all tests have succeeded, the file "test.log" should end with
+    the line "@@@ SUCCESS @@@". Otherwise, "test.log" should end with the line
+    "@@@ FAILURE @@@".
+
+make clean:
+    Should delete all temporary files that are generated on 'make test'.
+    The file 'test.log' should be blanked for example with the command 'echo > test.log'.
+
+This test suite detects test directories by the presence of the file "test.log". Therefore
+make sure that "test.log" is never deleted in test directories.

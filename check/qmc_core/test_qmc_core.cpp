@@ -1,9 +1,10 @@
 #include "catch.hpp"
-#include "../src/qmc.hpp"
+#include "qmc.hpp"
 
 #include <complex>
 #include <random>
 #include <stdexcept> // invalid_argument
+#include <limits> // numeric_limits
 
 TEST_CASE( "Result Constructor", "[result]") {
 
@@ -23,9 +24,9 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
     SECTION( "Check Fields", "[Qmc]" ) {
 
-        REQUIRE( real_integrator.minN > 0 );
-        REQUIRE( real_integrator.m > 1 );
-        REQUIRE( real_integrator.blockSize > 0);
+        REQUIRE( real_integrator.minn > 0 );
+        REQUIRE( real_integrator.minm > 1 );
+        REQUIRE( real_integrator.cputhreads > 0);
         REQUIRE( real_integrator.generatingVectors.size() > 0);
 
     };
@@ -43,39 +44,45 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
     SECTION( "Check Fields", "[Qmc]" ) {
 
         integrators::Qmc<double,double> real_integrator;
-        real_integrator.minN = 1;
-        real_integrator.m = 2;
-        real_integrator.blockSize = 3;
+        real_integrator.minn = 1;
+        real_integrator.minm = 2;
+        real_integrator.cputhreads = 3;
         real_integrator.generatingVectors = gv;
 
-        REQUIRE( real_integrator.minN == 1 );
-        REQUIRE( real_integrator.m == 2 );
-        REQUIRE( real_integrator.blockSize == 3);
+        REQUIRE( real_integrator.minn == 1 );
+        REQUIRE( real_integrator.minm == 2 );
+        REQUIRE( real_integrator.cputhreads == 3);
         REQUIRE( real_integrator.generatingVectors.size() == 2 );
         REQUIRE( real_integrator.generatingVectors[2] == v2 );
         REQUIRE( real_integrator.generatingVectors[3] == v3 );
 
     };
 
-    SECTION( "Check getN Function", "[Qmc]" ) {
+    SECTION( "Check getNextN Function", "[Qmc]" ) {
 
-        integrators::Qmc<double,double> real_integrator;
-        real_integrator.minN = 1;
+        integrators::Qmc<double,double, unsigned long long int> real_integrator;
+        real_integrator.minn = 1;
         real_integrator.generatingVectors = gv;
 
-        // minN less than any generating vector
-        REQUIRE( real_integrator.minN == 1 );
-        REQUIRE( real_integrator.getN() == 2 ); // Increased to smallest generating vector
+        // minn less than any generating vector
+        REQUIRE( real_integrator.minn == 1 );
+        REQUIRE( real_integrator.getNextN(1) == 2 ); // Increased to smallest generating vector
 
-        real_integrator.minN = 2;
-        // minN matches a generating vector
-        REQUIRE( real_integrator.minN == 2 );
-        REQUIRE( real_integrator.getN() == 2 );
+        real_integrator.minn = 2;
+        // minn matches a generating vector
+        REQUIRE( real_integrator.minn == 2 );
+        REQUIRE( real_integrator.getNextN(2) == 2 );
 
-        real_integrator.minN = 4;
-        // minN larger than any generating vector
-        REQUIRE( real_integrator.minN == 4 );
-        REQUIRE_THROWS_AS( real_integrator.getN(), std::domain_error );
+        real_integrator.minn = 4;
+        // minn larger than any generating vector
+        REQUIRE( real_integrator.minn == 4 );
+        REQUIRE( real_integrator.getNextN(4) == 3 ); // fall back to largest available generating vector
+
+        real_integrator.generatingVectors[std::numeric_limits<unsigned long long int>::max()] = {1,2,3};
+        real_integrator.minn = std::numeric_limits<unsigned long long int>::max();
+        // n larger than representable in signed version of 'U' (invalid)
+        REQUIRE( real_integrator.minn == std::numeric_limits<unsigned long long int>::max() );
+        REQUIRE_THROWS_AS( real_integrator.getNextN(std::numeric_limits<unsigned long long int>::max()), std::domain_error );
 
     };
     
@@ -96,7 +103,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
     SECTION( "Invalid Number of Random Shifts", "[Qmc]" ) {
 
-        real_integrator.m = 1;
+        real_integrator.minm = 1;
         REQUIRE_THROWS_AS( real_integrator.integrate(real_function,3) , std::domain_error);
 
     };
@@ -134,10 +141,10 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     std::function<std::complex<double>(double[])> complex_function = [] (double x[]) { return std::complex<double>(x[0],x[0]*x[1]); };
 
     integrators::Qmc<double,double> real_integrator;
-    real_integrator.minN = 10000;
+    real_integrator.minn = 10000;
 
     integrators::Qmc<std::complex<double>,double> complex_integrator;
-    complex_integrator.minN = 10000;
+    complex_integrator.minn = 10000;
 
     SECTION( "Real Function (Default Block Size)" )
     {
@@ -151,7 +158,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     SECTION( "Real Function (Serial)" )
     {
-        real_integrator.blockSize = 1;
+        real_integrator.cputhreads = 1;
 
         real_result = real_integrator.integrate(real_function,2);
 
@@ -162,7 +169,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     SECTION( "Real Function (Parallel)" )
     {
-        real_integrator.blockSize = 2;
+        real_integrator.cputhreads = 2;
 
         real_result = real_integrator.integrate(real_function,2);
 
@@ -178,12 +185,12 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         real_integrator.generatingVectors = gv;
 
-        real_integrator.minN = 1;
-        real_integrator.blockSize = 5;
+        real_integrator.minn = 1;
+        real_integrator.cputhreads = 5;
 
         real_result = real_integrator.integrate(univariate_real_function,1);
 
-        REQUIRE( real_integrator.blockSize > real_integrator.getN() );
+        REQUIRE( real_integrator.cputhreads == 5 );
         REQUIRE( real_result.integral == Approx(0.5).epsilon(badeps) );
         REQUIRE( real_result.error < badeps );
         
@@ -203,7 +210,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     SECTION( "Complex Function (Serial)" )
     {
-        complex_integrator.blockSize = 1;
+        complex_integrator.cputhreads = 1;
 
         complex_result = complex_integrator.integrate(complex_function,2);
 
@@ -217,7 +224,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     SECTION( "Complex Function (Parallel)" )
     {
-        complex_integrator.blockSize = 2;
+        complex_integrator.cputhreads = 2;
 
         complex_result = complex_integrator.integrate(complex_function,2);
 
@@ -236,12 +243,12 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         complex_integrator.generatingVectors = gv;
 
-        complex_integrator.minN = 1;
-        complex_integrator.blockSize = 5;
+        complex_integrator.minn = 1;
+        complex_integrator.cputhreads = 5;
 
         complex_result = complex_integrator.integrate(univariate_complex_function,1);
 
-        REQUIRE( complex_integrator.blockSize > complex_integrator.getN() );
+        REQUIRE( complex_integrator.cputhreads == 5 );
         REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(badeps) );
         REQUIRE( complex_result.integral.imag() == Approx(0.5).epsilon(badeps) );
 
@@ -275,13 +282,13 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
-    SECTION( "Set blockSize to zero (invalid)")
+    SECTION( "Set cputhreads to zero (sequential)")
     {
-        real_integrator.blockSize = 0;
-        complex_integrator.blockSize = 0;
+        real_integrator.cputhreads = 0;
+        complex_integrator.cputhreads = 0;
 
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,2), std::domain_error );
-        REQUIRE_THROWS_AS( complex_integrator.integrate(complex_function,2), std::domain_error );
+        REQUIRE( real_result.integral == Approx(0.25).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
 
     };
 
@@ -299,7 +306,7 @@ TEST_CASE( "Transform Validity", "[Qmc]" ) {
     };
 
     integrators::Qmc<double,double> real_integrator;
-    real_integrator.minN = 10000;
+    real_integrator.minn = 10000;
 
     SECTION( "Check integration parameters x satisfy x >= 0 and x <= 1" )
     {
