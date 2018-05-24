@@ -8,6 +8,7 @@
 #include <iterator>
 #include <type_traits>
 #include <memory> // unique_ptr
+#include <cassert> // assert
 
 #include <cuda_runtime_api.h>
 
@@ -146,5 +147,14 @@ namespace integrators
         CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F2>::type*>(*d_integralTransform), &integralTransform_copy, sizeof(F2), cudaMemcpyHostToDevice));
         if(verbosity > 1) std::cout << "- (" << device << ") copied d_func,d_integralTransform to device memory" << std::endl;
     };
+
+    int get_device_count_gpu()
+    {
+        int device_count;
+        CUDA_SAFE_CALL(cudaGetDeviceCount(&device_count));
+        assert(device_count >= 0);
+        return device_count;
+    };
+
 };
 #endif
