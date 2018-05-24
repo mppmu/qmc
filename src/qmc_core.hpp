@@ -326,13 +326,13 @@ namespace integrators
     {
         if (verbosity > 2) std::cout << "-- qmc::update called --" << std::endl;
         D errorRatio = computeErrorRatio(res, epsrel, epsabs);
-        errorRatio = std::min(errorRatio,20.); // TODO - magic number
-        if (errorRatio < 1.)
+        errorRatio = std::min(errorRatio,static_cast<D>(20)); // TODO - magic number
+        if (errorRatio < static_cast<D>(1))
             return;
-        D expectedScaling=0.8; // assume error scales as n^(-expectedScaling) // TODO - magic number
+        D expectedScaling=static_cast<D>(0.8); // assume error scales as n^(-expectedScaling) // TODO - magic number
         U newM = minm;
-        U newN = getNextN(static_cast<U>(static_cast<D>(n)*pow(errorRatio,1./expectedScaling)));
-        if ( newN <= n or ( errorRatio*errorRatio - 1. < static_cast<D>(newN)/static_cast<D>(n)))
+        U newN = getNextN(static_cast<U>(static_cast<D>(n)*pow(errorRatio,static_cast<D>(1)/expectedScaling)));
+        if ( newN <= n or ( errorRatio*errorRatio - static_cast<D>(1) < static_cast<D>(newN)/static_cast<D>(n)))
         {
             // n did not increase, or increasing m will be faster
             // increase m
@@ -375,7 +375,7 @@ namespace integrators
             res = sample(func,dim,integralTransform,n,m, previous_iterations);
             if (verbosity > 1) std::cout << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m,previous_iterations);
-        } while  ( computeErrorRatio(res,epsrel,epsabs) > 1. && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
+        } while  ( computeErrorRatio(res,epsrel,epsabs) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
         return res;
     };
     
