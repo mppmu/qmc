@@ -32,8 +32,6 @@ namespace integrators
 
         std::uniform_real_distribution<D> uniformDistribution = std::uniform_real_distribution<D>(0,1);
 
-        U getNextN(U preferred_n) const;
-        
         void initg();
         void initz(std::vector<U>& z, const U n, const U dim) const;
         void initd(std::vector<D>& d, const U m, const U dim);
@@ -68,6 +66,7 @@ namespace integrators
 
         template <typename F1, typename F2> result<T,U> integrate(F1& func, const U dim, F2& integralTransform);
         template <typename F1> result<T,U> integrate(F1& func, const U dim);
+        U get_next_n(U preferred_n) const;
 
         Qmc();
         virtual ~Qmc() {}

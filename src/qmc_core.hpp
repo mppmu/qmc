@@ -17,7 +17,7 @@ namespace integrators
 {
     
     template <typename T, typename D, typename U, typename G>
-    U Qmc<T,D,U,G>::getNextN(U preferred_n) const
+    U Qmc<T,D,U,G>::get_next_n(U preferred_n) const
     {
         U n;
         if ( generatingVectors.lower_bound(preferred_n) == generatingVectors.end() )
@@ -334,7 +334,7 @@ namespace integrators
             return;
         D expectedScaling=static_cast<D>(0.8); // assume error scales as n^(-expectedScaling) // TODO - magic number
         U newM = minm;
-        U newN = getNextN(static_cast<U>(static_cast<D>(n)*pow(errorRatio,static_cast<D>(1)/expectedScaling)));
+        U newN = get_next_n(static_cast<U>(static_cast<D>(n)*pow(errorRatio,static_cast<D>(1)/expectedScaling)));
         if ( newN <= n or ( errorRatio*errorRatio - static_cast<D>(1) < static_cast<D>(newN)/static_cast<D>(n)))
         {
             // n did not increase, or increasing m will be faster
@@ -345,7 +345,7 @@ namespace integrators
         if ( maxeval < newN*newM)
         {
             // Decrease n
-            newN = getNextN(maxeval/newM);
+            newN = get_next_n(maxeval/newM);
         }
         n = newN;
         m = newM;
@@ -364,7 +364,7 @@ namespace integrators
 
         std::vector<result<T,U>> previous_iterations; // keep track of the different interations, but here result.err will contain variance!
 
-        U n = getNextN(minn); // Increase minn to next available n
+        U n = get_next_n(minn); // Increase minn to next available n
         U m = minm;
         if ( maxeval < minn*minm)
         {
