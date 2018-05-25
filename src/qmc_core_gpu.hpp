@@ -53,6 +53,7 @@ namespace integrators
         {
             for (U k = 0; k < m; k++)
             {
+                T kahanC = {0.};
                 for (U b = 0; b < points_per_package; b++)
                 {
                     U offset = b * total_work_packages + work_offset;
@@ -80,7 +81,13 @@ namespace integrators
 
                         T point = (*func)(x);
 
-                        r[k*work_this_iteration + i] += wgt*point; // TODO - Compute sum using Kahan summation?
+                        // Compute sum using Kahan summation
+                        // equivalent to: r[k*work_this_iteration + i] += wgt*point;
+                        T kahanY = wgt*point - kahanC;
+                        T kahanT = r[k*work_this_iteration + i] + kahanY;
+                        T kahanD = kahanT - r[k*work_this_iteration + i];
+                        kahanC = kahanD - kahanY;
+                        r[k*work_this_iteration + i] = kahanT;
                     }
                 }
             }
