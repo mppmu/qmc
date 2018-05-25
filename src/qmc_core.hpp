@@ -221,11 +221,11 @@ namespace integrators
     template <typename F1, typename F2>
     result<T,U> Qmc<T,D,U,G>::sample(F1& func, const U dim, F2& integralTransform, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
     {
-        assert(maxworkpackages>0);
-
         std::vector<U> z;
         std::vector<D> d;
         std::vector<T> r;
+
+        result<T,U> res;
         
         U total_work_packages = std::min(maxworkpackages, n); // Set total number of work packages to be computed
         U points_per_package = (n+total_work_packages-1)/total_work_packages; // Points to compute per thread per work_package
@@ -238,90 +238,106 @@ namespace integrators
             r_size += cputhreads; // cpu-workers
         }
 
-        // Generate z, d, r
-        initz(z, n, dim);
-        initd(d, m, dim);
-        initr(r, m, r_size);
-        
-        if (verbosity > 0)
+        U iterations = (m+maxconcurrentshifts-1)/maxconcurrentshifts;
+        U shifts_per_iteration = std::min(m,maxconcurrentshifts);
+        for(U iteration = 0; iteration < iterations; iteration++)
         {
-            std::cout << "-- qmc::sample called --" << std::endl;
-            std::cout << "dim " << dim << std::endl;
-            std::cout << "minn " << minn << std::endl;
-            std::cout << "minm " << minm << std::endl;
-            std::cout << "epsrel " << epsrel << std::endl;
-            std::cout << "epsabs " << epsabs << std::endl;
-            std::cout << "maxeval " << maxeval << std::endl;
-            std::cout << "cputhreads " << cputhreads << std::endl;
-            std::cout << "maxworkpackages " << maxworkpackages << std::endl;
-            std::cout << "cudablocks " << cudablocks << std::endl;
-            std::cout << "cudathreadsperblock " << cudathreadsperblock << std::endl;
-            std::cout << "devices ";
-            for (const int& i : devices)
-                std::cout << i << " ";
-            std::cout << std::endl;
-            std::cout << "n " << n << std::endl;
-            std::cout << "m " << m << std::endl;
-            std::cout << "total_work_packages " << total_work_packages << std::endl;
-            std::cout << "points_per_package " << points_per_package << std::endl;
-            std::cout << "r " << m << "*" << r_size << std::endl;
-        }
-        
-        if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1)
-        {
-            // Compute serially on cpu
-            if (verbosity > 2) std::cout << "computing serially" << std::endl;
-            for( U i=0; i < total_work_packages; i++)
+            U shifts = shifts_per_iteration;
+            if ( iteration == iterations-1)
             {
-                compute(i, z, d, &r[0], r.size()/m, total_work_packages, points_per_package, n, m, func, dim, integralTransform);
+                // last iteration => compute remaining shifts
+                shifts = m%maxconcurrentshifts == 0 ? std::min(m,maxconcurrentshifts) : m%maxconcurrentshifts;
             }
-        }
-        else
-        {
-            // Create threadpool
-            if (verbosity > 2)
+
+            // Generate z, d, r
+            initz(z, n, dim);
+            initd(d, shifts, dim);
+            initr(r, shifts, r_size);
+
+            if (verbosity > 0)
             {
-                std::cout << "distributing work" << std::endl;
-                if ( devices.count(-1) != 0)
-                    std::cout << "creating " << std::to_string(cputhreads) << " cputhreads," << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
-                else
-                    std::cout << "creating " << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
+                std::cout << "-- qmc::sample called --" << std::endl;
+                std::cout << "dim " << dim << std::endl;
+                std::cout << "minn " << minn << std::endl;
+                std::cout << "minm " << minm << std::endl;
+                std::cout << "epsrel " << epsrel << std::endl;
+                std::cout << "epsabs " << epsabs << std::endl;
+                std::cout << "maxeval " << maxeval << std::endl;
+                std::cout << "cputhreads " << cputhreads << std::endl;
+                std::cout << "maxworkpackages " << maxworkpackages << std::endl;
+                std::cout << "maxconcurrentshifts " << maxconcurrentshifts << std::endl;
+                std::cout << "cudablocks " << cudablocks << std::endl;
+                std::cout << "cudathreadsperblock " << cudathreadsperblock << std::endl;
+                std::cout << "devices ";
+                for (const int& i : devices)
+                    std::cout << i << " ";
+                std::cout << std::endl;
+                std::cout << "n " << n << std::endl;
+                std::cout << "m " << m << std::endl;
+                std::cout << "shifts " << shifts << std::endl;
+                std::cout << "iterations " << iterations << std::endl;
+                std::cout << "total_work_packages " << total_work_packages << std::endl;
+                std::cout << "points_per_package " << points_per_package << std::endl;
+                std::cout << "r " << shifts << "*" << r_size << std::endl;
             }
-            
-            // Setup work queue
-            std::mutex work_queue_mutex;
-            U work_queue = total_work_packages;
-            
-            // Launch worker threads
-            U thread_id = 0;
-            std::vector<std::thread> thread_pool;
-            thread_pool.reserve(cputhreads+extra_threads);
-            for (int device : devices)
+
+            if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1)
             {
-                if( device != -1)
+                // Compute serially on cpu
+                if (verbosity > 2) std::cout << "computing serially" << std::endl;
+                for( U i=0; i < total_work_packages; i++)
                 {
+                    compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, points_per_package, n, shifts, func, dim, integralTransform);
+                }
+            }
+            else
+            {
+                // Create threadpool
+                if (verbosity > 2)
+                {
+                    std::cout << "distributing work" << std::endl;
+                    if ( devices.count(-1) != 0)
+                        std::cout << "creating " << std::to_string(cputhreads) << " cputhreads," << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
+                    else
+                        std::cout << "creating " << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
+                }
+
+                // Setup work queue
+                std::mutex work_queue_mutex;
+                U work_queue = total_work_packages;
+
+                // Launch worker threads
+                U thread_id = 0;
+                std::vector<std::thread> thread_pool;
+                thread_pool.reserve(cputhreads+extra_threads);
+                for (int device : devices)
+                {
+                    if( device != -1)
+                    {
 #ifdef __CUDACC__
-                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, m, std::ref(func), dim, std::ref(integralTransform), device ) ); // Launch non-cpu workers
-                    thread_id += cudablocks*cudathreadsperblock;
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integralTransform), device ) ); // Launch non-cpu workers
+                        thread_id += cudablocks*cudathreadsperblock;
 #else
-                    throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
+                        throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
 #endif
+                    }
                 }
-            }
-            if( devices.count(-1) != 0)
-            {
-                for ( U i=0; i < cputhreads; i++)
+                if( devices.count(-1) != 0)
                 {
-                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, m, std::ref(func), dim, std::ref(integralTransform), -1 ) ); // Launch cpu workers
-                    thread_id += 1;
+                    for ( U i=0; i < cputhreads; i++)
+                    {
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integralTransform), -1 ) ); // Launch cpu workers
+                        thread_id += 1;
+                    }
                 }
+                // Destroy threadpool
+                for( std::thread& thread : thread_pool )
+                    thread.join();
+                thread_pool.clear();
             }
-            // Destroy threadpool
-            for( std::thread& thread : thread_pool )
-                thread.join();
-            thread_pool.clear();
+            res = reduce(r, n, shifts,  previous_iterations);
         }
-        return reduce(r, n, m,  previous_iterations);
+        return res;
     };
     
     template <typename T, typename D, typename U, typename G>
@@ -358,6 +374,7 @@ namespace integrators
     {
         if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
+        if ( maxconcurrentshifts < 2 ) throw std::domain_error("qmc::integrate called with maxconcurrentshifts < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxconcurrentshifts.");
         if ( maxworkpackages == 0 ) throw std::domain_error("qmc::integrate called with maxworkpackages = 0. Please set maxworkpackages to a positive integer.");
 
         if (verbosity > 2) std::cout << "-- qmc::integrate called --" << std::endl;
@@ -392,7 +409,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    randomGenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    randomGenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), maxconcurrentshifts(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

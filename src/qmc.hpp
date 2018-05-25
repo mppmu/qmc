@@ -57,6 +57,7 @@ namespace integrators
         D border;
         U maxeval;
         U maxworkpackages;
+        U maxconcurrentshifts;
         U cputhreads;
         U cudablocks;
         U cudathreadsperblock;
