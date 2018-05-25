@@ -344,13 +344,15 @@ namespace integrators
     void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations)
     {
         if (verbosity > 2) std::cout << "-- qmc::update called --" << std::endl;
-        D errorRatio = computeErrorRatio(res, epsrel, epsabs);
-        errorRatio = std::min(errorRatio,static_cast<D>(20)); // TODO - magic number
+
+        const D MAXIMUM_ERROR_RATIO = static_cast<D>(20);
+        const D EXPECTED_SCALING = static_cast<D>(0.8); // assume error scales as n^(-expectedScaling)
+
+        D errorRatio = std::min(computeErrorRatio(res, epsrel, epsabs),MAXIMUM_ERROR_RATIO);
         if (errorRatio < static_cast<D>(1))
             return;
-        D expectedScaling=static_cast<D>(0.8); // assume error scales as n^(-expectedScaling) // TODO - magic number
         U newM = minm;
-        U newN = get_next_n(static_cast<U>(static_cast<D>(n)*pow(errorRatio,static_cast<D>(1)/expectedScaling)));
+        U newN = get_next_n(static_cast<U>(static_cast<D>(n)*std::pow(errorRatio,static_cast<D>(1)/EXPECTED_SCALING)));
         if ( newN <= n or ( errorRatio*errorRatio - static_cast<D>(1) < static_cast<D>(newN)/static_cast<D>(n)))
         {
             // n did not increase, or increasing m will be faster
