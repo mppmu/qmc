@@ -62,6 +62,15 @@ namespace integrators
     template <typename T, typename D, typename U, typename G>
     result<T,U> Qmc<T,D,U,G>::reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
     {
+        if (verbosity > 1)
+        {
+            std::cout << "-- qmc::reduce called --" << std::endl;
+            for(const auto& previous_result : previous_iterations)
+            {
+                std::cout << "previous_result: integral " << previous_result.integral << ", error " << previous_result.error << ", n " << previous_result.n << ", m " << previous_result.m << std::endl; // TODO - error here has weird meaning
+            }
+        }
+
         T mean = {0.};
         T variance = {0.};
         U previousM = 0;
@@ -102,8 +111,9 @@ namespace integrators
         T integral = mean/(static_cast<T>(n));
         variance = variance/( static_cast<T>(m+previousM-1) * static_cast<T>(m+previousM) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
         T error = computeError(variance);
-//        result<T,U> tempREs = {integral, error, n, m};
         previous_iterations.push_back({integral, variance, n, m+previousM});
+        if (verbosity > 1)
+            std::cout << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previousM << std::endl;
         return {integral, error, n, m+previousM};
     };
     
@@ -157,7 +167,7 @@ namespace integrators
     template <typename F1, typename F2>
     void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device)
     {
-        if(verbosity > 1) std::cout << "-(" << thread_id << ") Thread started for device" << device << std::endl;
+        if(verbosity > 1) std::cout << "-(" << thread_id << ") Thread started for device " << device << std::endl;
 
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
