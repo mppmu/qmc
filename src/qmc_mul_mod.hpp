@@ -15,7 +15,7 @@ namespace integrators
         // 2) a < k
         // 3) b < k
         // 4) k < std::numeric_limits<typename std::make_signed<U>::type>::max()
-        // 5) k < pow(std::numeric_limits<D>::radix,std::numeric_limits<D>::digits-1)
+        // 5) k < std::pow(std::numeric_limits<D>::radix,std::numeric_limits<D>::digits-1)
         using S = typename std::make_signed<U>::type;
         D x = static_cast<D>(a);
         U c = static_cast<U>( (x*b) / k );
