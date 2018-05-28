@@ -2,7 +2,7 @@ namespace integrators
 {
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::initg()
+    void Qmc<T,D,U,G>::init_g()
     {
         
         // Vectors generated using Dirk Nuyens' fastrank1pt.m tool https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc

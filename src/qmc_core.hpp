@@ -439,7 +439,7 @@ namespace integrators
             devices.insert(i);
 #endif
         
-        initg();
+        init_g();
     };
     
 };
