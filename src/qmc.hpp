@@ -66,7 +66,7 @@ namespace integrators
         D epsabs;
         D border;
         U maxeval;
-        U maxworkpackages;
+        U maxnperworkpackage;
         U maxmperworkpackage;
         U cputhreads;
         U cudablocks;
