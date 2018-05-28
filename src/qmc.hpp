@@ -62,7 +62,7 @@ namespace integrators
         U cudablocks;
         U cudathreadsperblock;
         std::set<int> devices;
-        std::map<U,std::vector<U>> generatingVectors;
+        std::map<U,std::vector<U>> generatingvectors;
         U verbosity;
 
         template <typename F1, typename F2> result<T,U> integrate(F1& func, const U dim, F2& integralTransform);

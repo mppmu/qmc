@@ -20,12 +20,12 @@ namespace integrators
     U Qmc<T,D,U,G>::get_next_n(U preferred_n) const
     {
         U n;
-        if ( generatingVectors.lower_bound(preferred_n) == generatingVectors.end() )
+        if ( generatingvectors.lower_bound(preferred_n) == generatingvectors.end() )
         {
-            n = generatingVectors.rbegin()->first;
+            n = generatingvectors.rbegin()->first;
             if (verbosity > 0) std::cout << "Qmc integrator does not have generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
         } else {
-            n = generatingVectors.lower_bound(preferred_n)->first;
+            n = generatingvectors.lower_bound(preferred_n)->first;
         }
         
         // Check n satisfies requirements of mod_mul implementation
@@ -38,7 +38,7 @@ namespace integrators
     template <typename T, typename D, typename U, typename G>
     void Qmc<T,D,U,G>::initz(std::vector<U>& z, const U n, const U dim) const
     {
-        z = generatingVectors.at(n);
+        z = generatingvectors.at(n);
         if ( dim > z.size() ) throw std::domain_error("dim > generating vector dimension. Please supply a generating vector table with a larger number of dimensions.");
         z.resize(dim);
     };
