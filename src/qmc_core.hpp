@@ -73,17 +73,17 @@ namespace integrators
 
         T mean = {0.};
         T variance = {0.};
-        U previousM = 0;
+        U previous_m = 0;
         if(!previous_iterations.empty())
         {
-            result<T,U> & previousRes = previous_iterations.back();
-            if(previousRes.n == n)
+            result<T,U> & previous_res = previous_iterations.back();
+            if(previous_res.n == n)
             {
                 if (verbosity>2) std::cout << "using additional shifts to improve previous iteration" << std::endl;
-                previousM = previousRes.m;
-                mean = previousRes.integral*static_cast<T>(n);
-                variance = previousRes.error; // this is really the variance
-                variance *= static_cast<T>(previousRes.m-1) * static_cast<T>(previousRes.m) * static_cast<T>(previousRes.n) * static_cast<T>(previousRes.n);
+                previous_m = previous_res.m;
+                mean = previous_res.integral*static_cast<T>(n);
+                variance = previous_res.error; // this is really the variance
+                variance *= static_cast<T>(previous_res.m-1) * static_cast<T>(previous_res.m) * static_cast<T>(previous_res.n) * static_cast<T>(previous_res.n);
                 previous_iterations.pop_back();
             }
         }
@@ -91,30 +91,30 @@ namespace integrators
         {
             T sum = {0.};
             T delta = {0.};
-            T kahanC = {0.};
+            T kahan_c = {0.};
             for (U i = 0; i<r.size()/m; i++)
             {
                 // Compute sum using Kahan summation
                 // equivalent to: sum += r.at(k*r.size()/m+i);
-                T kahanY = r.at(k*r.size()/m+i) - kahanC;
-                T kahanT = sum + kahanY;
-                T kahanD = kahanT - sum;
-                kahanC = kahanD - kahanY;
-                sum = kahanT;
+                T kahan_y = r.at(k*r.size()/m+i) - kahan_c;
+                T kahan_t = sum + kahan_y;
+                T kahan_d = kahan_t - sum;
+                kahan_c = kahan_d - kahan_y;
+                sum = kahan_t;
             }
-            if (verbosity > 2) std::cout << "shift " << k+previousM << " result: " << sum/static_cast<T>(n) << std::endl;
+            if (verbosity > 2) std::cout << "shift " << k+previous_m << " result: " << sum/static_cast<T>(n) << std::endl;
             // Compute Variance using online algorithm (Knuth, The Art of Computer Programming)
             delta = sum - mean;
-            mean = mean + delta/(static_cast<T>(k+previousM+1));
+            mean = mean + delta/(static_cast<T>(k+previous_m+1));
             variance = compute_variance(mean, variance, sum, delta);
         }
         T integral = mean/(static_cast<T>(n));
-        variance = variance/( static_cast<T>(m+previousM-1) * static_cast<T>(m+previousM) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
+        variance = variance/( static_cast<T>(m+previous_m-1) * static_cast<T>(m+previous_m) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
         T error = compute_error(variance);
-        previous_iterations.push_back({integral, variance, n, m+previousM});
+        previous_iterations.push_back({integral, variance, n, m+previous_m});
         if (verbosity > 1)
-            std::cout << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previousM << std::endl;
-        return {integral, error, n, m+previousM};
+            std::cout << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previous_m << std::endl;
+        return {integral, error, n, m+previous_m};
     };
     
     template <typename T, typename D, typename U, typename G>
@@ -123,7 +123,7 @@ namespace integrators
     {
         for (U k = 0; k < m; k++)
         {
-            T kahanC = {0.};
+            T kahan_c = {0.};
             for( U b = 0; b < points_per_package; b++ )
             {
                 U offset = b * total_work_packages;
@@ -153,11 +153,11 @@ namespace integrators
                     
                     // Compute sum using Kahan summation
                     // equivalent to: r_element[k*r_size] += wgt*point;
-                    T kahanY = wgt*point - kahanC;
-                    T kahanT = r_element[k*r_size] + kahanY;
-                    T kahanD = kahanT - r_element[k*r_size];
-                    kahanC = kahanD - kahanY;
-                    r_element[k*r_size] = kahanT;
+                    T kahan_y = wgt*point - kahan_c;
+                    T kahan_t = r_element[k*r_size] + kahan_y;
+                    T kahan_d = kahan_t - r_element[k*r_size];
+                    kahan_c = kahan_d - kahan_y;
+                    r_element[k*r_size] = kahan_t;
                 }
             }
         }
