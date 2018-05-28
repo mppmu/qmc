@@ -36,7 +36,7 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::initz(std::vector<U>& z, const U n, const U dim) const
+    void Qmc<T,D,U,G>::init_z(std::vector<U>& z, const U n, const U dim) const
     {
         z = generatingvectors.at(n);
         if ( dim > z.size() ) throw std::domain_error("dim > generating vector dimension. Please supply a generating vector table with a larger number of dimensions.");
@@ -44,7 +44,7 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::initd(std::vector<D>& d, const U m, const U dim)
+    void Qmc<T,D,U,G>::init_d(std::vector<D>& d, const U m, const U dim)
     {
         d.clear();
         for (U k = 0; k < m; k++)
@@ -53,7 +53,7 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::initr(std::vector<T>& r, const U m, const U r_size) const
+    void Qmc<T,D,U,G>::init_r(std::vector<T>& r, const U m, const U r_size) const
     {
         r.clear();
         r.resize(m * r_size, {0.});
@@ -260,9 +260,9 @@ namespace integrators
             }
 
             // Generate z, d, r
-            initz(z, n, dim);
-            initd(d, shifts, dim);
-            initr(r, shifts, r_size);
+            init_z(z, n, dim);
+            init_d(d, shifts, dim);
+            init_r(r, shifts, r_size);
 
             if (verbosity > 0)
             {

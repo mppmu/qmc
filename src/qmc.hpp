@@ -33,9 +33,9 @@ namespace integrators
         std::uniform_real_distribution<D> uniformDistribution = std::uniform_real_distribution<D>(0,1);
 
         void initg();
-        void initz(std::vector<U>& z, const U n, const U dim) const;
-        void initd(std::vector<D>& d, const U m, const U dim);
-        void initr(std::vector<T>& r, const U m, const U r_size) const;
+        void init_z(std::vector<U>& z, const U n, const U dim) const;
+        void init_d(std::vector<D>& d, const U m, const U dim);
+        void init_r(std::vector<T>& r, const U m, const U r_size) const;
         
         result<T,U> reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
         template <typename F1, typename F2> void compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform);
