@@ -46,7 +46,7 @@ namespace integrators
     // TODO - make use of restricted pointers?
     template <typename T, typename D, typename U, typename F1, typename F2>
     __global__
-    void compute_kernel_gpu(const U work_offset, const U points_per_package, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1* func, const U dim, F2* integral_transform, const D border)
+    void compute_kernel_gpu(const U work_offset, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1* func, const U dim, F2* integral_transform, const D border)
     {
         U i = blockIdx.x*blockDim.x + threadIdx.x;
         if (i < work_this_iteration)
@@ -54,41 +54,37 @@ namespace integrators
             for (U k = 0; k < m; k++)
             {
                 T kahan_c = {0.};
-                for (U b = 0; b < points_per_package; b++)
+                for (U offset = work_offset + i; offset < n; offset += total_work_packages)
                 {
-                    U offset = b * total_work_packages + work_offset;
-                    if (offset + i < n)
+                    D wgt = 1.;
+                    D mynull = 0;
+                    D x[25]; // TODO - template parameter?
+
+                    for (U sDim = 0; sDim < dim; sDim++)
                     {
-                        D wgt = 1.;
-                        D mynull = 0;
-                        D x[25]; // TODO - template parameter?
-
-                        for (U sDim = 0; sDim < dim; sDim++)
-                        {
-                            x[sDim] = modf(integrators::mul_mod<D, D, U>(i + offset, z[sDim], n) / n + d[k*dim + sDim], &mynull);
-                        }
-
-                        (*integral_transform)(x, wgt, dim);
-
-                        // Nudge point inside border (for numerical stability)
-                        for (U sDim = 0; sDim < dim; sDim++)
-                        {
-                            if( x[sDim] < border)
-                                x[sDim] = border;
-                            if( x[sDim] > 1.-border)
-                                x[sDim] = 1.-border;
-                        }
-
-                        T point = (*func)(x);
-
-                        // Compute sum using Kahan summation
-                        // equivalent to: r[k*work_this_iteration + i] += wgt*point;
-                        T kahan_y = wgt*point - kahan_c;
-                        T kahan_t = r[k*work_this_iteration + i] + kahan_y;
-                        T kahan_d = kahan_t - r[k*work_this_iteration + i];
-                        kahan_c = kahan_d - kahan_y;
-                        r[k*work_this_iteration + i] = kahan_t;
+                        x[sDim] = modf(integrators::mul_mod<D, D, U>(offset, z[sDim], n) / n + d[k*dim + sDim], &mynull);
                     }
+
+                    (*integral_transform)(x, wgt, dim);
+
+                    // Nudge point inside border (for numerical stability)
+                    for (U sDim = 0; sDim < dim; sDim++)
+                    {
+                        if( x[sDim] < border)
+                        x[sDim] = border;
+                        if( x[sDim] > 1.-border)
+                        x[sDim] = 1.-border;
+                    }
+
+                    T point = (*func)(x);
+
+                    // Compute sum using Kahan summation
+                    // equivalent to: r[k*work_this_iteration + i] += wgt*point;
+                    T kahan_y = wgt*point - kahan_c;
+                    T kahan_t = r[k*work_this_iteration + i] + kahan_y;
+                    T kahan_d = kahan_t - r[k*work_this_iteration + i];
+                    kahan_c = kahan_d - kahan_y;
+                    r[k*work_this_iteration + i] = kahan_t;
                 }
             }
         }
@@ -96,7 +92,7 @@ namespace integrators
 
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1* d_func, const U dim, F2* d_integral_transform, const int device, const U cudablocks, const U cudathreadsperblock)
+    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U n, const U m, F1* d_func, const U dim, F2* d_integral_transform, const int device, const U cudablocks, const U cudathreadsperblock)
     {
         if (verbosity > 1) logger << "- (" << device << ") computing work_package " << i << ", work_this_iteration " << work_this_iteration << ", total_work_packages " << total_work_packages << std::endl;
 
@@ -122,7 +118,7 @@ namespace integrators
         if(verbosity > 1) logger << "- (" << device << ") allocated d_r " << m*work_this_iteration << std::endl;
         if(verbosity > 2) logger << "- (" << device << ") launching gpu kernel<<<" << cudablocks << "," << cudathreadsperblock << ">>>" << std::endl;
 
-        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i,points_per_package, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, static_cast<F1*>(d_func), dim, static_cast<F2*>(d_integral_transform), border);
+        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, static_cast<F1*>(d_func), dim, static_cast<F2*>(d_integral_transform), border);
 //        CUDA_SAFE_CALL(cudaPeekAtLastError());
 //        CUDA_SAFE_CALL(cudaDeviceSynchronize());
 

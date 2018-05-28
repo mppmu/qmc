@@ -119,53 +119,49 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integral_transform)
+    void Qmc<T,D,U,G>::compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform)
     {
         for (U k = 0; k < m; k++)
         {
             T kahan_c = {0.};
-            for( U b = 0; b < points_per_package; b++ )
+            for( U offset = i; offset < n; offset += total_work_packages )
             {
-                U offset = b * total_work_packages;
-                if(offset + i < n)
-                {
-                    D wgt = 1.;
-                    D mynull = 0;
-                    std::vector<D> x(dim,0);
-                    
-                    for (U sDim = 0; sDim < dim; sDim++)
-                    {
-                        x[sDim] = std::modf( integrators::mul_mod<D,D,U>(i+offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
-                    }
+                D wgt = 1.;
+                D mynull = 0;
+                std::vector<D> x(dim,0);
 
-                    integral_transform(x.data(), wgt, dim);
-                    
-                    // Nudge point inside border (for numerical stability)
-                    for (U sDim = 0; sDim < dim; sDim++)
-                    {
-                        if( x[sDim] < border)
-                            x[sDim] = border;
-                        if( x[sDim] > 1.-border)
-                            x[sDim] = 1.-border;
-                    }
-                
-                    T point = func(x.data());
-                    
-                    // Compute sum using Kahan summation
-                    // equivalent to: r_element[k*r_size] += wgt*point;
-                    T kahan_y = wgt*point - kahan_c;
-                    T kahan_t = r_element[k*r_size] + kahan_y;
-                    T kahan_d = kahan_t - r_element[k*r_size];
-                    kahan_c = kahan_d - kahan_y;
-                    r_element[k*r_size] = kahan_t;
+                for (U sDim = 0; sDim < dim; sDim++)
+                {
+                    x[sDim] = std::modf( integrators::mul_mod<D,D,U>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
                 }
+
+                integral_transform(x.data(), wgt, dim);
+
+                // Nudge point inside border (for numerical stability)
+                for (U sDim = 0; sDim < dim; sDim++)
+                {
+                    if( x[sDim] < border)
+                    x[sDim] = border;
+                    if( x[sDim] > 1.-border)
+                    x[sDim] = 1.-border;
+                }
+
+                T point = func(x.data());
+
+                // Compute sum using Kahan summation
+                // equivalent to: r_element[k*r_size] += wgt*point;
+                T kahan_y = wgt*point - kahan_c;
+                T kahan_t = r_element[k*r_size] + kahan_y;
+                T kahan_d = kahan_t - r_element[k*r_size];
+                kahan_c = kahan_d - kahan_y;
+                r_element[k*r_size] = kahan_t;
             }
         }
     };
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device)
+    void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device)
     {
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
@@ -212,12 +208,12 @@ namespace integrators
             // Do work
             if (device == -1)
             {
-                compute(i, z, d, &r[thread_id], r.size()/m, total_work_packages, points_per_package, n, m, func, dim, integral_transform);
+                compute(i, z, d, &r[thread_id], r.size()/m, total_work_packages, n, m, func, dim, integral_transform);
             }
             else
             {
 #ifdef __CUDACC__
-                compute_gpu(i, z, d, &r[thread_id], r.size()/m, work_this_iteration, total_work_packages, points_per_package, n, m,
+                compute_gpu(i, z, d, &r[thread_id], r.size()/m, work_this_iteration, total_work_packages, n, m,
                             static_cast<typename std::remove_const<F1>::type*>(*d_func), dim,
                             static_cast<typename std::remove_const<F2>::type*>(*d_integral_transform), device, cudablocks, cudathreadsperblock);
 #endif
@@ -297,7 +293,7 @@ namespace integrators
                 if (verbosity > 2) logger << "computing serially" << std::endl;
                 for( U i=0; i < total_work_packages; i++)
                 {
-                    compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, points_per_package, n, shifts, func, dim, integral_transform);
+                    compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, n, shifts, func, dim, integral_transform);
                 }
             }
             else
@@ -325,7 +321,7 @@ namespace integrators
                     if( device != -1)
                     {
 #ifdef __CUDACC__
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integral_transform), device ) ); // Launch non-cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), device ) ); // Launch non-cpu workers
                         thread_id += cudablocks*cudathreadsperblock;
 #else
                         throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
@@ -336,7 +332,7 @@ namespace integrators
                 {
                     for ( U i=0; i < cputhreads; i++)
                     {
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1 ) ); // Launch cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1 ) ); // Launch cpu workers
                         thread_id += 1;
                     }
                 }
