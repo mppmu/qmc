@@ -119,7 +119,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform)
+    void Qmc<T,D,U,G>::compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integral_transform)
     {
         for (U k = 0; k < m; k++)
         {
@@ -138,7 +138,7 @@ namespace integrators
                         x[sDim] = std::modf( integrators::mul_mod<D,D,U>(i+offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
                     }
 
-                    integralTransform(x.data(), wgt, dim);
+                    integral_transform(x.data(), wgt, dim);
                     
                     // Nudge point inside border (for numerical stability)
                     for (U sDim = 0; sDim < dim; sDim++)
@@ -165,14 +165,14 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integralTransform, const int device)
+    void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device)
     {
         if(verbosity > 1) std::cout << "-(" << thread_id << ") Thread started for device " << device << std::endl;
 
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
         std::unique_ptr<integrators::detail::cuda_memory<F1>> d_func;
-        std::unique_ptr<integrators::detail::cuda_memory<F2>> d_integralTransform;
+        std::unique_ptr<integrators::detail::cuda_memory<F2>> d_integral_transform;
 #endif
 
         U i;
@@ -182,7 +182,7 @@ namespace integrators
         } else {
             work_this_iteration = cudablocks*cudathreadsperblock;
 #ifdef __CUDACC__
-            setup_gpu(d_func, func, d_integralTransform, integralTransform, device, verbosity);
+            setup_gpu(d_func, func, d_integral_transform, integral_transform, device, verbosity);
 #endif
         }
 
@@ -214,14 +214,14 @@ namespace integrators
             // Do work
             if (device == -1)
             {
-                compute(i, z, d, &r[thread_id], r.size()/m, total_work_packages, points_per_package, n, m, func, dim, integralTransform);
+                compute(i, z, d, &r[thread_id], r.size()/m, total_work_packages, points_per_package, n, m, func, dim, integral_transform);
             }
             else
             {
 #ifdef __CUDACC__
                 compute_gpu(i, z, d, &r[thread_id], r.size()/m, work_this_iteration, total_work_packages, points_per_package, n, m,
                             static_cast<typename std::remove_const<F1>::type*>(*d_func), dim,
-                            static_cast<typename std::remove_const<F2>::type*>(*d_integralTransform), device, cudablocks, cudathreadsperblock);
+                            static_cast<typename std::remove_const<F2>::type*>(*d_integral_transform), device, cudablocks, cudathreadsperblock);
 #endif
             }
         }
@@ -229,7 +229,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    result<T,U> Qmc<T,D,U,G>::sample(F1& func, const U dim, F2& integralTransform, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
+    result<T,U> Qmc<T,D,U,G>::sample(F1& func, const U dim, F2& integral_transform, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
     {
         std::vector<U> z;
         std::vector<D> d;
@@ -297,7 +297,7 @@ namespace integrators
                 if (verbosity > 2) std::cout << "computing serially" << std::endl;
                 for( U i=0; i < total_work_packages; i++)
                 {
-                    compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, points_per_package, n, shifts, func, dim, integralTransform);
+                    compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, points_per_package, n, shifts, func, dim, integral_transform);
                 }
             }
             else
@@ -325,7 +325,7 @@ namespace integrators
                     if( device != -1)
                     {
 #ifdef __CUDACC__
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integralTransform), device ) ); // Launch non-cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integral_transform), device ) ); // Launch non-cpu workers
                         thread_id += cudablocks*cudathreadsperblock;
 #else
                         throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
@@ -336,7 +336,7 @@ namespace integrators
                 {
                     for ( U i=0; i < cputhreads; i++)
                     {
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integralTransform), -1 ) ); // Launch cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::compute_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, points_per_package, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1 ) ); // Launch cpu workers
                         thread_id += 1;
                     }
                 }
@@ -382,7 +382,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    result<T,U> Qmc<T,D,U,G>::integrate(F1& func, const U dim, F2& integralTransform)
+    result<T,U> Qmc<T,D,U,G>::integrate(F1& func, const U dim, F2& integral_transform)
     {
         if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
@@ -404,7 +404,7 @@ namespace integrators
         do
         {
             if (verbosity > 1) std::cout << "iterating" << std::endl;
-            res = sample(func,dim,integralTransform,n,m, previous_iterations);
+            res = sample(func,dim,integral_transform,n,m, previous_iterations);
             if (verbosity > 1) std::cout << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m,previous_iterations);
         } while  ( compute_error_ratio(res,epsrel,epsabs) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
@@ -415,8 +415,8 @@ namespace integrators
     template <typename F1>
     result<T,U> Qmc<T,D,U,G>::integrate(F1& func, const U dim)
     {
-        integrators::Korobov3<D,U> defaultIntegralTransform;
-        return integrate(func, dim, defaultIntegralTransform);
+        integrators::Korobov3<D,U> default_integral_transform;
+        return integrate(func, dim, default_integral_transform);
     };
     
     template <typename T, typename D, typename U, typename G>

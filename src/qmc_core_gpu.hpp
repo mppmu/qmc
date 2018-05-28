@@ -46,7 +46,7 @@ namespace integrators
     // TODO - make use of restricted pointers?
     template <typename T, typename D, typename U, typename F1, typename F2>
     __global__
-    void compute_kernel_gpu(const U work_offset, const U points_per_package, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1* func, const U dim, F2* integralTransform, const D border)
+    void compute_kernel_gpu(const U work_offset, const U points_per_package, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1* func, const U dim, F2* integral_transform, const D border)
     {
         U i = blockIdx.x*blockDim.x + threadIdx.x;
         if (i < work_this_iteration)
@@ -68,7 +68,7 @@ namespace integrators
                             x[sDim] = modf(integrators::mul_mod<D, D, U>(i + offset, z[sDim], n) / n + d[k*dim + sDim], &mynull);
                         }
 
-                        (*integralTransform)(x, wgt, dim);
+                        (*integral_transform)(x, wgt, dim);
 
                         // Nudge point inside border (for numerical stability)
                         for (U sDim = 0; sDim < dim; sDim++)
@@ -96,7 +96,7 @@ namespace integrators
 
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1* d_func, const U dim, F2* d_integralTransform, const int device, const U cudablocks, const U cudathreadsperblock)
+    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U points_per_package, const U n, const U m, F1* d_func, const U dim, F2* d_integral_transform, const int device, const U cudablocks, const U cudathreadsperblock)
     {
         if (verbosity > 1) std::cout << "- (" << device << ") computing work_package " << i << ", work_this_iteration " << work_this_iteration << ", total_work_packages " << total_work_packages << std::endl;
 
@@ -108,7 +108,7 @@ namespace integrators
 
         //        CUDA_SAFE_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // TODO - investigate if this helps
         //        cudaOccupancyMaxPotentialBlockSize( &minGridSize, &blockSize, MyKernel, 0, 0); // TODO - investigate if this helps - https://devblogs.nvidia.com/cuda-pro-tip-occupancy-api-simplifies-launch-configuration/
-        // Copy z,d,r,func,integralTransform to device
+        // Copy z,d,r,func,integral_transform to device
         CUDA_SAFE_CALL(cudaMemcpy(d_z, z.data(), z.size() * sizeof(U), cudaMemcpyHostToDevice));
         CUDA_SAFE_CALL(cudaMemcpy(d_d, d.data(), d.size() * sizeof(D), cudaMemcpyHostToDevice));
         for (U k = 0; k < m; k++)
@@ -122,7 +122,7 @@ namespace integrators
         if(verbosity > 1) std::cout << "- (" << device << ") allocated d_r " << m*work_this_iteration << std::endl;
         if(verbosity > 2) std::cout << "- (" << device << ") launching gpu kernel<<<" << cudablocks << "," << cudathreadsperblock << ">>>" << std::endl;
 
-        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i,points_per_package, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, static_cast<F1*>(d_func), dim, static_cast<F2*>(d_integralTransform), border);
+        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i,points_per_package, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, static_cast<F1*>(d_func), dim, static_cast<F2*>(d_integral_transform), border);
 //        CUDA_SAFE_CALL(cudaPeekAtLastError());
 //        CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
@@ -135,7 +135,7 @@ namespace integrators
     };
 
     template <typename F1, typename F2, typename U>
-    void setup_gpu(std::unique_ptr<integrators::detail::cuda_memory<F1>>& d_func, F1& func, std::unique_ptr<integrators::detail::cuda_memory<F2>>& d_integralTransform, F2& integralTransform, const int device, const U verbosity)
+    void setup_gpu(std::unique_ptr<integrators::detail::cuda_memory<F1>>& d_func, F1& func, std::unique_ptr<integrators::detail::cuda_memory<F2>>& d_integral_transform, F2& integral_transform, const int device, const U verbosity)
     {
         // Set Device
         if (verbosity > 1) std::cout << "- (" << device << ") setting device" << std::endl;
@@ -143,16 +143,16 @@ namespace integrators
         if (verbosity > 1) std::cout << "- (" << device << ") device set" << std::endl;
 
         d_func.reset( new integrators::detail::cuda_memory<F1>(1) );
-        d_integralTransform.reset( new integrators::detail::cuda_memory<F2>(1) );
-        if(verbosity > 1) std::cout << "- (" << device << ") allocated d_func,d_integralTransform" << std::endl;
+        d_integral_transform.reset( new integrators::detail::cuda_memory<F2>(1) );
+        if(verbosity > 1) std::cout << "- (" << device << ") allocated d_func,d_integral_transform" << std::endl;
 
-        // copy func and integralTransform (initialize on new active device)
+        // copy func and integral_transform (initialize on new active device)
         F1 func_copy = func;
-        F2 integralTransform_copy = integralTransform;
+        F2 integral_transform_copy = integral_transform;
 
         CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F1>::type*>(*d_func), &func_copy, sizeof(F1), cudaMemcpyHostToDevice));
-        CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F2>::type*>(*d_integralTransform), &integralTransform_copy, sizeof(F2), cudaMemcpyHostToDevice));
-        if(verbosity > 1) std::cout << "- (" << device << ") copied d_func,d_integralTransform to device memory" << std::endl;
+        CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<F2>::type*>(*d_integral_transform), &integral_transform_copy, sizeof(F2), cudaMemcpyHostToDevice));
+        if(verbosity > 1) std::cout << "- (" << device << ") copied d_func,d_integral_transform to device memory" << std::endl;
     };
 
     int get_device_count_gpu()
