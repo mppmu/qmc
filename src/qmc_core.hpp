@@ -49,7 +49,7 @@ namespace integrators
         d.clear();
         for (U k = 0; k < m; k++)
             for (U sDim = 0; sDim < dim; sDim++)
-                d.push_back(uniformDistribution(randomGenerator));
+                d.push_back(uniformDistribution(randomgenerator));
     };
     
     template <typename T, typename D, typename U, typename G>
@@ -421,7 +421,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    randomGenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), maxconcurrentshifts(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), maxconcurrentshifts(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

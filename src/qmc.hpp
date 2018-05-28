@@ -48,7 +48,7 @@ namespace integrators
 
     public:
 
-        G randomGenerator;
+        G randomgenerator;
 
         U minn;
         U minm;
