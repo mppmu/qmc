@@ -231,7 +231,7 @@ namespace integrators
 
         result<T,U> res;
 
-        U points_per_package = std::min(maxnperworkpackage, n); // points to compute per thread per work_package
+        U points_per_package = std::min(maxnperpackage, n); // points to compute per thread per work_package
         U total_work_packages = n/points_per_package; // Set total number of work packages to be computed
         if( n%points_per_package != 0) total_work_packages++;
 
@@ -244,15 +244,15 @@ namespace integrators
             r_size += cputhreads; // cpu-workers
         }
 
-        U iterations = (m+maxmperworkpackage-1)/maxmperworkpackage;
-        U shifts_per_iteration = std::min(m,maxmperworkpackage);
+        U iterations = (m+maxmperpackage-1)/maxmperpackage;
+        U shifts_per_iteration = std::min(m,maxmperpackage);
         for(U iteration = 0; iteration < iterations; iteration++)
         {
             U shifts = shifts_per_iteration;
             if ( iteration == iterations-1)
             {
                 // last iteration => compute remaining shifts
-                shifts = m%maxmperworkpackage == 0 ? std::min(m,maxmperworkpackage) : m%maxmperworkpackage;
+                shifts = m%maxmperpackage == 0 ? std::min(m,maxmperpackage) : m%maxmperpackage;
             }
 
             // Generate z, d, r
@@ -270,8 +270,8 @@ namespace integrators
                 logger << "epsabs " << epsabs << std::endl;
                 logger << "maxeval " << maxeval << std::endl;
                 logger << "cputhreads " << cputhreads << std::endl;
-                logger << "maxnperworkpackage " << maxnperworkpackage << std::endl;
-                logger << "maxmperworkpackage " << maxmperworkpackage << std::endl;
+                logger << "maxnperpackage " << maxnperpackage << std::endl;
+                logger << "maxmperpackage " << maxmperpackage << std::endl;
                 logger << "cudablocks " << cudablocks << std::endl;
                 logger << "cudathreadsperblock " << cudathreadsperblock << std::endl;
                 logger << "devices ";
@@ -385,8 +385,8 @@ namespace integrators
     {
         if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
-        if ( maxmperworkpackage < 2 ) throw std::domain_error("qmc::integrate called with maxmperworkpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperworkpackage.");
-        if ( maxnperworkpackage == 0 ) throw std::domain_error("qmc::integrate called with maxnperworkpackage = 0. Please set maxnperworkpackage to a positive integer.");
+        if ( maxmperpackage < 2 ) throw std::domain_error("qmc::integrate called with maxmperpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperpackage.");
+        if ( maxnperpackage == 0 ) throw std::domain_error("qmc::integrate called with maxnperpackage = 0. Please set maxnperpackage to a positive integer.");
 
         if (verbosity > 2) logger << "-- qmc::integrate called --" << std::endl;
 
@@ -420,7 +420,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxnperworkpackage(1), maxmperworkpackage(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxnperpackage(1), maxmperpackage(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
