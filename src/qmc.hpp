@@ -10,10 +10,18 @@
 #include <random> // mt19937_64, uniform_real_distribution
 #include <type_traits> // make_signed
 #include <iterator>
+#include <functional> // reference_wrapper
 
 namespace integrators
 {
-    
+
+    struct Logger : public std::reference_wrapper<std::ostream>
+    {
+        using std::reference_wrapper<std::ostream>::reference_wrapper;
+        template<typename T> std::ostream& operator<<(T arg) const { return this->get() << arg; }
+        std::ostream& operator<<(std::ostream& (*arg)(std::ostream&)) const { return this->get() << arg; }
+    };
+
     template <typename T, typename U = unsigned long long int>
     struct result
     {
@@ -48,6 +56,8 @@ namespace integrators
 
     public:
 
+        Logger logger;
+
         G randomgenerator;
 
         U minn;
@@ -70,7 +80,7 @@ namespace integrators
         U get_next_n(U preferred_n) const;
 
         Qmc();
-        virtual ~Qmc() {}
+        ~Qmc() {}
 
     };
     

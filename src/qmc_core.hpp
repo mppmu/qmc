@@ -23,7 +23,7 @@ namespace integrators
         if ( generatingvectors.lower_bound(preferred_n) == generatingvectors.end() )
         {
             n = generatingvectors.rbegin()->first;
-            if (verbosity > 0) std::cout << "Qmc integrator does not have generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
+            if (verbosity > 0) logger << "Qmc integrator does not have generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
         } else {
             n = generatingvectors.lower_bound(preferred_n)->first;
         }
@@ -64,10 +64,10 @@ namespace integrators
     {
         if (verbosity > 1)
         {
-            std::cout << "-- qmc::reduce called --" << std::endl;
+            logger << "-- qmc::reduce called --" << std::endl;
             for(const auto& previous_result : previous_iterations)
             {
-                std::cout << "previous_result: integral " << previous_result.integral << ", error " << previous_result.error << ", n " << previous_result.n << ", m " << previous_result.m << std::endl; // TODO - error here has weird meaning
+                logger << "previous_result: integral " << previous_result.integral << ", error " << previous_result.error << ", n " << previous_result.n << ", m " << previous_result.m << std::endl; // TODO - error here has weird meaning
             }
         }
 
@@ -79,7 +79,7 @@ namespace integrators
             result<T,U> & previous_res = previous_iterations.back();
             if(previous_res.n == n)
             {
-                if (verbosity>2) std::cout << "using additional shifts to improve previous iteration" << std::endl;
+                if (verbosity>2) logger << "using additional shifts to improve previous iteration" << std::endl;
                 previous_m = previous_res.m;
                 mean = previous_res.integral*static_cast<T>(n);
                 variance = previous_res.error; // this is really the variance
@@ -102,7 +102,7 @@ namespace integrators
                 kahan_c = kahan_d - kahan_y;
                 sum = kahan_t;
             }
-            if (verbosity > 2) std::cout << "shift " << k+previous_m << " result: " << sum/static_cast<T>(n) << std::endl;
+            if (verbosity > 1) logger << "shift " << k+previous_m << " result: " << sum/static_cast<T>(n) << std::endl;
             // Compute Variance using online algorithm (Knuth, The Art of Computer Programming)
             delta = sum - mean;
             mean = mean + delta/(static_cast<T>(k+previous_m+1));
@@ -112,8 +112,8 @@ namespace integrators
         variance = variance/( static_cast<T>(m+previous_m-1) * static_cast<T>(m+previous_m) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
         T error = compute_error(variance);
         previous_iterations.push_back({integral, variance, n, m+previous_m});
-        if (verbosity > 1)
-            std::cout << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previous_m << std::endl;
+        if (verbosity > 0)
+            logger << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previous_m << std::endl;
         return {integral, error, n, m+previous_m};
     };
     
@@ -167,8 +167,6 @@ namespace integrators
     template <typename F1, typename F2>
     void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U points_per_package, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device)
     {
-        if(verbosity > 1) std::cout << "-(" << thread_id << ") Thread started for device " << device << std::endl;
-
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
         std::unique_ptr<integrators::detail::cuda_memory<F1>> d_func;
@@ -182,7 +180,7 @@ namespace integrators
         } else {
             work_this_iteration = cudablocks*cudathreadsperblock;
 #ifdef __CUDACC__
-            setup_gpu(d_func, func, d_integral_transform, integral_transform, device, verbosity);
+            setup_gpu(d_func, func, d_integral_transform, integral_transform, device, verbosity, logger);
 #endif
         }
 
@@ -266,35 +264,35 @@ namespace integrators
 
             if (verbosity > 0)
             {
-                std::cout << "-- qmc::sample called --" << std::endl;
-                std::cout << "dim " << dim << std::endl;
-                std::cout << "minn " << minn << std::endl;
-                std::cout << "minm " << minm << std::endl;
-                std::cout << "epsrel " << epsrel << std::endl;
-                std::cout << "epsabs " << epsabs << std::endl;
-                std::cout << "maxeval " << maxeval << std::endl;
-                std::cout << "cputhreads " << cputhreads << std::endl;
-                std::cout << "maxworkpackages " << maxworkpackages << std::endl;
-                std::cout << "maxmperworkpackage " << maxmperworkpackage << std::endl;
-                std::cout << "cudablocks " << cudablocks << std::endl;
-                std::cout << "cudathreadsperblock " << cudathreadsperblock << std::endl;
-                std::cout << "devices ";
+                logger << "-- qmc::sample called --" << std::endl;
+                logger << "dim " << dim << std::endl;
+                logger << "minn " << minn << std::endl;
+                logger << "minm " << minm << std::endl;
+                logger << "epsrel " << epsrel << std::endl;
+                logger << "epsabs " << epsabs << std::endl;
+                logger << "maxeval " << maxeval << std::endl;
+                logger << "cputhreads " << cputhreads << std::endl;
+                logger << "maxworkpackages " << maxworkpackages << std::endl;
+                logger << "maxmperworkpackage " << maxmperworkpackage << std::endl;
+                logger << "cudablocks " << cudablocks << std::endl;
+                logger << "cudathreadsperblock " << cudathreadsperblock << std::endl;
+                logger << "devices ";
                 for (const int& i : devices)
-                    std::cout << i << " ";
-                std::cout << std::endl;
-                std::cout << "n " << n << std::endl;
-                std::cout << "m " << m << std::endl;
-                std::cout << "shifts " << shifts << std::endl;
-                std::cout << "iterations " << iterations << std::endl;
-                std::cout << "total_work_packages " << total_work_packages << std::endl;
-                std::cout << "points_per_package " << points_per_package << std::endl;
-                std::cout << "r " << shifts << "*" << r_size << std::endl;
+                    logger << i << " ";
+                logger << std::endl;
+                logger << "n " << n << std::endl;
+                logger << "m " << m << std::endl;
+                logger << "shifts " << shifts << std::endl;
+                logger << "iterations " << iterations << std::endl;
+                logger << "total_work_packages " << total_work_packages << std::endl;
+                logger << "points_per_package " << points_per_package << std::endl;
+                logger << "r " << shifts << "*" << r_size << std::endl;
             }
 
             if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1)
             {
                 // Compute serially on cpu
-                if (verbosity > 2) std::cout << "computing serially" << std::endl;
+                if (verbosity > 2) logger << "computing serially" << std::endl;
                 for( U i=0; i < total_work_packages; i++)
                 {
                     compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, points_per_package, n, shifts, func, dim, integral_transform);
@@ -305,11 +303,11 @@ namespace integrators
                 // Create threadpool
                 if (verbosity > 2)
                 {
-                    std::cout << "distributing work" << std::endl;
+                    logger << "distributing work" << std::endl;
                     if ( devices.count(-1) != 0)
-                        std::cout << "creating " << std::to_string(cputhreads) << " cputhreads," << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
+                        logger << "creating " << std::to_string(cputhreads) << " cputhreads," << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
                     else
-                        std::cout << "creating " << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
+                        logger << "creating " << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
                 }
 
                 // Setup work queue
@@ -353,14 +351,17 @@ namespace integrators
     template <typename T, typename D, typename U, typename G>
     void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations)
     {
-        if (verbosity > 2) std::cout << "-- qmc::update called --" << std::endl;
+        if (verbosity > 2) logger << "-- qmc::update called --" << std::endl;
 
         const D MAXIMUM_ERROR_RATIO = static_cast<D>(20);
         const D EXPECTED_SCALING = static_cast<D>(0.8); // assume error scales as n^(-expectedScaling)
 
         D error_ratio = std::min(compute_error_ratio(res, epsrel, epsabs),MAXIMUM_ERROR_RATIO);
         if (error_ratio < static_cast<D>(1))
+        {
+            if (verbosity > 2) logger << "error goal reached" << std::endl;
             return;
+        }
         U new_m = minm;
         U new_n = get_next_n(static_cast<U>(static_cast<D>(n)*std::pow(error_ratio,static_cast<D>(1)/EXPECTED_SCALING)));
         if ( new_n <= n or ( error_ratio*error_ratio - static_cast<D>(1) < static_cast<D>(new_n)/static_cast<D>(n)))
@@ -377,7 +378,7 @@ namespace integrators
         }
         n = new_n;
         m = new_m;
-        if(verbosity > 1 ) std::cout << "updated n m " << n << " " << m << std::endl;
+        if(verbosity > 1 ) logger << "updated n m " << n << " " << m << std::endl;
     };
     
     template <typename T, typename D, typename U, typename G>
@@ -389,23 +390,23 @@ namespace integrators
         if ( maxmperworkpackage < 2 ) throw std::domain_error("qmc::integrate called with maxmperworkpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperworkpackage.");
         if ( maxworkpackages == 0 ) throw std::domain_error("qmc::integrate called with maxworkpackages = 0. Please set maxworkpackages to a positive integer.");
 
-        if (verbosity > 2) std::cout << "-- qmc::integrate called --" << std::endl;
+        if (verbosity > 2) logger << "-- qmc::integrate called --" << std::endl;
 
         std::vector<result<T,U>> previous_iterations; // keep track of the different interations, but here result.err will contain variance!
 
-        U n = get_next_n(minn); // Increase minn to next available n
+        U n = get_next_n(minn); // get next available n >= minn
         U m = minm;
         if ( maxeval < minn*minm)
         {
-            if (verbosity > 2) std::cout << "increasing maxeval " << maxeval << " -> " << minn*minm << std::endl;
+            if (verbosity > 2) logger << "increasing maxeval " << maxeval << " -> " << minn*minm << std::endl;
             maxeval = minn*minm;
         }
         result<T,U> res;
         do
         {
-            if (verbosity > 1) std::cout << "iterating" << std::endl;
+            if (verbosity > 1) logger << "iterating" << std::endl;
             res = sample(func,dim,integral_transform,n,m, previous_iterations);
-            if (verbosity > 1) std::cout << "result " << res.integral << " " << res.error << std::endl;
+            if (verbosity > 1) logger << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m,previous_iterations);
         } while  ( compute_error_ratio(res,epsrel,epsabs) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
         return res;
@@ -421,7 +422,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), maxmperworkpackage(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), maxmperworkpackage(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
@@ -430,7 +431,7 @@ namespace integrators
         if ( cputhreads == 0 )
         {
             cputhreads = 1; // Correct cputhreads if hardware_concurrency is 0, i.e. not well defined or not computable
-            if (verbosity > 1) std::cout << "Qmc increased cputhreads from 0 to 1." << std::endl;
+            if (verbosity > 1) logger << "Qmc increased cputhreads from 0 to 1." << std::endl;
         }
 
 #ifdef __CUDACC__

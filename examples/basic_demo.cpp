@@ -1,5 +1,4 @@
-
-
+#include <fstream>
 
 
 #define QMC_DEBUG 2
@@ -20,10 +19,15 @@ struct my_functor {
 };
 
 int main() {
-    
+
+
+    std::ofstream mylogger("basic.log");
     integrators::Qmc<double,double> integrator;
+    integrator.logger = mylogger;
+    integrator.verbosity = 3;
     integrator.minn = 10000; // (optional) set parameters
     my_functor my_functor_instance;
     integrators::result<double> result = integrator.integrate(my_functor_instance,3);
     std::cout << "integral = " << result.integral << ", error = " << result.error << std::endl;
+
 }
