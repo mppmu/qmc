@@ -106,11 +106,11 @@ namespace integrators
             // Compute Variance using online algorithm (Knuth, The Art of Computer Programming)
             delta = sum - mean;
             mean = mean + delta/(static_cast<T>(k+previousM+1));
-            variance = computeVariance(mean, variance, sum, delta);
+            variance = compute_variance(mean, variance, sum, delta);
         }
         T integral = mean/(static_cast<T>(n));
         variance = variance/( static_cast<T>(m+previousM-1) * static_cast<T>(m+previousM) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
-        T error = computeError(variance);
+        T error = compute_error(variance);
         previous_iterations.push_back({integral, variance, n, m+previousM});
         if (verbosity > 1)
             std::cout << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previousM << std::endl;
@@ -358,17 +358,17 @@ namespace integrators
         const D MAXIMUM_ERROR_RATIO = static_cast<D>(20);
         const D EXPECTED_SCALING = static_cast<D>(0.8); // assume error scales as n^(-expectedScaling)
 
-        D errorRatio = std::min(computeErrorRatio(res, epsrel, epsabs),MAXIMUM_ERROR_RATIO);
-        if (errorRatio < static_cast<D>(1))
+        D error_ratio = std::min(compute_error_ratio(res, epsrel, epsabs),MAXIMUM_ERROR_RATIO);
+        if (error_ratio < static_cast<D>(1))
             return;
         U newM = minm;
-        U newN = get_next_n(static_cast<U>(static_cast<D>(n)*std::pow(errorRatio,static_cast<D>(1)/EXPECTED_SCALING)));
-        if ( newN <= n or ( errorRatio*errorRatio - static_cast<D>(1) < static_cast<D>(newN)/static_cast<D>(n)))
+        U newN = get_next_n(static_cast<U>(static_cast<D>(n)*std::pow(error_ratio,static_cast<D>(1)/EXPECTED_SCALING)));
+        if ( newN <= n or ( error_ratio*error_ratio - static_cast<D>(1) < static_cast<D>(newN)/static_cast<D>(n)))
         {
             // n did not increase, or increasing m will be faster
             // increase m
             newN = n;
-            newM = static_cast<U>(static_cast<D>(m)*errorRatio*errorRatio)+1-m;
+            newM = static_cast<U>(static_cast<D>(m)*error_ratio*error_ratio)+1-m;
         }
         if ( maxeval < newN*newM)
         {
@@ -407,7 +407,7 @@ namespace integrators
             res = sample(func,dim,integralTransform,n,m, previous_iterations);
             if (verbosity > 1) std::cout << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m,previous_iterations);
-        } while  ( computeErrorRatio(res,epsrel,epsabs) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
+        } while  ( compute_error_ratio(res,epsrel,epsabs) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
         return res;
     };
     
