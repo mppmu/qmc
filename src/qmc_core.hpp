@@ -248,15 +248,15 @@ namespace integrators
             r_size += cputhreads; // cpu-workers
         }
 
-        U iterations = (m+maxconcurrentshifts-1)/maxconcurrentshifts;
-        U shifts_per_iteration = std::min(m,maxconcurrentshifts);
+        U iterations = (m+maxmperworkpackage-1)/maxmperworkpackage;
+        U shifts_per_iteration = std::min(m,maxmperworkpackage);
         for(U iteration = 0; iteration < iterations; iteration++)
         {
             U shifts = shifts_per_iteration;
             if ( iteration == iterations-1)
             {
                 // last iteration => compute remaining shifts
-                shifts = m%maxconcurrentshifts == 0 ? std::min(m,maxconcurrentshifts) : m%maxconcurrentshifts;
+                shifts = m%maxmperworkpackage == 0 ? std::min(m,maxmperworkpackage) : m%maxmperworkpackage;
             }
 
             // Generate z, d, r
@@ -275,7 +275,7 @@ namespace integrators
                 std::cout << "maxeval " << maxeval << std::endl;
                 std::cout << "cputhreads " << cputhreads << std::endl;
                 std::cout << "maxworkpackages " << maxworkpackages << std::endl;
-                std::cout << "maxconcurrentshifts " << maxconcurrentshifts << std::endl;
+                std::cout << "maxmperworkpackage " << maxmperworkpackage << std::endl;
                 std::cout << "cudablocks " << cudablocks << std::endl;
                 std::cout << "cudathreadsperblock " << cudathreadsperblock << std::endl;
                 std::cout << "devices ";
@@ -386,7 +386,7 @@ namespace integrators
     {
         if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
-        if ( maxconcurrentshifts < 2 ) throw std::domain_error("qmc::integrate called with maxconcurrentshifts < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxconcurrentshifts.");
+        if ( maxmperworkpackage < 2 ) throw std::domain_error("qmc::integrate called with maxmperworkpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperworkpackage.");
         if ( maxworkpackages == 0 ) throw std::domain_error("qmc::integrate called with maxworkpackages = 0. Please set maxworkpackages to a positive integer.");
 
         if (verbosity > 2) std::cout << "-- qmc::integrate called --" << std::endl;
@@ -421,7 +421,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), maxconcurrentshifts(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxworkpackages(2560000), maxmperworkpackage(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
