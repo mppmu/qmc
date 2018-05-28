@@ -361,22 +361,22 @@ namespace integrators
         D error_ratio = std::min(compute_error_ratio(res, epsrel, epsabs),MAXIMUM_ERROR_RATIO);
         if (error_ratio < static_cast<D>(1))
             return;
-        U newM = minm;
-        U newN = get_next_n(static_cast<U>(static_cast<D>(n)*std::pow(error_ratio,static_cast<D>(1)/EXPECTED_SCALING)));
-        if ( newN <= n or ( error_ratio*error_ratio - static_cast<D>(1) < static_cast<D>(newN)/static_cast<D>(n)))
+        U new_m = minm;
+        U new_n = get_next_n(static_cast<U>(static_cast<D>(n)*std::pow(error_ratio,static_cast<D>(1)/EXPECTED_SCALING)));
+        if ( new_n <= n or ( error_ratio*error_ratio - static_cast<D>(1) < static_cast<D>(new_n)/static_cast<D>(n)))
         {
             // n did not increase, or increasing m will be faster
             // increase m
-            newN = n;
-            newM = static_cast<U>(static_cast<D>(m)*error_ratio*error_ratio)+1-m;
+            new_n = n;
+            new_m = static_cast<U>(static_cast<D>(m)*error_ratio*error_ratio)+1-m;
         }
-        if ( maxeval < newN*newM)
+        if ( maxeval < new_n*new_m)
         {
             // Decrease n
-            newN = get_next_n(maxeval/newM);
+            new_n = get_next_n(maxeval/new_m);
         }
-        n = newN;
-        m = newM;
+        n = new_n;
+        m = new_m;
         if(verbosity > 1 ) std::cout << "updated n m " << n << " " << m << std::endl;
     };
     
