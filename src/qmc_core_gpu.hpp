@@ -92,7 +92,7 @@ namespace integrators
 
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U n, const U m, F1* d_func, const U dim, F2* d_integral_transform, const int device, const U cudablocks, const U cudathreadsperblock)
+    void Qmc<T, D, U, G>::compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U n, const U m, F1* d_func, const U dim, F2* d_integral_transform, const int device, const U cudablocks, const U cudathreadsperblock) const
     {
         if (verbosity > 1) logger << "- (" << device << ") computing work_package " << i << ", work_this_iteration " << work_this_iteration << ", total_work_packages " << total_work_packages << std::endl;
 

@@ -60,7 +60,7 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    result<T,U> Qmc<T,D,U,G>::reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
+    result<T,U> Qmc<T,D,U,G>::reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations) const
     {
         if (verbosity > 1)
         {
@@ -119,7 +119,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform)
+    void Qmc<T,D,U,G>::compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform) const
     {
         for (U k = 0; k < m; k++)
         {
@@ -161,7 +161,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device)
+    void Qmc<T,D,U,G>::compute_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device) const
     {
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
@@ -347,7 +347,7 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations)
+    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations) const
     {
         if (verbosity > 2) logger << "-- qmc::update called --" << std::endl;
 
