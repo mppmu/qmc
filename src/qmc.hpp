@@ -87,8 +87,7 @@ namespace integrators
         U get_next_n(U preferred_n) const;
 
         Qmc();
-        ~Qmc() {}
-
+        virtual ~Qmc() {}
     };
     
 };
