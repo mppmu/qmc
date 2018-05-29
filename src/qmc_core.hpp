@@ -188,6 +188,7 @@ namespace integrators
             if (work_queue == 0)
             {
                 work_remaining=false;
+                i = 0;
             }
             else if (work_queue >= work_this_iteration)
             {
