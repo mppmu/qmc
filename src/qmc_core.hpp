@@ -347,7 +347,7 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, std::vector<result<T,U>> & previous_iterations) const
+    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m) const
     {
         if (verbosity > 2) logger << "-- qmc::update called --" << std::endl;
 
@@ -405,7 +405,7 @@ namespace integrators
             if (verbosity > 1) logger << "iterating" << std::endl;
             res = sample(func,dim,integral_transform,n,m, previous_iterations);
             if (verbosity > 1) logger << "result " << res.integral << " " << res.error << std::endl;
-            update(res,n,m,previous_iterations);
+            update(res,n,m);
         } while  ( compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
         return res;
     };
