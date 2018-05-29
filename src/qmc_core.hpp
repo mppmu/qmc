@@ -67,7 +67,7 @@ namespace integrators
             logger << "-- qmc::reduce called --" << std::endl;
             for(const auto& previous_result : previous_iterations)
             {
-                logger << "previous_result: integral " << previous_result.integral << ", error " << previous_result.error << ", n " << previous_result.n << ", m " << previous_result.m << std::endl; // TODO - error here has weird meaning
+                logger << "previous_result: integral " << previous_result.integral << ", error " << previous_result.error << ", n " << previous_result.n << ", m " << previous_result.m << std::endl;
             }
         }
 
@@ -82,7 +82,7 @@ namespace integrators
                 if (verbosity>2) logger << "using additional shifts to improve previous iteration" << std::endl;
                 previous_m = previous_res.m;
                 mean = previous_res.integral*static_cast<T>(n);
-                variance = previous_res.error; // this is really the variance
+                variance = compute_variance_from_error(previous_res.error);
                 variance *= static_cast<T>(previous_res.m-1) * static_cast<T>(previous_res.m) * static_cast<T>(previous_res.n) * static_cast<T>(previous_res.n);
                 previous_iterations.pop_back();
             }
@@ -111,7 +111,7 @@ namespace integrators
         T integral = mean/(static_cast<T>(n));
         variance = variance/( static_cast<T>(m+previous_m-1) * static_cast<T>(m+previous_m) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
         T error = compute_error(variance);
-        previous_iterations.push_back({integral, variance, n, m+previous_m});
+        previous_iterations.push_back({integral, error, n, m+previous_m});
         if (verbosity > 0)
             logger << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previous_m << std::endl;
         return {integral, error, n, m+previous_m};
@@ -390,7 +390,7 @@ namespace integrators
 
         if (verbosity > 2) logger << "-- qmc::integrate called --" << std::endl;
 
-        std::vector<result<T,U>> previous_iterations; // keep track of the different interations, but here result.err will contain variance!
+        std::vector<result<T,U>> previous_iterations; // keep track of the different interations
 
         U n = get_next_n(minn); // get next available n >= minn
         U m = minm;

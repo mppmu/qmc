@@ -13,6 +13,12 @@ namespace integrators
     {
         return T(std::sqrt(std::abs(variance)));
     };
+
+    template <typename T>
+    T compute_variance_from_error(const T& error)
+    {
+        return T(error*error);
+    };
     
     template <typename T, typename D, typename U>
     D compute_error_ratio(const result<T,U>& res, const D& epsrel, const D&epsabs, const ErrorMode errormode)
