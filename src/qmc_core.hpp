@@ -5,7 +5,7 @@
 #include <algorithm> // min, max
 #include <type_traits> // make_signed
 #include <limits> // numeric_limits
-#include <string>
+#include <string> // to_string
 #include <vector>
 #include <iostream>
 #include <iterator> // advance
@@ -354,7 +354,7 @@ namespace integrators
         const D MAXIMUM_ERROR_RATIO = static_cast<D>(20);
         const D EXPECTED_SCALING = static_cast<D>(0.8); // assume error scales as n^(-expectedScaling)
 
-        D error_ratio = std::min(compute_error_ratio(res, epsrel, epsabs),MAXIMUM_ERROR_RATIO);
+        D error_ratio = std::min(compute_error_ratio(res, epsrel, epsabs, errormode),MAXIMUM_ERROR_RATIO);
         if (error_ratio < static_cast<D>(1))
         {
             if (verbosity > 2) logger << "error goal reached" << std::endl;
@@ -406,7 +406,7 @@ namespace integrators
             res = sample(func,dim,integral_transform,n,m, previous_iterations);
             if (verbosity > 1) logger << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m,previous_iterations);
-        } while  ( compute_error_ratio(res,epsrel,epsabs) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
+        } while  ( compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
         return res;
     };
     
@@ -420,7 +420,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxnperpackage(1), maxmperpackage(1024), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), border(0), maxeval(std::numeric_limits<U>::max()), maxnperpackage(1), maxmperpackage(1024), errormode(all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

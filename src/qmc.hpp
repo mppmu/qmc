@@ -15,6 +15,12 @@
 namespace integrators
 {
 
+    enum ErrorMode
+    {
+        all,
+        largest
+    };
+
     struct Logger : public std::reference_wrapper<std::ostream>
     {
         using std::reference_wrapper<std::ostream>::reference_wrapper;
@@ -68,6 +74,7 @@ namespace integrators
         U maxeval;
         U maxnperpackage;
         U maxmperpackage;
+        ErrorMode errormode;
         U cputhreads;
         U cudablocks;
         U cudathreadsperblock;
