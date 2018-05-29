@@ -119,7 +119,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute(const int i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform) const
+    void Qmc<T,D,U,G>::compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform) const
     {
         for (U k = 0; k < m; k++)
         {
