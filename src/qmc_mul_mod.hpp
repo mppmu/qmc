@@ -20,7 +20,7 @@ namespace integrators
         D x = static_cast<D>(a);
         U c = static_cast<U>( (x*b) / k );
         S r = static_cast<S>( (a*b) - (c*k) ) % static_cast<S>(k);
-        return static_cast<R>(r < 0 ? (r+k) : r);
+        return static_cast<R>(r < 0 ? static_cast<R>(static_cast<U>(r)+k) : static_cast<R>(r));
     };
 
 };
