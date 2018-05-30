@@ -58,7 +58,7 @@ namespace integrators
         template <typename F1, typename F2> void compute_gpu(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U work_this_iteration, const U total_work_packages, const U n, const U m, F1* d_func, const U dim, F2* d_integral_transform, const int device, const U cudablocks, const U cudathreadsperblock) const;
 #endif
         template <typename F1, typename F2> result<T,U> sample(F1& func, const U dim, F2& integral_transform, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
-        void update(result<T,U>& res, U& n, U& m) const;
+        void update(result<T,U>& res, U& n, U& m, U& function_evaluations) const;
 
     public:
 

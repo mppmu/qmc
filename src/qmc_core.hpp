@@ -348,12 +348,15 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m) const
+    void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, U& function_evaluations) const
     {
         if (verbosity > 2) logger << "-- qmc::update called --" << std::endl;
 
         const D MAXIMUM_ERROR_RATIO = static_cast<D>(20);
         const D EXPECTED_SCALING = static_cast<D>(0.8); // assume error scales as n^(-expectedScaling)
+
+        function_evaluations += res.n*res.m; // update count of function_evaluations
+        if(verbosity > 1 ) logger << "function_evaluations " << function_evaluations << std::endl;
 
         D error_ratio = std::min(compute_error_ratio(res, epsrel, epsabs, errormode),MAXIMUM_ERROR_RATIO);
         if (error_ratio < static_cast<D>(1))
@@ -367,13 +370,16 @@ namespace integrators
         {
             // n did not increase, or increasing m will be faster
             // increase m
+            if (verbosity > 2) logger << "n did not increase, or increasing m will be faster, increasing m." << std::endl;
             new_n = n;
             new_m = static_cast<U>(static_cast<D>(m)*error_ratio*error_ratio)+1-m;
+            if( verbosity > 2 ) logger << new_m << std::endl;
         }
-        if ( maxeval < new_n*new_m)
+        if ( maxeval < function_evaluations + new_n*new_m)
         {
             // Decrease n
-            new_n = get_next_n(maxeval/new_m);
+            if ( verbosity > 2 ) logger << "requested number of function evaluations greater than maxeval, reducing n." << std::endl;
+            new_n = get_next_n((maxeval-function_evaluations)/new_m);
         }
         n = new_n;
         m = new_m;
@@ -392,22 +398,17 @@ namespace integrators
         if (verbosity > 2) logger << "-- qmc::integrate called --" << std::endl;
 
         std::vector<result<T,U>> previous_iterations; // keep track of the different interations
-
+        U function_evaluations = 0;
         U n = get_next_n(minn); // get next available n >= minn
         U m = minm;
-        if ( maxeval < minn*minm)
-        {
-            if (verbosity > 2) logger << "increasing maxeval " << maxeval << " -> " << minn*minm << std::endl;
-            maxeval = minn*minm;
-        }
         result<T,U> res;
         do
         {
             if (verbosity > 1) logger << "iterating" << std::endl;
             res = sample(func,dim,integral_transform,n,m, previous_iterations);
             if (verbosity > 1) logger << "result " << res.integral << " " << res.error << std::endl;
-            update(res,n,m);
-        } while  ( compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && (res.n*res.m) < maxeval ); // TODO - if error estimate is not decreasing quit
+            update(res,n,m,function_evaluations);
+        } while  ( compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && function_evaluations < maxeval );
         return res;
     };
     
