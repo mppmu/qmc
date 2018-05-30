@@ -12,30 +12,13 @@
 #include <iterator>
 #include <functional> // reference_wrapper
 
+// Custom types
+#include "qmc_logger.hpp"
+#include "qmc_result.hpp"
+#include "qmc_errormode.hpp"
+
 namespace integrators
 {
-
-    enum ErrorMode : int
-    {
-        all = 1,
-        largest = 2
-    };
-
-    struct Logger : public std::reference_wrapper<std::ostream>
-    {
-        using std::reference_wrapper<std::ostream>::reference_wrapper;
-        template<typename T> std::ostream& operator<<(T arg) const { return this->get() << arg; }
-        std::ostream& operator<<(std::ostream& (*arg)(std::ostream&)) const { return this->get() << arg; }
-    };
-
-    template <typename T, typename U = unsigned long long int>
-    struct result
-    {
-        T integral;
-        T error;
-        U n;
-        U m;
-    };
 
 // TODO - unsigned int MAXDIM = 20,
     template <typename T, typename D, typename U = unsigned long long int, typename G = std::mt19937_64>
