@@ -15,10 +15,10 @@
 namespace integrators
 {
 
-    enum ErrorMode
+    enum ErrorMode : int
     {
-        all,
-        largest
+        all = 1,
+        largest = 2
     };
 
     struct Logger : public std::reference_wrapper<std::ostream>
