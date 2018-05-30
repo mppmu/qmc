@@ -131,7 +131,7 @@ namespace integrators
     };
 
     template <typename F1, typename F2, typename U>
-    void setup_gpu(std::unique_ptr<integrators::detail::cuda_memory<F1>>& d_func, F1& func, std::unique_ptr<integrators::detail::cuda_memory<F2>>& d_integral_transform, F2& integral_transform, const int device, const U verbosity, Logger& logger)
+    void setup_gpu(std::unique_ptr<integrators::detail::cuda_memory<F1>>& d_func, F1& func, std::unique_ptr<integrators::detail::cuda_memory<F2>>& d_integral_transform, F2& integral_transform, const int device, const U verbosity, const Logger& logger)
     {
         // Set Device
         if (verbosity > 1) logger << "- (" << device << ") setting device" << std::endl;
