@@ -70,7 +70,6 @@ namespace integrators
         U minm;
         D epsrel;
         D epsabs;
-        D border;
         U maxeval;
         U maxnperpackage;
         U maxmperpackage;

@@ -46,7 +46,7 @@ namespace integrators
     // TODO - make use of restricted pointers?
     template <typename T, typename D, typename U, typename F1, typename F2>
     __global__
-    void compute_kernel_gpu(const U work_offset, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1* func, const U dim, F2* integral_transform, const D border)
+    void compute_kernel_gpu(const U work_offset, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U n, const U m, F1* func, const U dim, F2* integral_transform)
     {
         U i = blockIdx.x*blockDim.x + threadIdx.x;
         if (i < work_this_iteration)
@@ -66,15 +66,6 @@ namespace integrators
                     }
 
                     (*integral_transform)(x, wgt, dim);
-
-                    // Nudge point inside border (for numerical stability)
-                    for (U sDim = 0; sDim < dim; sDim++)
-                    {
-                        if( x[sDim] < border)
-                        x[sDim] = border;
-                        if( x[sDim] > 1.-border)
-                        x[sDim] = 1.-border;
-                    }
 
                     T point = (*func)(x);
 
@@ -118,7 +109,7 @@ namespace integrators
         if(verbosity > 1) logger << "- (" << device << ") allocated d_r " << m*work_this_iteration << std::endl;
         if(verbosity > 2) logger << "- (" << device << ") launching gpu kernel<<<" << cudablocks << "," << cudathreadsperblock << ">>>" << std::endl;
 
-        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, static_cast<F1*>(d_func), dim, static_cast<F2*>(d_integral_transform), border);
+        integrators::compute_kernel_gpu<<< cudablocks, cudathreadsperblock >>>(i, work_this_iteration, total_work_packages, static_cast<U*>(d_z), static_cast<D*>(d_d), static_cast<T*>(d_r), n, m, static_cast<F1*>(d_func), dim, static_cast<F2*>(d_integral_transform));
 //        CUDA_SAFE_CALL(cudaPeekAtLastError());
 //        CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
