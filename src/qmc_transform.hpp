@@ -17,7 +17,16 @@ namespace integrators
 				if (x[sDim] > 1.)
 					x[sDim] = 1.;
 			}
-		};
+		}
 	};
+
+    template<typename D, typename U>
+    struct Trivial
+    {
+#ifdef __CUDACC__
+        __host__ __device__
+#endif
+        void operator()(D* x, D& wgt, const U dim) const {}
+    };
     
 };
