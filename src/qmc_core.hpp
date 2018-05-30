@@ -49,7 +49,7 @@ namespace integrators
         d.clear();
         for (U k = 0; k < m; k++)
             for (U sDim = 0; sDim < dim; sDim++)
-                d.push_back(uniformDistribution(randomgenerator));
+                d.push_back(uniform_distribution(randomgenerator));
     };
     
     template <typename T, typename D, typename U, typename G>

@@ -27,7 +27,7 @@ namespace integrators
 
     private:
 
-        std::uniform_real_distribution<D> uniformDistribution = std::uniform_real_distribution<D>(0,1);
+        std::uniform_real_distribution<D> uniform_distribution = std::uniform_real_distribution<D>(0,1);
 
         void init_g();
         void init_z(std::vector<U>& z, const U n, const U dim) const;
