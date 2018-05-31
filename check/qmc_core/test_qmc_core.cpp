@@ -6,28 +6,32 @@
 #include <stdexcept> // invalid_argument
 #include <limits> // numeric_limits
 
-TEST_CASE( "Result Constructor", "[result]") {
-
-    integrators::result<double> result({1.0,2.0});
-
-    SECTION( "Access Fields" )
-    {
-        REQUIRE( result.integral == Approx(1.0) );
-        REQUIRE( result.error == Approx(2.0) );
-    };
-
-};
-
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
     integrators::Qmc<double,double> real_integrator;
 
     SECTION( "Check Fields", "[Qmc]" ) {
 
+        std::uniform_int_distribution<double> uniform_distribution(0,1);
+        double random_sample = uniform_distribution( real_integrator.randomgenerator );
+
+        //        Logger logger; // checked later
+        REQUIRE( random_sample >= 0 );
+        REQUIRE( random_sample <= 1 );
         REQUIRE( real_integrator.minn > 0 );
-        REQUIRE( real_integrator.minm > 1 );
-        REQUIRE( real_integrator.cputhreads > 0);
-        REQUIRE( real_integrator.generatingVectors.size() > 0);
+        REQUIRE( real_integrator.minm > 1 ); // can not calculate variance if minm <= 1
+        REQUIRE( real_integrator.epsrel >= 0 );
+        REQUIRE( real_integrator.epsabs >= 0 );
+        REQUIRE( real_integrator.maxeval >= 0 );
+        REQUIRE( real_integrator.maxnperpackage > 0 );
+        REQUIRE( real_integrator.maxmperpackage > 0 );
+        REQUIRE( real_integrator.errormode > 0 ); // ErrorMode starts at 1
+        REQUIRE( real_integrator.cputhreads > 0 );
+        REQUIRE( real_integrator.cudablocks > 0 );
+        REQUIRE( real_integrator.cudathreadsperblock > 0 );
+        REQUIRE( real_integrator.devices.size() > 0 );
+        REQUIRE( real_integrator.generatingvectors.size() > 0 );
+        REQUIRE( real_integrator.verbosity >= 0 );
 
     };
 
@@ -47,42 +51,62 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         real_integrator.minn = 1;
         real_integrator.minm = 2;
         real_integrator.cputhreads = 3;
-        real_integrator.generatingVectors = gv;
+        real_integrator.generatingvectors = gv;
 
         REQUIRE( real_integrator.minn == 1 );
         REQUIRE( real_integrator.minm == 2 );
         REQUIRE( real_integrator.cputhreads == 3);
-        REQUIRE( real_integrator.generatingVectors.size() == 2 );
-        REQUIRE( real_integrator.generatingVectors[2] == v2 );
-        REQUIRE( real_integrator.generatingVectors[3] == v3 );
+        REQUIRE( real_integrator.generatingvectors.size() == 2 );
+        REQUIRE( real_integrator.generatingvectors[2] == v2 );
+        REQUIRE( real_integrator.generatingvectors[3] == v3 );
+
+
+//        Logger logger;
+//
+//        G randomgenerator;
+//
+//        U minn;
+//        U minm;
+//        D epsrel;
+//        D epsabs;
+//        U maxeval;
+//        U maxnperpackage;
+//        U maxmperpackage;
+//        ErrorMode errormode;
+//        U cputhreads;
+//        U cudablocks;
+//        U cudathreadsperblock;
+//        std::set<int> devices;
+//        std::map<U,std::vector<U>> generatingvectors;
+//        U verbosity;
 
     };
 
-    SECTION( "Check getNextN Function", "[Qmc]" ) {
+    SECTION( "Check get_next_n Function", "[Qmc]" ) {
 
         integrators::Qmc<double,double, unsigned long long int> real_integrator;
         real_integrator.minn = 1;
-        real_integrator.generatingVectors = gv;
+        real_integrator.generatingvectors = gv;
 
         // minn less than any generating vector
         REQUIRE( real_integrator.minn == 1 );
-        REQUIRE( real_integrator.getNextN(1) == 2 ); // Increased to smallest generating vector
+        REQUIRE( real_integrator.get_next_n(1) == 2 ); // Increased to smallest generating vector
 
         real_integrator.minn = 2;
         // minn matches a generating vector
         REQUIRE( real_integrator.minn == 2 );
-        REQUIRE( real_integrator.getNextN(2) == 2 );
+        REQUIRE( real_integrator.get_next_n(2) == 2 );
 
         real_integrator.minn = 4;
         // minn larger than any generating vector
         REQUIRE( real_integrator.minn == 4 );
-        REQUIRE( real_integrator.getNextN(4) == 3 ); // fall back to largest available generating vector
+        REQUIRE( real_integrator.get_next_n(4) == 3 ); // fall back to largest available generating vector
 
-        real_integrator.generatingVectors[std::numeric_limits<unsigned long long int>::max()] = {1,2,3};
+        real_integrator.generatingvectors[std::numeric_limits<unsigned long long int>::max()] = {1,2,3};
         real_integrator.minn = std::numeric_limits<unsigned long long int>::max();
         // n larger than representable in signed version of 'U' (invalid)
         REQUIRE( real_integrator.minn == std::numeric_limits<unsigned long long int>::max() );
-        REQUIRE_THROWS_AS( real_integrator.getNextN(std::numeric_limits<unsigned long long int>::max()), std::domain_error );
+        REQUIRE_THROWS_AS( real_integrator.get_next_n(std::numeric_limits<unsigned long long int>::max()), std::domain_error );
 
     };
     
@@ -117,7 +141,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         gv[1] = v1;
         gv[2] = v2;
 
-        real_integrator.generatingVectors = gv;
+        real_integrator.generatingvectors = gv;
 
         // Call integrate on function with 3 dimensions
         REQUIRE_THROWS_AS( real_integrator.integrate(real_function,3) , std::domain_error);
@@ -183,7 +207,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         std::vector<unsigned long long int> v1 = {1};
         std::map< unsigned long long int, std::vector<unsigned long long int> > gv;
         gv[3] = v1;
-        real_integrator.generatingVectors = gv;
+        real_integrator.generatingvectors = gv;
 
         real_integrator.minn = 1;
         real_integrator.cputhreads = 5;
@@ -241,7 +265,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         std::vector<unsigned long long int> v1 = {1};
         std::map< unsigned long long int, std::vector<unsigned long long int> > gv;
         gv[3] = v1;
-        complex_integrator.generatingVectors = gv;
+        complex_integrator.generatingvectors = gv;
 
         complex_integrator.minn = 1;
         complex_integrator.cputhreads = 5;
@@ -260,7 +284,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     SECTION( "Change Seed of Random Number Generator" )
     {
 
-        real_integrator.randomGenerator = std::mt19937_64(1);
+        real_integrator.randomgenerator = std::mt19937_64(1);
 
         real_result = real_integrator.integrate(real_function,2);
 
@@ -273,7 +297,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     {
 
         std::random_device rd;
-        real_integrator.randomGenerator = std::mt19937_64(rd());
+        real_integrator.randomgenerator = std::mt19937_64(rd());
 
         real_result = real_integrator.integrate(real_function,2);
 

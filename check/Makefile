@@ -7,7 +7,7 @@
 
 # Running all
 # -----------
-ALL_EXAMPLES=$(shell ls -d */test.log | sed s/\\/test.log//)
+ALL_EXAMPLES=$(shell ls -d *[!test_suite]*/ | sed s\#/\#\#)
 .PHONY : runtests
 runtests : $(ALL_EXAMPLES)
 
