@@ -30,9 +30,9 @@ int main() {
     integrator.randomgenerator = std::mt19937_64();
     integrator.minn = 8191;
     integrator.minm = 32;
-    integrator.epsrel = std::numeric_limits<D>::max();
-    integrator.epsabs  = std::numeric_limits<D>::max();
-    integrator.maxeval = std::numeric_limits<U>::max();
+    integrator.epsrel = 0.01;
+    integrator.epsabs  = 1e-7;
+    integrator.maxeval = 1000000;
     integrator.maxnperpackage = 1;
     integrator.maxmperpackage = 1024;
     integrator.errormode = integrators::ErrorMode::all;
