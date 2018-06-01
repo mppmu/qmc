@@ -156,8 +156,12 @@ namespace integrators
     {
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
+        U d_r_size = m*cudablocks*cudathreadsperblock;
         std::unique_ptr<integrators::detail::cuda_memory<F1>> d_func;
         std::unique_ptr<integrators::detail::cuda_memory<F2>> d_integral_transform;
+        std::unique_ptr<integrators::detail::cuda_memory<U>> d_z;
+        std::unique_ptr<integrators::detail::cuda_memory<D>> d_d;
+        std::unique_ptr<integrators::detail::cuda_memory<T>> d_r;
 #endif
 
         U i;
@@ -167,7 +171,7 @@ namespace integrators
         } else {
             work_this_iteration = cudablocks*cudathreadsperblock;
 #ifdef __CUDACC__
-            setup_gpu(d_func, func, d_integral_transform, integral_transform, device, verbosity, logger);
+            setup_gpu(d_z, z, d_d, d, d_r, d_r_size/m, &r[thread_id], r.size()/m, m, d_func, func, d_integral_transform, integral_transform, device, verbosity, logger);
 #endif
         }
 
@@ -188,7 +192,7 @@ namespace integrators
             }
             else
             {
-                work_this_iteration = work_queue; // TODO - do not redo work in this case...
+                work_this_iteration = work_queue;
                 work_queue = 0;
                 i = 0;
             }
@@ -205,12 +209,15 @@ namespace integrators
             else
             {
 #ifdef __CUDACC__
-                compute_gpu(i, z, d, &r[thread_id], r.size()/m, work_this_iteration, total_work_packages, n, m,
-                            static_cast<typename std::remove_const<F1>::type*>(*d_func), dim,
-                            static_cast<typename std::remove_const<F2>::type*>(*d_integral_transform), device, cudablocks, cudathreadsperblock);
+                compute_gpu(*this, i, work_this_iteration, total_work_packages, d_z, d_d, d_r, d_r_size/m, n, m, d_func, dim, d_integral_transform, device);
 #endif
             }
         }
+#ifdef __CUDACC__
+        if (device != -1) {
+            tear_down_gpu(d_r, d_r_size/m, &r[thread_id], r.size()/m, m, device, verbosity, logger);
+        }
+#endif
     };
     
     template <typename T, typename D, typename U, typename G>
