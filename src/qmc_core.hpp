@@ -413,7 +413,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     Qmc<T,D,U,G>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), maxeval(std::numeric_limits<U>::max()), maxnperpackage(1), maxmperpackage(1024), errormode(all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), verbosity(0)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(std::numeric_limits<D>::max()), epsabs(std::numeric_limits<D>::max()), maxeval(std::numeric_limits<U>::max()), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100<U>()), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
@@ -431,8 +431,6 @@ namespace integrators
         for(int i = 0; i < device_count; i++)
             devices.insert(i);
 #endif
-        
-        init_g();
     };
     
 };
