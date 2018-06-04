@@ -19,12 +19,21 @@ TEST_CASE( "Setting Output Stream", "[logger]") {
         REQUIRE_NOTHROW( mylogger = stream );
     };
 
+    SECTION( "Check Fields")
+    {
+        integrators::Logger mylogger(std::cout);
+        REQUIRE( mylogger.display_timing == true);
+        REQUIRE_NOTHROW( mylogger.display_timing = false );
+        REQUIRE( mylogger.display_timing == false);
+    };
+
 };
 
 TEST_CASE( "Output", "[logger]") {
 
     std::ostringstream stream;
     integrators::Logger mylogger(stream);
+    mylogger.display_timing = false; // do not print timing information
 
     SECTION( "String" )
     {
