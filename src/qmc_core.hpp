@@ -53,10 +53,10 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G>
-    void Qmc<T,D,U,G>::init_r(std::vector<T>& r, const U m, const U r_size) const
+    void Qmc<T,D,U,G>::init_r(std::vector<T>& r, const U m, const U r_size_over_m) const
     {
         r.clear();
-        r.resize(m * r_size, {0.});
+        r.resize(m * r_size_over_m, {0.});
     };
     
     template <typename T, typename D, typename U, typename G>
@@ -119,7 +119,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform) const
+    void Qmc<T,D,U,G>::compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform) const
     {
         for (U k = 0; k < m; k++)
         {
@@ -140,12 +140,12 @@ namespace integrators
                 T point = func(x.data());
 
                 // Compute sum using Kahan summation
-                // equivalent to: r_element[k*r_size] += wgt*point;
+                // equivalent to: r_element[k*r_size_over_m] += wgt*point;
                 T kahan_y = wgt*point - kahan_c;
-                T kahan_t = r_element[k*r_size] + kahan_y;
-                T kahan_d = kahan_t - r_element[k*r_size];
+                T kahan_t = r_element[k*r_size_over_m] + kahan_y;
+                T kahan_d = kahan_t - r_element[k*r_size_over_m];
                 kahan_c = kahan_d - kahan_y;
-                r_element[k*r_size] = kahan_t;
+                r_element[k*r_size_over_m] = kahan_t;
             }
         }
     };
@@ -237,10 +237,10 @@ namespace integrators
         U extra_threads = devices.size() - devices.count(-1);
         
         // Memory required for result vector
-        U r_size = extra_threads*cudablocks*cudathreadsperblock; // non-cpu workers
+        U r_size_over_m = extra_threads*cudablocks*cudathreadsperblock; // non-cpu workers
         if (devices.count(-1) != 0)
         {
-            r_size += cputhreads; // cpu-workers
+            r_size_over_m += cputhreads; // cpu-workers
         }
 
         U iterations = (m+maxmperpackage-1)/maxmperpackage;
@@ -257,7 +257,7 @@ namespace integrators
             // Generate z, d, r
             init_z(z, n, dim);
             init_d(d, shifts, dim);
-            init_r(r, shifts, r_size);
+            init_r(r, shifts, r_size_over_m);
 
             if (verbosity > 0)
             {
@@ -283,7 +283,7 @@ namespace integrators
                 logger << "iterations " << iterations << std::endl;
                 logger << "total_work_packages " << total_work_packages << std::endl;
                 logger << "points_per_package " << points_per_package << std::endl;
-                logger << "r " << shifts << "*" << r_size << std::endl;
+                logger << "r " << shifts << "*" << r_size_over_m << std::endl;
             }
 
             if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1)
@@ -392,6 +392,7 @@ namespace integrators
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
         if ( maxmperpackage < 2 ) throw std::domain_error("qmc::integrate called with maxmperpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperpackage.");
         if ( maxnperpackage == 0 ) throw std::domain_error("qmc::integrate called with maxnperpackage = 0. Please set maxnperpackage to a positive integer.");
+        if ( cputhreads < 1 ) throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
 
         if (verbosity > 2) logger << "-- qmc::integrate called --" << std::endl;
 
