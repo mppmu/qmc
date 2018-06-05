@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "../src/qmc.hpp"
+#include "qmc.hpp"
 
 #ifdef __CUDACC__
 #include <thrust/complex.h>
@@ -510,61 +510,24 @@ y[122]*y[132]*y[189]*y[274]-lambda*x3*y[122]*y[132]*y[191]*y[277]+y[257]*y[\
 326]*y[327]+y[335]+y[326]*y[336]+y[326]*y[327]*y[337]+y[326]*y[336]*y[337]+\
 y[345]+y[326]*y[327]*y[346]+y[326]*y[336]*y[346]);
 return (FOUT);
-    };
-};
+    }
+} ReduzeF1L2_021111010ord0f3;
 
 int main() {
-    ReduzeF1L2_021111010ord0f3_t ReduzeF1L2_021111010ord0f3;
+
     integrators::Qmc<dcmplx,double> integrator;
     integrator.minm = 20;
-    
-    std::map<unsigned long long int,std::vector<unsigned long long int>> generatingVectors;
-    generatingVectors[65521] = {1,18303,27193,16899,31463,13841};
-    generatingVectors[131071] = {1,49763,21432,15971,52704,48065};
-    generatingVectors[196597] = {1,72610,13914,40202,16516,29544};
-    generatingVectors[262139] = {1,76811,28708,119567,126364,5581};
-    generatingVectors[327673] = {1,96768,151904,147948,19040,7279};
-    generatingVectors[393209] = {1,150061,176857,160143,163763,27779};
-    generatingVectors[458747] = {1,169705,198529,128346,134850,173318};
-    generatingVectors[524287] = {1,153309,134071,36812,159642,245846};
-    generatingVectors[655357] = {1,182713,136050,266403,115744,309255};
-    generatingVectors[786431] = {1,287940,127919,317730,382333,92699};
-    generatingVectors[982981] = {1,290676,241263,362758,220038,222702};
-    generatingVectors[1245169] = {1,368213,239319,593224,147860,546740};
-    generatingVectors[1572853] = {1,459925,736430,70288,373919,634109};
-    generatingVectors[1966079] = {1,543404,727531,411227,845650,276051};
-    generatingVectors[2359267] = {1,652233,925002,55266,1081815,983370};
-    generatingVectors[2949119] = {1,1089432,678474,520664,830095,467555};
-    generatingVectors[3670013] = {1,1357095,1026979,857015,644825,1129417};
-    generatingVectors[4587503] = {1,1683782,664553,141526,2280616,852206};
-    generatingVectors[5767129] = {1,2133408,992019,264673,1328053,1755310};
-    generatingVectors[7208951] = {1,3018955,888276,1487385,1230836,1649364};
-    generatingVectors[8933471] = {1,3300010,2075144,364108,2654894,4294388};
-    generatingVectors[12506869] = {1,3663001,2298621,853317,2983823,5576578};
-    generatingVectors[17509627] = {1,6426637,1486159,2528828,866597,1015123};
-    generatingVectors[24513479] = {1,9049134,4646640,12005880,551965,5385373};
-    generatingVectors[34318871] = {1,13136653,1797003,689360,6292100,10772079};
-    generatingVectors[48046423] = {1,13420123,8348036,1528683,22569695,23654553};
-    generatingVectors[67264993] = {1,25676953,17982830,20433934,1831155,32562852};
-    generatingVectors[94170997] = {1,34493943,45822183,33604771,17761662,27235450};
-    generatingVectors[855941587] = {1,250297106,297291223,88021481,187170556,409656924};
-    generatingVectors[5040947521] = {1,2084035980,585653597,448523180,856444223,2389197079};
-    generatingVectors[6165626881] = {1,2360163115,1727923807,3043833953,2316665784,2702804871};
-    
-    integrator.generatingVectors = generatingVectors;
+    integrator.maxeval = 1; // do not iterate
 
-    //std::vector<unsigned long long int> lattices = { 65521, 131071, 67264993, 94170997, 131839397};
-    //std::vector<unsigned long long int> lattices = { 65521, 131071, 786431, 982981, 1245169, 1572853, 1966079, 2359267};
-   // std::vector<unsigned long long int> lattices = {65521, 131071, 196597, 262139, 327673, 393209, 458747, 524287, 655357, 786431, 982981, 1245169, 1572853, 1966079, 2359267, 2949119, 3670013, 4587503, 5767129, 7208951, 8933471, 12506869, 17509627, 24513479, 34318871, 48046423, 67264993, 94170997, 131839397, 184575163, 258405233, 361767331, 506474291};
-    std::vector<unsigned long long int> lattices = { 855941587, 5040947521, 6165626881 };
+    integrators::transforms::Korobov<double,unsigned long long int,3> integral_transform;
 
     std::cout << "# n m Re[I] Im[I] Re[Abs. Err.] Im[Abs. Err.]" << std::endl;
     std::cout << std::setprecision(16);
 
-    for(const auto& lattice : lattices)
+    for(const auto& generating_vector : integrator.generatingvectors)
     {
-        integrator.minn = lattice;
-        integrators::result<dcmplx> result = integrator.integrate(ReduzeF1L2_021111010ord0f3,5);
+        integrator.minn = generating_vector.first;
+        integrators::result<dcmplx> result = integrator.integrate(ReduzeF1L2_021111010ord0f3,5,integral_transform);
 
         std::cout
         << result.n
