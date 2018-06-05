@@ -9,14 +9,41 @@ namespace integrators
             /*
              * Power function: ipow<D,U,i>(d) raises the D d to the U power i
              */
-            template<typename D, typename U, U exponent>
-#ifdef __CUDACC__
-            __host__ __device__
-#endif
-            inline constexpr D ipow(const D base)
+            template<typename D, typename U, U n, typename = void>
+            struct ipow // n%2 == 0 && n != 0
             {
-                return (exponent == 0) ? 1 : (exponent % 2 == 0) ? ipow<D,U,exponent/2>(base)*ipow<D,U,exponent/2>(base) : base * ipow<D,U,(exponent-1)/2>(base) * ipow<D,U,(exponent-1)/2>(base);
-            }
+#ifdef __CUDACC__
+                __host__ __device__
+#endif
+                static D value(D base)
+                {
+                    D power = ipow<D,U,n/2>::value(base);
+                    return power * power;
+                }
+            };
+            template<typename D, typename U, U n>
+            struct ipow<D, U, n, typename std::enable_if< n%2 != 0 && n != 0>::type>
+            {
+#ifdef __CUDACC__
+                __host__ __device__
+#endif
+                static D value(D base)
+                {
+                    D power = ipow<D,U,(n-1)/2>::value(base);
+                    return base * power * power;
+                }
+            };
+            template<typename D, typename U, U n>
+            struct ipow<D, U, n, typename std::enable_if< n == 0>::type>
+            {
+#ifdef __CUDACC__
+                __host__ __device__
+#endif
+                static D value(D base)
+                {
+                    return D(1);
+                }
+            };
 
             /*
              * Binomial Coefficients: Binomial<U,n,k>::value gives the type U binomial coefficient (n k)
@@ -27,7 +54,7 @@ namespace integrators
                 constexpr static U value = (Binomial<U,n-1,k-1>::value + Binomial<U,n-1,k>::value);
             };
 
-            // optimisation
+            // TODO - optimisation
             // k > n -k ? bin(n,n-k) : bin(n,k)
 
             template<typename U, U n, U k>
@@ -98,14 +125,13 @@ namespace integrators
 #endif
             void operator()(D* x, D& wgt, const U dim) const
             {
-                D prefactor = (D(2)*r+D(1))*detail::Binomial<U,2*r,r>::value;
+                const D prefactor = (D(2)*r+D(1))*detail::Binomial<U,2*r,r>::value;
                 for(U s = 0; s<dim; s++)
                 {
-                    wgt *= prefactor*detail::ipow<D,U,r>(x[s])*detail::ipow<D,U,r>(D(1)-x[s]);
-                    x[s] = detail::ipow<D,U,r+1>(x[s])*detail::KorobovTerm<D,U,r,r,r>::value(x[s]);
-                    // loss of precision can cause x > 1., must keep in x \elem [0,1]
-                    if (x[s] > D(1))
-                        x[s] = D(1);
+                    wgt *= prefactor*detail::ipow<D,U,r>::value(x[s])*detail::ipow<D,U,r>::value(D(1)-x[s]);
+                    x[s] = detail::ipow<D,U,r+1>::value(x[s])*detail::KorobovTerm<D,U,r,r,r>::value(x[s]);
+                    // loss of precision can cause x > 1, must keep in x \elem [0,1]
+                    if (x[s] > D(1)) x[s] = D(1);
                 }
             }
         };
@@ -124,9 +150,8 @@ namespace integrators
                 {
                     wgt *= x[s] * x[s] * x[s] * D(140)*(D(1) - x[s])*(D(1) - x[s])*(D(1) - x[s]);
                     x[s] = x[s] * x[s] * x[s] * x[s] * (D(35) + x[s] * (D(-84) + x[s] * (D(70) + x[s] * D(-20))));
-                    // loss of precision can cause x > 1., must keep in x \elem [0,1]
-                    if (x[s] > D(1))
-                        x[s] = D(1);
+                    // loss of precision can cause x > 1, must keep in x \elem [0,1]
+                    if (x[s] > D(1)) x[s] = D(1);
                 }
             }
         };
@@ -143,4 +168,6 @@ namespace integrators
     };
 
 };
+
+
 
