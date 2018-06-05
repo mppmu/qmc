@@ -415,7 +415,7 @@ namespace integrators
     template <typename F1>
     result<T,U> Qmc<T,D,U,G>::integrate(F1& func, const U dim)
     {
-        integrators::Korobov3<D,U> default_integral_transform;
+        integrators::transforms::Korobov<D,U,3> default_integral_transform;
         return integrate(func, dim, default_integral_transform);
     };
     
