@@ -18,7 +18,7 @@ namespace integrators
             if( display_timing )
             {
                 std::chrono::steady_clock::time_point now_time = std::chrono::steady_clock::now();
-                time_string = "[" + std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(now_time - reference_time).count()) + " ms] ";
+                time_string = "[" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(now_time - reference_time).count()) + " ms] ";
             }
             return this->get() << time_string << arg;
         }
