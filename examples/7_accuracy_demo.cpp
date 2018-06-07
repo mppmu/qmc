@@ -1,3 +1,14 @@
+/*
+ * Compile without GPU support:
+ *   c++ -std=c++11 -I../src 7_accuracy_demo.cpp -o 7_accuracy_demo.out
+ * Compile with GPU support:
+ *   nvcc -std=c++11 -x cu -I../src 7_accuracy_demo.cpp -o 7_accuracy_demo.out
+ */
+
+
+
+// TODO - fix this example
+
 #include <iostream>
 #include <limits> // numeric_limits
 #include <cmath> // sin, cos, exp

@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -I../src 5_cuda_demo_pointers.cpp -o 5_cuda_demo_pointers.out
+ *   c++ -std=c++11 -I../src 6_cuda_pointers_demo.cpp -o 6_cuda_pointers_demo.out
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 5_cuda_demo_pointers.cpp -o 5_cuda_demo_pointers.out
+ *   nvcc -std=c++11 -x cu -I../src 6_cuda_pointers_demo.cpp -o 6_cuda_pointers_demo.out
  */
 
 #include <iostream>
