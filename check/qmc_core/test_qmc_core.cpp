@@ -12,12 +12,16 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
     SECTION( "Check Fields", "[Qmc]" ) {
 
-        std::uniform_int_distribution<double> uniform_distribution(0,1);
-        double random_sample = uniform_distribution( real_integrator.randomgenerator );
+        std::uniform_real_distribution<double> uniform_distribution(0,1);
 
         //        Logger logger; // checked later
-        REQUIRE( random_sample >= 0 );
-        REQUIRE( random_sample <= 1 );
+        // Check a few random samples
+        for(int i = 0; i < 100; i++)
+        {
+            double random_sample = uniform_distribution( real_integrator.randomgenerator );
+            REQUIRE( random_sample >= 0 );
+            REQUIRE( random_sample <= 1 );
+        }
         REQUIRE( real_integrator.minn > 0 );
         REQUIRE( real_integrator.minm > 1 ); // can not calculate variance if minm <= 1
         REQUIRE( real_integrator.epsrel >= 0 );
