@@ -51,9 +51,11 @@ summarize :
 		   2>/dev/null \; | \
 		sed 's/\.\/\([A-Za-z0-9_-]*\)\/test.log/+ \1 (FAILED)/' | \
 		sort
-	find . -type f -name 'test.log' -exec grep -HL "@@@ FAILURE\|SUCCESS @@@" \{} \; | \
+	find . -type f -name 'test.log' -exec grep -HL "@@@ FAILURE\|SUCCESS @@@" \{} \
+		   2>/dev/null \; | \
 		sed 's/\.\/\([A-Za-z0-9_-]*\)\/test.log/+ \1 (UNKNOWN)/' | \
 		sort
+	for dir in $(ALL_EXAMPLES); do grep -HL "@@@ SUCCESS @@@" $$dir/test.log 2>&1 >/dev/null || printf '' ; done
 	printf "\033[0m"
 	printf "\n"
 
