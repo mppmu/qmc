@@ -130,14 +130,14 @@ namespace integrators
                 {
                     wgt *= prefactor*detail::ipow<D,U,r>::value(x[s])*detail::ipow<D,U,r>::value(D(1)-x[s]);
                     x[s] = detail::ipow<D,U,r+1>::value(x[s])*detail::KorobovTerm<D,U,r,r,r>::value(x[s]);
-                    // loss of precision can cause x > 1, must keep in x \elem [0,1]
+                    // loss of precision can cause x < 0 or x > 1 must keep in x \elem [0,1]
                     if (x[s] > D(1)) x[s] = D(1);
+                    if (x[s] < D(0)) x[s] = D(0);
                 }
             }
         };
 
-
-        template <typename D, typename U>
+        template <typename D, typename U = unsigned long long int>
         struct Tent
         {
 #ifdef __CUDACC__
@@ -148,13 +148,14 @@ namespace integrators
                 for (U s = 0; s < dim; s++)
                 {
                     x[s] = D(1) - fabs(D(2)*x[s]-D(1)) ;
-                    // loss of precision can cause x > 1, must keep in x \elem [0,1]
+                    // loss of precision can cause x < 0 or x > 1 must keep in x \elem [0,1]
                     if (x[s] > D(1)) x[s] = D(1);
+                    if (x[s] < D(0)) x[s] = D(0);
                 }
             }
         };
 
-        template<typename D, typename U>
+        template<typename D, typename U = unsigned long long int>
         struct Trivial
         {
 #ifdef __CUDACC__
