@@ -76,6 +76,7 @@ Temporary Items
 *.log
 *.trs
 check/*/test_*
+!check/*/test_*.cpp
 examples/cuba_demo
 examples/accuracy_demo
 examples/basic_demo
