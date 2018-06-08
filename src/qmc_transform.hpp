@@ -136,25 +136,6 @@ namespace integrators
             }
         };
 
-        // TODO make 3 a compiler template argument
-        template <typename D, typename U>
-        struct Korobov3
-        {
-#ifdef __CUDACC__
-            __host__ __device__
-#endif
-            void operator()(D* x, D& wgt, const U dim) const
-            {
-                // Korobov r = 3
-                for (U s = 0; s < dim; s++)
-                {
-                    wgt *= x[s] * x[s] * x[s] * D(140)*(D(1) - x[s])*(D(1) - x[s])*(D(1) - x[s]);
-                    x[s] = x[s] * x[s] * x[s] * x[s] * (D(35) + x[s] * (D(-84) + x[s] * (D(70) + x[s] * D(-20))));
-                    // loss of precision can cause x > 1, must keep in x \elem [0,1]
-                    if (x[s] > D(1)) x[s] = D(1);
-                }
-            }
-        };
 
         template <typename D, typename U>
         struct Tent
