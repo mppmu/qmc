@@ -39,8 +39,8 @@ TEST_CASE( "Edge Cases", "[mul_mod]" ) {
         U d = 4037000499ull;
         U e = 6854775807ull;
 
-        REQUIRE( integrators::mul_mod<R,D,U>(d,0ull,e) == zero );
-        REQUIRE( integrators::mul_mod<R,D,U>(0ull,d,e) == zero );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(d,0ull,e) == zero );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(0ull,d,e) == zero );
 
     };
 
@@ -51,8 +51,8 @@ TEST_CASE( "Edge Cases", "[mul_mod]" ) {
         U d = 4037000499ull;
         U e = 6854775807ull;
 
-        REQUIRE( integrators::mul_mod<R,D,U>(d,0ull,e) == Approx(zero) );
-        REQUIRE( integrators::mul_mod<R,D,U>(0ull,d,e) == Approx(zero) );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(d,0ull,e) == Approx(zero) );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(0ull,d,e) == Approx(zero) );
 
     };
 
@@ -63,13 +63,13 @@ TEST_CASE( "Edge Cases", "[mul_mod]" ) {
         U a = 4503599627370496ull; // pow(radix,digits-1)
         U b = 4503599627370495ull;
 
-        REQUIRE( integrators::mul_mod<R,D,U>(b,b,a) == 1ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(b,0ull,a) == 0ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(0ull,b,a) == 0ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(b,1ull,a) == 4503599627370495ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(1ll,b,a) == 4503599627370495ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(b,2ull,a) == 4503599627370494ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(2ll,b,a) == 4503599627370494ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,b,a) == 1ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,0ull,a) == 0ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(0ull,b,a) == 0ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,1ull,a) == 4503599627370495ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(1ll,b,a) == 4503599627370495ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,2ull,a) == 4503599627370494ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(2ll,b,a) == 4503599627370494ull );
 
     };
 
@@ -80,13 +80,13 @@ TEST_CASE( "Edge Cases", "[mul_mod]" ) {
         U a = 4503599627370496ull; // pow(radix,digits-1)
         U b = 4503599627370495ull;
 
-        REQUIRE( integrators::mul_mod<R,D,U>(b,b,a) == 1ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(b,0ull,a) == 0ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(0ull,b,a) == 0ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(b,1ull,a) == 4503599627370495ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(1ll,b,a) == 4503599627370495ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(b,2ull,a) == 4503599627370494ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(2ll,b,a) == 4503599627370494ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,b,a) == 1ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,0ull,a) == 0ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(0ull,b,a) == 0ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,1ull,a) == 4503599627370495ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(1ll,b,a) == 4503599627370495ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(b,2ull,a) == 4503599627370494ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(2ll,b,a) == 4503599627370494ull );
 
     };
 
@@ -98,8 +98,8 @@ TEST_CASE( "Edge Cases", "[mul_mod]" ) {
         U d = 4037000499ull;
         U e = 6854775807ull;
 
-        REQUIRE( integrators::mul_mod<R,D,U>(c,d,e) == 93292437ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(d,c,e) == 93292437ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(c,d,e) == 93292437ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(d,c,e) == 93292437ull );
 
     };
 
@@ -111,8 +111,8 @@ TEST_CASE( "Edge Cases", "[mul_mod]" ) {
         U d = 4037000499ull;
         U e = 6854775807ull;
 
-        REQUIRE( integrators::mul_mod<R,D,U>(c,d,e) == 93292437ull );
-        REQUIRE( integrators::mul_mod<R,D,U>(d,c,e) == 93292437ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(c,d,e) == 93292437ull );
+        REQUIRE( integrators::math::mul_mod<R,D,U>(d,c,e) == 93292437ull );
 
     };
 
@@ -133,7 +133,7 @@ TEST_CASE( "Fuzz Large Numbers", "[mul_mod]" )
         using R = unsigned long long int;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
         }
     };
 
@@ -142,7 +142,7 @@ TEST_CASE( "Fuzz Large Numbers", "[mul_mod]" )
         using R = double;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
         }
     };
 
@@ -163,7 +163,7 @@ TEST_CASE( "Fuzz Small Numbers", "[mul_mod]" )
         using R = unsigned long long int;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
         }
     };
 
@@ -172,7 +172,7 @@ TEST_CASE( "Fuzz Small Numbers", "[mul_mod]" )
         using R = double;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
         }
     };
 
@@ -193,7 +193,7 @@ TEST_CASE( "Fuzz Small a,b and Large k", "[mul_mod]" )
         using R = unsigned long long int;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
         }
     };
 
@@ -202,7 +202,7 @@ TEST_CASE( "Fuzz Small a,b and Large k", "[mul_mod]" )
         using R = double;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
         }
     };
 
@@ -223,7 +223,7 @@ TEST_CASE( "Fuzz Small a and Large b,k", "[mul_mod]" )
         using R = unsigned long long int;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
         }
     };
 
@@ -232,7 +232,7 @@ TEST_CASE( "Fuzz Small a and Large b,k", "[mul_mod]" )
         using R = double;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
         }
     };
 
@@ -253,7 +253,7 @@ TEST_CASE( "Fuzz Small b and Large a,k", "[mul_mod]" )
         using R = unsigned long long int;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == goal[i] );
         }
     };
 
@@ -262,7 +262,7 @@ TEST_CASE( "Fuzz Small b and Large a,k", "[mul_mod]" )
         using R = double;
         for(size_t i = 0; i < a.size(); i++)
         {
-            REQUIRE( integrators::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
+            REQUIRE( integrators::math::mul_mod<R,D,U>(a[i],b[i],k[i]) == Approx(goal[i]) );
         }
     };
 

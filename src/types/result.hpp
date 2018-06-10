@@ -1,3 +1,6 @@
+#ifndef QMC_RESULT_H
+#define QMC_RESULT_H
+
 namespace integrators
 {
     template <typename T, typename U = unsigned long long int>
@@ -9,3 +12,5 @@ namespace integrators
         U m;
     };
 };
+
+#endif

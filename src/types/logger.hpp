@@ -1,3 +1,6 @@
+#ifndef QMC_LOGGER_H
+#define QMC_LOGGER_H
+
 #include <functional> // reference_wrapper
 #include <ostream> // ostream
 #include <chrono> // chrono
@@ -29,3 +32,4 @@ namespace integrators
     };
 };
 
+#endif

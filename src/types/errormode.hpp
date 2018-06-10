@@ -1,3 +1,6 @@
+#ifndef QMC_ERRORMODE_H
+#define QMC_ERRORMODE_H
+
 namespace integrators
 {
     enum ErrorMode : int
@@ -6,3 +9,5 @@ namespace integrators
         largest = 2
     };
 };
+
+#endif
