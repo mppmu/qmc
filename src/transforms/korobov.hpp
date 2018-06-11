@@ -26,8 +26,8 @@ namespace integrators
                 const D prefactor = (D(2)*r+D(1))*detail::Binomial<U,2*r,r>::value;
                 for(U s = 0; s<dim; s++)
                 {
-                    wgt *= prefactor*detail::ipow<D,U,r>::value(x[s])*detail::ipow<D,U,r>::value(D(1)-x[s]);
-                    x[s] = detail::ipow<D,U,r+1>::value(x[s])*detail::KorobovTerm<D,U,r,r,r>::value(x[s]);
+                    wgt *= prefactor*detail::IPow<D,U,r>::value(x[s])*detail::IPow<D,U,r>::value(D(1)-x[s]);
+                    x[s] = detail::IPow<D,U,r+1>::value(x[s])*detail::KorobovTerm<D,U,r,r,r>::value(x[s]);
                     // loss of precision can cause x < 0 or x > 1 must keep in x \elem [0,1]
                     if (x[s] > D(1)) x[s] = D(1);
                     if (x[s] < D(0)) x[s] = D(0);

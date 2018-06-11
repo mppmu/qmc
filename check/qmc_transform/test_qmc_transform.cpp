@@ -11,16 +11,16 @@ TEST_CASE( "ipow", "[ipow]")
         using D = int;
         using U = unsigned long long int;
 
-        REQUIRE(integrators::transforms::detail::ipow<D,U,0>::value(1) == 1 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,0>::value(3) == 1 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,1>::value(2) == 2 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,1>::value(-2) == -2 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,3>::value(2) == 8 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,3>::value(-2) == -8 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,10>::value(3) == 59049 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,10>::value(-3) == 59049 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,9>::value(4) == 262144 );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,9>::value(-4) == -262144 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,0>::value(1) == 1 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,0>::value(3) == 1 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,1>::value(2) == 2 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,1>::value(-2) == -2 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,3>::value(2) == 8 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,3>::value(-2) == -8 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,10>::value(3) == 59049 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,10>::value(-3) == 59049 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,9>::value(4) == 262144 );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,9>::value(-4) == -262144 );
 
     };
 
@@ -29,18 +29,18 @@ TEST_CASE( "ipow", "[ipow]")
         using D = double;
         using U = unsigned long long int;
 
-        REQUIRE(integrators::transforms::detail::ipow<D,U,0>::value(1.) == Approx(1.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,0>::value(3.) == Approx(1.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,1>::value(2.) == Approx(2.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,1>::value(-2.) == Approx(-2.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,3>::value(2.) == Approx(8.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,3>::value(-2.) == Approx(-8.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,10>::value(3.) == Approx(59049.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,10>::value(-3.) == Approx(59049.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,9>::value(4.) == Approx(262144.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,9>::value(-4.) == Approx(-262144.) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,101>::value(-4.) == Approx(-6.42775217703596110e60) );
-        REQUIRE(integrators::transforms::detail::ipow<D,U,40>::value(7e-6) == Approx(6.36680576090902799e-207) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,0>::value(1.) == Approx(1.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,0>::value(3.) == Approx(1.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,1>::value(2.) == Approx(2.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,1>::value(-2.) == Approx(-2.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,3>::value(2.) == Approx(8.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,3>::value(-2.) == Approx(-8.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,10>::value(3.) == Approx(59049.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,10>::value(-3.) == Approx(59049.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,9>::value(4.) == Approx(262144.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,9>::value(-4.) == Approx(-262144.) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,101>::value(-4.) == Approx(-6.42775217703596110e60) );
+        REQUIRE(integrators::transforms::detail::IPow<D,U,40>::value(7e-6) == Approx(6.36680576090902799e-207) );
     };
 
 };

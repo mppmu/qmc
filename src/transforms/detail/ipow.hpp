@@ -10,34 +10,34 @@ namespace integrators
         namespace detail
         {
             /*
-             * Power function: ipow<D,U,i>(d) raises the D d to the U power i
+             * Power function: IPow<D,U,i>(d) raises the D d to the U power i
              */
             template<typename D, typename U, U n, typename = void>
-            struct ipow // n%2 == 0 && n != 0
+            struct IPow // n%2 == 0 && n != 0
             {
 #ifdef __CUDACC__
                 __host__ __device__
 #endif
                 static D value(D base)
                 {
-                    D power = ipow<D,U,n/2>::value(base);
+                    D power = IPow<D,U,n/2>::value(base);
                     return power * power;
                 }
             };
             template<typename D, typename U, U n>
-            struct ipow<D, U, n, typename std::enable_if< n%2 != 0 && n != 0>::type>
+            struct IPow<D, U, n, typename std::enable_if< n%2 != 0 && n != 0>::type>
             {
 #ifdef __CUDACC__
                 __host__ __device__
 #endif
                 static D value(D base)
                 {
-                    D power = ipow<D,U,(n-1)/2>::value(base);
+                    D power = IPow<D,U,(n-1)/2>::value(base);
                     return base * power * power;
                 }
             };
             template<typename D, typename U, U n>
-            struct ipow<D, U, n, typename std::enable_if< n == 0>::type>
+            struct IPow<D, U, n, typename std::enable_if< n == 0>::type>
             {
 #ifdef __CUDACC__
                 __host__ __device__
