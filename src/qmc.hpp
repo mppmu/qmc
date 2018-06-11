@@ -26,7 +26,7 @@ namespace integrators
         void init_d(std::vector<D>& d, const U m, const U dim);
         void init_r(std::vector<T>& r, const U m, const U r_size_over_m) const;
 
-        template <typename F1, typename F2> void worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  F1& func, const U dim, F2& integral_transform, const int device) const;
+        template <typename F1, typename F2> void worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  F1& func, const U dim, F2& integral_transform, const int device, D& time_in_ns, U& points_computed) const;
         template <typename F1, typename F2> result<T,U> sample(F1& func, const U dim, F2& integral_transform, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
         void update(result<T,U>& res, U& n, U& m, U& function_evaluations) const;
 

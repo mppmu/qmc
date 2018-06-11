@@ -15,6 +15,7 @@
 #include <mutex>
 #include <memory> // unique_ptr
 #include <cassert> // assert
+#include <chrono>
 
 namespace integrators
 {
@@ -44,8 +45,12 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G>::worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device) const
+    void Qmc<T,D,U,G>::worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device, D& time_in_ns, U& points_computed) const
     {
+        std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
+
+        points_computed = 0;
+
         // Setup worker
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
@@ -104,6 +109,9 @@ namespace integrators
                 integrators::core::cuda::compute(*this, i, work_this_iteration, total_work_packages, d_z, d_d, d_r, d_r_size/m, n, m, d_func, dim, d_integral_transform, device);
 #endif
             }
+
+            points_computed += work_this_iteration*m;
+
         }
 
         // Teardown worker
@@ -112,6 +120,10 @@ namespace integrators
             integrators::core::cuda::teardown(d_r, d_r_size/m, &r[thread_id], r.size()/m, m, device, verbosity, logger);
         }
 #endif
+
+        std::chrono::steady_clock::time_point time_after_compute = std::chrono::steady_clock::now();
+        time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_after_compute - time_before_compute).count();
+
     };
     
     template <typename T, typename D, typename U, typename G>
@@ -180,6 +192,8 @@ namespace integrators
                 logger << "r " << shifts << "*" << r_size_over_m << std::endl;
             }
 
+            std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
+
             if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1)
             {
                 // Compute serially on cpu
@@ -207,15 +221,19 @@ namespace integrators
 
                 // Launch worker threads
                 U thread_id = 0;
+                U thread_number = 0;
                 std::vector<std::thread> thread_pool;
                 thread_pool.reserve(cputhreads+extra_threads);
+                std::vector<D> time_in_ns_per_thread(cputhreads+extra_threads,D(0));
+                std::vector<U> points_computed_per_thread(cputhreads+extra_threads,U(0));
                 for (int device : devices)
                 {
                     if( device != -1)
                     {
 #ifdef __CUDACC__
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), device ) ); // Launch non-cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number])  ) ); // Launch non-cpu workers
                         thread_id += cudablocks*cudathreadsperblock;
+                        thread_number += 1;
 #else
                         throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
 #endif
@@ -225,14 +243,42 @@ namespace integrators
                 {
                     for ( U i=0; i < cputhreads; i++)
                     {
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1 ) ); // Launch cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G>::worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
                         thread_id += 1;
+                        thread_number += 1;
                     }
                 }
                 // Destroy threadpool
                 for( std::thread& thread : thread_pool )
                     thread.join();
                 thread_pool.clear();
+
+                if(verbosity > 2)
+                {
+                    for( U i=0; i< extra_threads; i++)
+                    {
+                        logger << "(" << i << ") Million Function Evaluations/s: " << D(1000)*D(points_computed_per_thread[i])/D(time_in_ns_per_thread[i]) << " Mfeps (Approx)" << std::endl;
+                    }
+                    if( devices.count(-1) != 0)
+                    {
+                        D time_in_ns_on_cpu = 0;
+                        U points_computed_on_cpu = 0;
+                        for( U i=extra_threads; i< extra_threads+cputhreads; i++)
+                        {
+                            points_computed_on_cpu += points_computed_per_thread[i];
+                            time_in_ns_on_cpu = std::max(time_in_ns_on_cpu,time_in_ns_per_thread[i]);
+                        }
+                        logger << "(-1) Million Function Evaluations/s: " << D(1000)*D(points_computed_on_cpu)/D(time_in_ns_on_cpu) << " Mfeps (Approx)" << std::endl;
+                    }
+                }
+            }
+
+            std::chrono::steady_clock::time_point time_after_compute = std::chrono::steady_clock::now();
+
+            if(verbosity > 2)
+            {
+                D mfeps = D(1000)*D(n*shifts)/D(std::chrono::duration_cast<std::chrono::nanoseconds>(time_after_compute - time_before_compute).count()); // million function evaluations per second
+                logger << "(Total) Million Function Evaluations/s: " << mfeps << " Mfeps" << std::endl;
             }
             res = integrators::core::reduce(r, n, shifts,  previous_iterations, verbosity, logger);
         }
