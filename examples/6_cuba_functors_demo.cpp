@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -I../src 5_cuda_functors_demo.cpp -o 5_cuda_functors_demo.out
+ *   c++ -std=c++11 -pthread -I../src 6_cuda_functors_demo.cpp -o 6_cuda_functors_demo.out
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 5_cuda_functors_demo.cpp -o 5_cuda_functors_demo.out
+ *   nvcc -std=c++11 -x cu -I../src 6_cuda_functors_demo.cpp -o 6_cuda_functors_demo.out
  */
 
 #include <iostream>
