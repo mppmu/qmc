@@ -1,15 +1,128 @@
-Examples
-========
+# Examples
 
-compiling
----------
+## Compiling
 
-Compile:
+Compile without GPU support:
 ```shell
-c++ -std=c++11 -I../src <example_name>.cpp -o <example_name>
+c++ -std=c++11 -pthread -I../src <example_name>.cpp -o <example_name>.out
 ```
 
-cuba_demo
----------
+Compile with GPU support:
+```shell
+nvcc -std=c++11 -x cu -I../src <example_name>.cpp -o <example_name>.out
+```
 
-Translation of the cuba demo file to C++11.
+## Introductory Examples
+
+The following examples demonstrate the basic usage of the integrator.
+
+### 1_minimal_demo
+
+Demonstrates the simplest usage of the QMC. Shows how to integrate the 3 dimensional function `f(x0,x1,x2) = x0*x1*x2`. The CUDA function execution space specifiers `__host__` and  `__device__` are present only when compiling with GPU support, this is controlled by the presence of the `__CUDACC__` macro which is automatically defined by the compiler during CUDA compilation.
+
+### 2_complex_demo
+
+Demonstrates how to integrate a complex function in a way compatible with both CPU and GPU evaluation. Since the type `std::complex` is not currently supported by GPUs we use the type `thrust::complex` if compiling with GPU support, this is achieved using a `typedef` which depends on the presence of `__CUDACC__`.
+
+### 3_defaults_demo
+
+Demonstrates how to adjust all settings of the QMC. In this demo all values are set to their default.
+
+### 4_transform_demo
+
+Demonstrates how to change the integral transform used by the integator. The available integral transforms are listed in `src/transforms`. In this example we instantiate a `Tent` transform and pass it as an additional (optional) argument to the integrator's `integrate` function, this overrides the default transform and instead causes the integrator to apply the `Tent` transform.
+
+### 5_generatingvectors_demo
+
+Demonstrates how to change the generating vectors used by the integrator. The available generating vectors are listed in `src/generatingvectors`. In this example we switch the generating vectors used by the integrators from the default to `cbcpt_dn2_6`.
+
+### 6_cuba_functors_demo
+
+A translation of the CUBA demo file for input to the QMC. For each function in the CUBA test suite we create a corresponding functor. In the `main` function we instantiate a copy of the QMC capable of integrating real functions. Finally we pass each functor to the integrator and print the result using the `integrate_and_print` function.
+
+### 7_cuba_pointers_demo
+
+An alternative translation of the CUBA demo file for input to the QMC. In  `6_cuba_functors_demo` a new functor is declared for each function in the CUBA test suite, in particular, each functor has a different type which corresponds to the function it contains. However, in `c++11` it can sometimes be inconvenient to iterate over objects of different types. In this demo we show how a functor of a single type can be used to refer to each of the functions in the test suite. This is a 5 stage process:
+1. Declare the functions to be integrated, e.g.
+```cpp
+__host__ __device__ func1(double x[]) { return sin(x[0])*cos(x[1])*exp(x[2]); }
+```
+2. Create pointers to these functions on each of the CUDA devices, as of CUDA 9.0 this must be done in global scope, e.g.
+```cpp
+__device__ integrand* device_func1 = func1; // must be in global scope
+```
+3. Create functions which can copy the device function pointers to the host, as of CUDA 9.0 this must be done in global scope due to the call to `cudaMemcpyFromSymbol`, e.g.
+```cpp
+integrand* get_device_address_func1()
+{
+#ifdef __CUDACC__
+integrand* device_address_on_host;
+CUDA_SAFE_CALL(cudaMemcpyFromSymbol(&device_address_on_host, device_func1, sizeof(integrand*))); // must be called by a function in global scope
+return device_address_on_host;
+#else
+return nullptr;
+#endif
+}
+```
+4. Create the functor that will hold these function pointers with a call operator to evaluate the function pointed to:
+```cpp
+struct my_functor_t {
+get_device_address* device_address_getter;
+
+integrand* host_address;
+integrand* device_address;
+
+#ifdef __CUDACC__
+__host__ __device__
+#endif
+double operator()(double* x) const
+{
+#ifdef __CUDA_ARCH__
+return device_address(x);
+#else
+return host_address(x);
+#endif
+}
+
+//Copy constructor
+my_functor_t(const my_functor_t& my_functor):
+device_address_getter(my_functor.device_address_getter),
+host_address(my_functor.host_address),
+device_address(my_functor.device_address_getter()) // update device_address for current device
+{};
+
+// Constructor
+my_functor_t(integrand* host_address, get_device_address* device_address_getter):
+device_address_getter(device_address_getter),
+host_address(host_address),
+device_address(device_address_getter())
+{};
+
+};
+```
+Note that this functor holds 3 pointers: 
+* a pointer to the function which returns the device address (`device_address_getter`)
+* a pointer to the host address of the function (`host_address`) and
+* a pointer to the function on the current device (`device_address`).
+
+The functor's call operator decides whether to call the host or device version of the function based on the presence of the `__CUDA_ARCH__` preprocessor macro which is automatically defined by the compiler depending on the architecture currently being compiled for (the function will typically be compiled twice by `nvcc`, once for the GPU and once for the CPU). The constructor of the functor takes a host address and a pointer to the device address getter function, the device address is determined via a call to the device address getter. 
+ The QMC integrator can change the device on which the functor will be called after the functor is constructed, it is therefore necessary to be able to update the device address to the address on the current device. In the integrator we provide a mechanism to update the device address by always copying the functor before the first call on the device, therefore, a copy constructor can be implemented which updates the device address by making an additional call to `device_address_getter`, as shown above. Finally, in the `main` function we create a vector of functors each pointing to a different function, we iterate over this vector integrating each function and printing the result.
+ 
+ ### 8_accuracy_demo
+ 
+ TODO
+ 
+ ## Loop Integral Examples
+ 
+ The following examples are taken from high energy physics loop integals and demonstrate the usage of the integrator on examples of interest to the authors.
+ 
+ ### 100_hh_sector_demo
+ 
+ A single sector of a sector decomposed 2-loop double higgs integral, taken from [arXiv:1604.06447](https://arxiv.org/abs/1604.06447) and [arXiv:1608.04798](https://arxiv.org/abs/1608.04798). This sector at phase-space point `Run 4160` (hardcoded near the top of the example) was identified by exhaustive search as having particularly poor scaling with integral transform Korobov weight 3 applied.
+ 
+ ### 101_ff4_demo
+ 
+ The finite 4-loop form factor of Eq(7.1) [arXiv:1510.06758](https://arxiv.org/abs/1510.06758). Here, rather than applying sector decomposition (which generates O(20k) sectors) we try to integrate the function directly. The first few lines map the domain of integration from the simplex to the hypercube. The example depends on 11 Feynman parameters (integration variables) and we find that (due to the high dimension?) the variance of the function is extremely large particualrly when the Korobov transforms are applied. Note that although the input function is integrable it is not finite everywhere, in particular it blows up when some of the parameters tend to zero.
+ 
+ The analytic result evalutes to: `3.1807380843134699650...`
+ 
