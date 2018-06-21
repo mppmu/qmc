@@ -1,4 +1,4 @@
-# HOW TO RUN THE TESTS
+# How to run the tests
 
 Each test can be run by executing 'make <dirname>'. 
 'make runtests' can be invoked to run all tests.
@@ -20,7 +20,7 @@ make <dirname>:
    Run 'make test' in the directory <dirname>.
 
 
-# FUTHER OPTIONS
+# Further options
 
 Make's "-j<jmake>" option controls how many recipes make executes in parallel. 
 
@@ -28,7 +28,7 @@ In order to change the c++ compiler, you can set the environment variables CXX.
 For example, to run an with the clang++ compiler type
 'CXX=clang++ make <example>'.
 
-# ADDING NEW TESTS
+# Adding new tests
 
 All subdirectories are considered when invoking 'make runtests'. 
 A test directory should have a "Makefile" that defines the
