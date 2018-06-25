@@ -76,6 +76,6 @@ namespace integrators
 #include "core/cuda/get_device_count.hpp"
 #include "core/generic/compute.hpp"
 #include "core/reduce.hpp"
-#include "qmc_members.hpp"
+#include "members.hpp"
 
 #endif
