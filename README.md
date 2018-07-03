@@ -166,7 +166,7 @@ Controls the error goal that the library attempts to acheive when the integrand 
 
 Possible values:
 *  `all` - try to find an estimate `E` for the integral `I` which fulfills  `|E-I| <= max(epsabs, epsrel*I)` for each component (real and imaginary) separately,
-*  `largest` - try to achieve either the `epsabs` or `epsrel` error goal for the largest component (either real or imaginary) only. The integrator tries to find an estimate `E` for the integral `I` such that `max( |Re[E]-Re[I]|, |Im[E]-Im[I]| ) <= min( epsabs, epsrel*max( |Re[I]|,|Im[I]| ) )` .
+*  `largest` - try to find an estimate `E` for the integral `I` such that `max( |Re[E]-Re[I]|, |Im[E]-Im[I]| ) <= min( epsabs, epsrel*max( |Re[I]|,|Im[I]| ) )` , i.e. to achieve either the `epsabs` error goal or that the largest error is smaller than `epsrel` times the value of the largest component (either real or imaginary).
 
 Default: `all`.
 
