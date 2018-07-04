@@ -12,7 +12,7 @@ namespace integrators
         std::map<U,std::vector<U>> cbcpt_cfftw1_6()
         {
 
-            // Vectors generated using custom generator based on FFTW
+            // Vectors generated using custom CBC tool based on FFTW
             // Settings:
             // s = 100
             // omega=inline('2*pi^2*(x.^2-x+1/6)')
