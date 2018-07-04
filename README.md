@@ -251,6 +251,37 @@ Integrates the function `func` in `dim` dimensions using the default integral tr
 
 ---
 
+### Generating Vectors
+
+The following generating vectors are distributed with the qmc:
+
+| Name | Max. Dimension | Description | Lattice Sizes |
+| --- | --- | --- | --- |
+| cbcpt_dn1_100 | 100 | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 1021 - 2147483647 |
+| cbcpt_dn2_6     | 6     | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 65521 - 2499623531 |
+| cbcpt_cfftw1_6 | 6     | Computed using a custom CBC tool based on FFTW | 2500000001 - 15173222401 |
+
+The generating vectors used by the qmc can be selected by setting the integrator's `generatingvectors` member variable. Example (assuming an integrator instance named `integrator`):
+```cpp
+integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn2_6<unsigned long long>();
+```
+### Integral Transforms
+
+The following integral transforms are distributed with the qmc:
+
+| Name | Description |
+| --- | --- |
+| Korobov<r> | A polynomial integral transform with weight ∝ x^r * (1-x)^r   |
+| Sidi<r> | A trigonometric integral transform with weight ∝ sin^r(pi*x) | 
+| Tent | The baker's transformation, phi(x) = 1 - abs(2x-1)  |
+| Trivial | A trivial integral transform, phi(x) = x |
+
+The integral transform used by the qmc can be selected by passing the desired integral transform to the integrate function. Example (assuming a real type integrator instance named `integrator`):
+```cpp
+integrators::transforms::Tent<double,unsigned long long int> transform;
+integrators::result<double> result = integrator.integrate(my_functor, 3, transform);
+```
+
 ## FAQ
 
 **How do I write the text output of the library to a file?**
