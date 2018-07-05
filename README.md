@@ -347,16 +347,16 @@ template<typename D, typename U = unsigned long long int>
 struct MyTransform
 {
 #ifdef __CUDACC__
-__host__ __device__
+  __host__ __device__
 #endif
-void operator()(D* x, D& wgt, const U dim) const
-{
-for (U s = 0; s < dim; s++)
-{
-wgt *= ...; // Jacobian of transform
-x[s] = ...; // Transform for each dimension s
-}
-}
+  void operator()(D* x, D& wgt, const U dim) const
+  {
+    for (U s = 0; s < dim; s++)
+    {
+      wgt *= ...; // Jacobian of transform
+      x[s] = ...; // Transform for each dimension s
+    }
+  }
 };
 ```
 See also the existing transforms in `src/transforms`.
