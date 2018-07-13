@@ -83,6 +83,7 @@ The Qmc class has 4 template parameters:
 * `D` the argument type of the function to be integrated (assumed to be a floating point type) 
 * `U` an unsigned int type (default: `unsigned long long int`)
 * `G` a C++11 style pseudo-random number engine (default: `std::mt19937_64`)
+* `H` a C++11 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
 
 ### Public fields
 

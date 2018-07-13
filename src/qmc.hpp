@@ -14,13 +14,13 @@
 
 namespace integrators
 {
-    template <typename T, typename D, typename U = unsigned long long int, typename G = std::mt19937_64>
+    template <typename T, typename D, typename U = unsigned long long int, typename G = std::mt19937_64, typename H = std::uniform_real_distribution<D>>
     class Qmc
     {
 
     private:
 
-        std::uniform_real_distribution<D> uniform_distribution = std::uniform_real_distribution<D>(0,1);
+        H uniform_distribution{0,1};
 
         void init_z(std::vector<U>& z, const U n, const U dim) const;
         void init_d(std::vector<D>& d, const U m, const U dim);
