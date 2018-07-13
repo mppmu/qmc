@@ -288,6 +288,8 @@ namespace integrators
     template <typename T, typename D, typename U, typename G>
     void Qmc<T,D,U,G>::update(result<T,U>& res, U& n, U& m, U& function_evaluations) const
     {
+        using std::pow;
+
         if (verbosity > 2) logger << "-- qmc::update called --" << std::endl;
 
         const D MAXIMUM_ERROR_RATIO = static_cast<D>(20);
@@ -303,7 +305,10 @@ namespace integrators
             return;
         }
         U new_m = minm;
-        U new_n = get_next_n(static_cast<U>(static_cast<D>(n)*std::pow(error_ratio,static_cast<D>(1)/EXPECTED_SCALING)));
+        #define QMC_POW_CALL pow(error_ratio,static_cast<D>(1)/EXPECTED_SCALING)
+        static_assert(std::is_same<decltype(QMC_POW_CALL),D>::value, "Downcast detected in qmc::update(. Please implement \"D pow(D)\".");
+        U new_n = get_next_n(static_cast<U>(static_cast<D>(n)*QMC_POW_CALL));
+        #undef QMC_POW_CALL
         if ( new_n <= n or ( error_ratio*error_ratio - static_cast<D>(1) < static_cast<D>(new_n)/static_cast<D>(n)))
         {
             // n did not increase, or increasing m will be faster

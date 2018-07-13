@@ -16,7 +16,9 @@ namespace integrators
         template <typename T>
         T compute_error(const T& variance)
         {
-            return T(std::sqrt(std::abs(variance)));
+            using std::sqrt;
+            using std::abs;
+            return T(sqrt(abs(variance)));
         };
 
         template <typename T>
@@ -28,7 +30,14 @@ namespace integrators
         template <typename T, typename D, typename U>
         D compute_error_ratio(const result<T,U>& res, const D& epsrel, const D&epsabs, const ErrorMode errormode)
         {
-            return std::min(res.error/epsabs, std::abs(res.error/(res.integral*epsrel)));
+            using std::abs;
+
+            #define QMC_ABS_CALL abs(res.error/(res.integral*epsrel))
+
+            static_assert(std::is_same<decltype(QMC_ABS_CALL),D>::value, "Downcast detected in integrators::overloads::compute_error_ratio. Please implement \"D abs(D)\".");
+            return std::min(res.error/epsabs, QMC_ABS_CALL);
+
+            #undef QMC_ABS_CALL
         };
     };
 };

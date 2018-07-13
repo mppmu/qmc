@@ -14,6 +14,8 @@ namespace integrators
             template <typename T, typename D, typename U, typename F1, typename F2>
             void compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform)
             {
+                using std::modf;
+
                 for (U k = 0; k < m; k++)
                 {
                     T kahan_c = {0.};
@@ -25,7 +27,12 @@ namespace integrators
 
                         for (U sDim = 0; sDim < dim; sDim++)
                         {
-                            x[sDim] = std::modf( integrators::math::mul_mod<D,D,U>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull);
+                            #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D,U>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull)
+
+                            static_assert(std::is_same<decltype(QMC_MODF_CALL),D>::value, "Downcast detected in integrators::core::generic::compute. Please implement \"D modf(D)\".");
+                            x[sDim] = QMC_MODF_CALL;
+
+                            #undef QMC_MODF_CALL
                         }
 
                         integral_transform(x.data(), wgt, dim);
