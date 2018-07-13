@@ -38,6 +38,10 @@ namespace integrators
             {
                 constexpr static U value = 1;
             };
+
+            // require declaration, see e.g.: https://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
+            template<typename U, U n, U k, typename T>
+            constexpr U Binomial<U,n,k,T>::value;
         };
     };
 };
