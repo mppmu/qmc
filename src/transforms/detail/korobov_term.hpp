@@ -21,9 +21,9 @@ namespace integrators
 #ifdef __CUDACC__
                 __host__ __device__
 #endif
-                constexpr static D value(const D& x)
+                const static D value(const D& x)
                 {
-                    return KorobovTerm<D,U,k-1,a,b>::value(x)*x+KorobovCoefficient<D,U,b-k,a,b>::value;
+                    return KorobovTerm<D,U,k-1,a,b>::value(x)*x+KorobovCoefficient<D,U,b-k,a,b>::value();
                 }
             };
             template<typename D, typename U, U k, U a, U b>
@@ -32,9 +32,9 @@ namespace integrators
 #ifdef __CUDACC__
                 __host__ __device__
 #endif
-                constexpr static D value(const D& x)
+                const static D value(const D& x)
                 {
-                    return KorobovCoefficient<D,U,b,a,b>::value;
+                    return KorobovCoefficient<D,U,b,a,b>::value();
                 }
             };
         };

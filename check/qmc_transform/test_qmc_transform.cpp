@@ -77,42 +77,41 @@ TEST_CASE( "KorobovCoefficient", "[transform]")
         using D = long long int;
         using U = unsigned long long int;
 
-        // static_assert as KorobovCoefficient should evaluate to an int at compile time
         // r=1, (3 - 2 x) x^2
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,0,1,1>::value == 3, "KorobovCoefficient<D,U,0,1,1>::value != 3");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,1,1,1>::value == -2, "KorobovCoefficient<D,U,1,1,1>::value != -2");
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,0,1,1>::value() == 3);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,1,1,1>::value() == -2);
 
         // r=2, x^3 (10 + x (-15 + 6 x))
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,0,2,2>::value == 10,  "KorobovCoefficient<D,U,0,2,2>::value != 10");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,1,2,2>::value == -15, "KorobovCoefficient<D,U,1,2,2>::value != -15");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,2,2,2>::value == 6,   "KorobovCoefficient<D,U,2,2,2>::value != 6");
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,0,2,2>::value() == 10);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,1,2,2>::value() == -15);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,2,2,2>::value() == 6);
 
         // r=3, x^4 (35 + x (-84 + (70 - 20 x) x))
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,0,3,3>::value == 35,  "KorobovCoefficient<D,U,0,3,3>::value != 35");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,1,3,3>::value == -84, "KorobovCoefficient<D,U,1,3,3>::value != -84");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,2,3,3>::value == 70,  "KorobovCoefficient<D,U,2,3,3>::value != 70");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,3,3,3>::value == -20, "KorobovCoefficient<D,U,3,3,3>::value != -20");
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,0,3,3>::value() == 35);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,1,3,3>::value() == -84);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,2,3,3>::value() == 70);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,3,3,3>::value() == -20);
 
         // r=4, x^5 (126 + x (-420 + x (540 + x (-315 + 70 x))))
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,0,4,4>::value == 126,  "KorobovCoefficient<D,U,0,2,2>::value != 126");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,1,4,4>::value == -420, "KorobovCoefficient<D,U,1,2,2>::value != -420");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,2,4,4>::value == 540,  "KorobovCoefficient<D,U,2,2,2>::value != 540");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,3,4,4>::value == -315, "KorobovCoefficient<D,U,3,2,2>::value != -315");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,4,4,4>::value == 70,   "KorobovCoefficient<D,U,4,2,2>::value != -70");
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,0,4,4>::value() == 126);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,1,4,4>::value() == -420);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,2,4,4>::value() == 540);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,3,4,4>::value() == -315);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,4,4,4>::value() == 70);
 
         // r=8, x^9 (24310+x (-175032+x (556920+x (-1021020+x (1178100+x (-875160+x (408408+x (-109395+12870 x))))))))
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,0,8,8>::value == 24310,    "KorobovCoefficient<D,U,0,8,8>::value != 24310");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,1,8,8>::value == -175032,  "KorobovCoefficient<D,U,1,8,8>::value != 175032");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,2,8,8>::value == 556920,   "KorobovCoefficient<D,U,2,8,8>::value != 556920");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,3,8,8>::value == -1021020, "KorobovCoefficient<D,U,3,8,8>::value != -1021020");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,4,8,8>::value == 1178100,  "KorobovCoefficient<D,U,4,8,8>::value != 1178100");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,5,8,8>::value == -875160,  "KorobovCoefficient<D,U,5,8,8>::value != -875160");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,6,8,8>::value == 408408,   "KorobovCoefficient<D,U,6,8,8>::value != 408408");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,7,8,8>::value == -109395,  "KorobovCoefficient<D,U,7,8,8>::value != -109395");
-        static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,8,8,8>::value == 12870,    "KorobovCoefficient<D,U,8,8,8>::value != 12870");
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,0,8,8>::value() == 24310);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,1,8,8>::value() == -175032);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,2,8,8>::value() == 556920);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,3,8,8>::value() == -1021020);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,4,8,8>::value() == 1178100);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,5,8,8>::value() == -875160);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,6,8,8>::value() == 408408);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,7,8,8>::value() == -109395);
+        REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,8,8,8>::value() == 12870);
 
         // Uneven weight (not used by program)
-        // static_assert(integrators::transforms::detail::KorobovCoefficient<D,U,5,6,7>::value == -90090, "KorobovCoefficient<U,5,6,7>::value != -90090");
+        // REQUIRE(integrators::transforms::detail::KorobovCoefficient<D,U,5,6,7>::value() == -90090);
      };
 
     SECTION( "Double Coefficients" )
@@ -120,68 +119,66 @@ TEST_CASE( "KorobovCoefficient", "[transform]")
         using D = double;
         using U = unsigned long long int;
 
-        // could use static_assert as KorobovCoefficient should evaluate to a double at compile time, but want to use Approx for comparing floating point
-
         double korobov_coefficient; // workaround catch issue
 
         // r=1, (3 - 2 x) x^2
-        korobov_coefficient = integrators::transforms::detail::KorobovCoefficient<D,U,0,1,1>::value;
+        korobov_coefficient = integrators::transforms::detail::KorobovCoefficient<D,U,0,1,1>::value();
         REQUIRE( korobov_coefficient== Approx(3.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,1,1>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,1,1>::value();
         REQUIRE( korobov_coefficient == Approx(-2.) );
 
         // r=2, x^3 (10 + x (-15 + 6 x))
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,2,2>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,2,2>::value();
         REQUIRE( korobov_coefficient == Approx(10.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,2,2>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,2,2>::value();
         REQUIRE( korobov_coefficient == Approx(-15.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,2,2>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,2,2>::value();
         REQUIRE( korobov_coefficient == Approx(6.) );
 
         // r=3, x^4 (35 + x (-84 + (70 - 20 x) x))
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,3,3>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,3,3>::value();
         REQUIRE( korobov_coefficient == Approx(35.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,3,3>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,3,3>::value();
         REQUIRE( korobov_coefficient == Approx(-84.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,3,3>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,3,3>::value();
         REQUIRE( korobov_coefficient == Approx(70.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,3,3,3>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,3,3,3>::value();
         REQUIRE( korobov_coefficient == Approx(-20.) );
 
         // r=4, x^5 (126 + x (-420 + x (540 + x (-315 + 70 x))))
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,4,4>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,4,4>::value();
         REQUIRE( korobov_coefficient == Approx(126.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,4,4>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,4,4>::value();
         REQUIRE( korobov_coefficient == Approx(-420.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,4,4>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,4,4>::value();
         REQUIRE( korobov_coefficient == Approx(540.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,3,4,4>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,3,4,4>::value();
         REQUIRE( korobov_coefficient == Approx(-315.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,4,4,4>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,4,4,4>::value();
         REQUIRE( korobov_coefficient == Approx(70.) );
 
         // r=8, x^9 (24310+x (-175032+x (556920+x (-1021020+x (1178100+x (-875160+x (408408+x (-109395+12870 x))))))))
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,0,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(24310.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,1,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(-175032.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,2,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(556920.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,3,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,3,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(-1021020.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,4,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,4,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(1178100.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,5,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,5,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(-875160.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,6,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,6,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(408408.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,7,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,7,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(-109395.) );
-        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,8,8,8>::value;
+        korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,8,8,8>::value();
         REQUIRE( korobov_coefficient == Approx(12870.) );
 
         // Uneven weight (not used by program)
-        // korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,5,6,7>::value;
+        // korobov_coefficient =integrators::transforms::detail::KorobovCoefficient<D,U,5,6,7>::value();
         //  REQUIRE( korobov_coefficient == Approx(-90090.) );
     };
 
