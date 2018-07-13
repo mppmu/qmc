@@ -310,13 +310,12 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
-    SECTION( "Set cputhreads to zero (sequential)")
+    SECTION( "Set cputhreads to zero (error)")
     {
         real_integrator.cputhreads = 0;
         complex_integrator.cputhreads = 0;
 
-        REQUIRE( real_result.integral == Approx(0.25).epsilon(eps) );
-        REQUIRE( real_result.error < eps );
+        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,2) , std::domain_error );
 
     };
 
