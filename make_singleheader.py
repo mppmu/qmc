@@ -55,7 +55,7 @@ main_header.insert(0,
  * Generated: """ +  datetime.datetime.now().strftime('%d-%m-%Y %X') + """
  *
  * ----------------------------------------------------------
- * This file has been merged from multiple headers. 
+ * This file has been merged from multiple headers.
  * Please don't edit it directly
  * ----------------------------------------------------------
  */
