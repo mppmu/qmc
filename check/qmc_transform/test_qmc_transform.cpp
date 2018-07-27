@@ -342,7 +342,7 @@ TEST_CASE( "Korobov Transform", "[transform]")
 
 };
 
-TEST_CASE( "Tent Transform", "[transform]")
+TEST_CASE( "Baker Transform", "[transform]")
 {
     using D = double;
     using U = unsigned long long int;
@@ -357,7 +357,7 @@ TEST_CASE( "Tent Transform", "[transform]")
 
     SECTION( "Trivial" )
     {
-        integrators::transforms::Tent<D> transform;
+        integrators::transforms::Baker<D> transform;
         transform(x,wgt,dim);
         for(U s = 0; s < dim; s++)
         {
@@ -368,7 +368,7 @@ TEST_CASE( "Tent Transform", "[transform]")
 
     SECTION( "Trivial" )
     {
-        integrators::transforms::Tent<D,U> transform;
+        integrators::transforms::Baker<D,U> transform;
         transform(x,wgt,dim);
         for(U s = 0; s < dim; s++)
         {

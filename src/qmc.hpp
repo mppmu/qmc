@@ -64,7 +64,7 @@ namespace integrators
 #include "overloads/real.hpp"
 #include "overloads/complex.hpp"
 #include "transforms/korobov.hpp"
-#include "transforms/tent.hpp"
+#include "transforms/baker.hpp"
 #include "transforms/trivial.hpp"
 #include "generatingvectors/cbcpt_dn1_100.hpp"
 #include "generatingvectors/cbcpt_dn2_6.hpp"

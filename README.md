@@ -274,12 +274,12 @@ The following integral transforms are distributed with the qmc:
 | --- | --- |
 | Korobov<r> | A polynomial integral transform with weight ∝ x^r * (1-x)^r   |
 | Sidi<r> | A trigonometric integral transform with weight ∝ sin^r(pi*x) | 
-| Tent | The baker's transformation, phi(x) = 1 - abs(2x-1)  |
+| Baker | The baker's transformation, phi(x) = 1 - abs(2x-1)  |
 | Trivial | A trivial integral transform, phi(x) = x |
 
 The integral transform used by the qmc can be selected by passing the desired integral transform to the integrate function. Example (assuming a real type integrator instance named `integrator`):
 ```cpp
-integrators::transforms::Tent<double,unsigned long long int> transform;
+integrators::transforms::Baker<double,unsigned long long int> transform;
 integrators::result<double> result = integrator.integrate(my_functor, 3, transform);
 ```
 
@@ -336,7 +336,7 @@ If you think your generating vectors will be widely useful for other people then
 
 By default we use the polynomial transform of Korobov, `\int_{[0,1]^d} f(\vec{x}) \mathrm{d} \vec{x} = \int_{[0,1]^d} F(\vec{t}) \mathrm{d} \vec{t}` with `F(\vec{t}) := f(\psi(\vec{t})) w_d(\vec{t})` where `w_d(\vec{t}) = \Prod_{j=1}^d w(t_j)`. Specifically we use the `r=3` transform which sets `w(t)=140 t^3 (1-t)^3` and `\psi(t) = 35t^4 -84t^5+70t^6-20t^7` for each variable. If you prefer another integral transform then you can pass another transform to the `integrate` function. For example:
 ```cpp
-integrators::transforms::Tent<double,unsigned long long int> transform;
+integrators::transforms::Baker<double,unsigned long long int> transform;
 integrators::Qmc<double,double> integrator;
 integrators::result<double> result = integrator.integrate(my_functor, 3, transform);
 ```

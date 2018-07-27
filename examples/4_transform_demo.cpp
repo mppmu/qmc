@@ -20,7 +20,7 @@ struct my_functor_t {
 
 int main() {
 
-    integrators::transforms::Tent<double,unsigned long long int> transform;
+    integrators::transforms::Baker<double,unsigned long long int> transform;
 
     integrators::Qmc<double,double> integrator;
     integrators::result<double> result = integrator.integrate(my_functor, 3, transform);

@@ -35,7 +35,7 @@ void integrate_and_print(integrators::Qmc<double,double>& real_integrator, F1& f
 
 int main() {
 
-    integrators::transforms::Tent<double,unsigned long long int> transform;
+    integrators::transforms::Baker<double,unsigned long long int> transform;
 
     integrators::Qmc<double,double> real_integrator;
 

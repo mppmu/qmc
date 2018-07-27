@@ -30,7 +30,7 @@ Demonstrates how to adjust all settings of the QMC. In this demo all values are 
 
 ### 4_transform_demo
 
-Demonstrates how to change the integral transform used by the integator. The available integral transforms are listed in `src/transforms`. In this example we instantiate a `Tent` transform and pass it as an additional (optional) argument to the integrator's `integrate` function, this overrides the default transform and instead causes the integrator to apply the `Tent` transform.
+Demonstrates how to change the integral transform used by the integator. The available integral transforms are listed in `src/transforms`. In this example we instantiate a `Baker` transform and pass it as an additional (optional) argument to the integrator's `integrate` function, this overrides the default transform and instead causes the integrator to apply the `Baker` transform.
 
 ### 5_generatingvectors_demo
 

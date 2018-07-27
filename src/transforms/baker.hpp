@@ -1,12 +1,12 @@
-#ifndef QMC_TRANSFORMS_TENT_H
-#define QMC_TRANSFORMS_TENT_H
+#ifndef QMC_TRANSFORMS_BAKER_H
+#define QMC_TRANSFORMS_BAKER_H
 
 namespace integrators
 {
     namespace transforms
     {
         template<typename D, typename U = unsigned long long int>
-        struct Tent
+        struct Baker
         {
 #ifdef __CUDACC__
             __host__ __device__
