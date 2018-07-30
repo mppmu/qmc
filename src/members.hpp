@@ -180,9 +180,12 @@ namespace integrators
                 logger << "cudablocks " << cudablocks << std::endl;
                 logger << "cudathreadsperblock " << cudathreadsperblock << std::endl;
                 logger << "devices ";
+                bool display_timing = logger.display_timing;
+                logger.display_timing = false;
                 for (const int& i : devices)
                     logger << i << " ";
                 logger << std::endl;
+                logger.display_timing = display_timing;
                 logger << "n " << n << std::endl;
                 logger << "m " << m << std::endl;
                 logger << "shifts " << shifts << std::endl;
