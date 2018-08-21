@@ -49,6 +49,27 @@ namespace integrators
                     }
                 }
             }
+
+            template <typename T, typename D, typename U, typename F1>
+            void generate_samples(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U n, F1& func, const U dim)
+            {
+                using std::modf;
+
+                D mynull = 0;
+                std::vector<D> x(dim,0);
+
+                for (U sDim = 0; sDim < dim; sDim++)
+                {
+                    #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D,U>(i,z.at(sDim),n)/(static_cast<D>(n)) + d.at(sDim), &mynull)
+
+                    static_assert(std::is_same<decltype(QMC_MODF_CALL),D>::value, "Downcast detected in integrators::core::generic::compute. Please implement \"D modf(D)\".");
+                    x[sDim] = QMC_MODF_CALL;
+
+                    #undef QMC_MODF_CALL
+                }
+
+                *r_element = func(x.data());
+            }
         };
     };
 };

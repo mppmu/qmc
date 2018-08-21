@@ -45,7 +45,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G, typename H>
     template <typename F1, typename F2>
-    void Qmc<T,D,U,G,H>::worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device, D& time_in_ns, U& points_computed) const
+    void Qmc<T,D,U,G,H>::sample_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device, D& time_in_ns, U& points_computed) const
     {
         std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
 
@@ -68,7 +68,7 @@ namespace integrators
         } else {
             work_this_iteration = cudablocks*cudathreadsperblock;
 #ifdef __CUDACC__
-            integrators::core::cuda::setup(d_z, z, d_d, d, d_r, d_r_size/m, &r[thread_id], r.size()/m, m, d_func, func, d_integral_transform, integral_transform, device, verbosity, logger);
+            integrators::core::cuda::setup_sample(d_z, z, d_d, d, d_r, d_r_size/m, &r[thread_id], r.size()/m, m, d_func, func, d_integral_transform, integral_transform, device, verbosity, logger);
 #endif
         }
 
@@ -117,7 +117,7 @@ namespace integrators
         // Teardown worker
 #ifdef __CUDACC__
         if (device != -1) {
-            integrators::core::cuda::teardown(d_r, d_r_size/m, &r[thread_id], r.size()/m, m, device, verbosity, logger);
+            integrators::core::cuda::teardown_sample(d_r, d_r_size/m, &r[thread_id], r.size()/m, m, device, verbosity, logger);
         }
 #endif
 
@@ -234,7 +234,7 @@ namespace integrators
                     if( device != -1)
                     {
 #ifdef __CUDACC__
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number])  ) ); // Launch non-cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::sample_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number])  ) ); // Launch non-cpu workers
                         thread_id += cudablocks*cudathreadsperblock;
                         thread_number += 1;
 #else
@@ -246,7 +246,7 @@ namespace integrators
                 {
                     for ( U i=0; i < cputhreads; i++)
                     {
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::sample_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
                         thread_id += 1;
                         thread_number += 1;
                     }
@@ -285,6 +285,227 @@ namespace integrators
             }
             res = integrators::core::reduce(r, n, shifts,  previous_iterations, verbosity, logger);
         }
+        return res;
+    };
+    
+    template <typename T, typename D, typename U, typename G, typename H>
+    template <typename F1, typename F2>
+    void Qmc<T,D,U,G,H>::evaluate_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, F1& func, const U dim, const int device, D& time_in_ns, U& points_computed) const
+    {
+        std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
+
+        points_computed = 0;
+
+        // Setup worker // TODO: fix cuda
+#ifdef __CUDACC__
+        // define device pointers (must be accessible in local scope of the entire function)
+        U d_r_size = cudablocks*cudathreadsperblock;
+        std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F1>> d_func;
+        std::unique_ptr<integrators::core::cuda::detail::cuda_memory<U>> d_z;
+        std::unique_ptr<integrators::core::cuda::detail::cuda_memory<D>> d_d;
+        std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>> d_r; // TODO: allocate two arrays for simultaneous computation and cudaMemcpy
+#endif
+        U i;
+        U  work_this_iteration;
+        if (device == -1) {
+            work_this_iteration = 1;
+        } else {
+            work_this_iteration = cudablocks*cudathreadsperblock;
+#ifdef __CUDACC__
+            integrators::core::cuda::setup_evaluate(d_z, z, d_d, d, d_r, d_r_size, d_func, func, device, verbosity, logger);
+#endif
+        }
+
+        bool work_remaining = true;
+        while( work_remaining )
+        {
+            // Get work
+            work_queue_mutex.lock();
+            if (work_queue == 0)
+            {
+                work_remaining=false;
+                i = 0;
+            }
+            else if (work_queue >= work_this_iteration)
+            {
+                work_queue-=work_this_iteration;
+                i = work_queue;
+            }
+            else
+            {
+                work_this_iteration = work_queue;
+                work_queue = 0;
+                i = 0;
+            }
+            work_queue_mutex.unlock();
+            
+            if( !work_remaining )
+                break;
+            
+            // Do work
+            if (device == -1)
+            {
+                integrators::core::generic::generate_samples(i, z, d, &r[i], n, func, dim);
+            }
+            else
+            {
+#ifdef __CUDACC__
+                integrators::core::cuda::generate_samples(*this, i, work_this_iteration, d_z, d_d, d_r, n, d_func, dim, device);
+#endif
+            }
+
+            points_computed += work_this_iteration;
+
+
+            // copy results to host
+#ifdef __CUDACC__
+            if (device != -1) {
+                integrators::core::cuda::copy_back(d_r, work_this_iteration, &r[i], device, verbosity, logger);
+            }
+#endif
+        }
+
+        // TODO: synchronize here when the async copy is implemented
+        std::chrono::steady_clock::time_point time_after_compute = std::chrono::steady_clock::now();
+        time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_after_compute - time_before_compute).count();
+
+    };
+    
+    template <typename T, typename D, typename U, typename G, typename H>
+    template <typename F1>
+    samples<T,D,U> Qmc<T,D,U,G,H>::evaluate(F1& func, const U dim) // TODO: this function needs to be written and tested
+    {
+        if ( cputhreads == 0 )
+        {
+            cputhreads = 1; // Correct cputhreads if hardware_concurrency is 0, i.e. not well defined or not computable
+            if (verbosity > 1) logger << "Qmc increased cputhreads from 0 to 1." << std::endl;
+        }
+
+        // no transform
+        using F2 = transforms::Trivial<D,U>;
+
+        // allocate memory
+        samples<T,D,U> res;
+        U& n = res.n;
+        n = get_next_n(minnevaluate); // get next available n >= minnevaluate
+        std::vector<U>& z = res.z;
+        std::vector<D>& d = res.d;
+        std::vector<T>& r = res.r;
+
+        // initialize z, d, r
+        init_z(z, n, dim);
+        init_d(d, 1, dim);
+        init_r(r, 1, n); // memory required for result vector
+
+        U extra_threads = devices.size() - devices.count(-1);
+
+        if (verbosity > 0)
+        {
+            logger << "-- qmc::evaluate called --" << std::endl;
+            logger << "dim " << dim << std::endl;
+            logger << "minnevaluate " << minnevaluate << std::endl;
+            logger << "cputhreads " << cputhreads << std::endl;
+            logger << "cudablocks " << cudablocks << std::endl;
+            logger << "cudathreadsperblock " << cudathreadsperblock << std::endl;
+            logger << "devices ";
+            bool display_timing = logger.display_timing;
+            logger.display_timing = false;
+            for (const int& i : devices)
+                logger << i << " ";
+            logger << std::endl;
+            logger.display_timing = display_timing;
+            logger << "n " << n << std::endl;
+        }
+
+        std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
+
+        if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1) // TODO: check this case
+        {
+            // Compute serially on cpu
+            if (verbosity > 2) logger << "computing serially" << std::endl;
+            for( U i=0; i < n; i++)
+            {
+                integrators::core::generic::generate_samples(i, z, d, &r[i], n, func, dim);
+            }
+        }
+        else // TODO: check this case
+        {
+            // Create threadpool
+            if (verbosity > 2)
+            {
+                logger << "distributing work" << std::endl;
+                if ( devices.count(-1) != 0)
+                    logger << "creating " << std::to_string(cputhreads) << " cputhreads," << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
+                else
+                    logger << "creating " << std::to_string(extra_threads) << " non-cpu threads" << std::endl;
+            }
+
+            // Setup work queue
+            std::mutex work_queue_mutex;
+            U work_queue = n;
+
+            // Launch worker threads
+            U thread_id = 0;
+            U thread_number = 0;
+            std::vector<std::thread> thread_pool;
+            thread_pool.reserve(cputhreads+extra_threads);
+            std::vector<D> time_in_ns_per_thread(cputhreads+extra_threads,D(0));
+            std::vector<U> points_computed_per_thread(cputhreads+extra_threads,U(0));
+            for (int device : devices)
+            {
+                if( device != -1)
+                {
+#ifdef __CUDACC__
+                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::evaluate_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), n, std::ref(func), dim, device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch non-cpu workers
+                    thread_id += cudablocks*cudathreadsperblock;
+                    thread_number += 1;
+#else
+                    throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
+#endif
+                }
+            }
+            if( devices.count(-1) != 0)
+            {
+                for ( U i=0; i < cputhreads; i++)
+                {
+                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::evaluate_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), n, std::ref(func), dim, -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
+                    thread_id += 1;
+                    thread_number += 1;
+                }
+            }
+            // Destroy threadpool
+            for( std::thread& thread : thread_pool )
+                thread.join();
+            thread_pool.clear();
+
+            if(verbosity > 2)
+            {
+                for( U i=0; i< extra_threads; i++)
+                {
+                    logger << "(" << i << ") Million Function Evaluations/s: " << D(1000)*D(points_computed_per_thread[i])/D(time_in_ns_per_thread[i]) << " Mfeps (Approx)" << std::endl;
+                }
+                if( devices.count(-1) != 0)
+                {
+                    D time_in_ns_on_cpu = 0;
+                    U points_computed_on_cpu = 0;
+                    for( U i=extra_threads; i< extra_threads+cputhreads; i++)
+                    {
+                        points_computed_on_cpu += points_computed_per_thread[i];
+                        time_in_ns_on_cpu = std::max(time_in_ns_on_cpu,time_in_ns_per_thread[i]);
+                    }
+                    logger << "(-1) Million Function Evaluations/s: " << D(1000)*D(points_computed_on_cpu)/D(time_in_ns_on_cpu) << " Mfeps (Approx)" << std::endl;
+                }
+            }
+        }
+
+        std::chrono::steady_clock::time_point time_after_compute = std::chrono::steady_clock::now();
+
+        if(verbosity > 2)
+        {
+            D mfeps = D(1000)*D(n)/D(std::chrono::duration_cast<std::chrono::nanoseconds>(time_after_compute - time_before_compute).count()); // million function evaluations per second
+            logger << "(Total) Million Function Evaluations/s: " << mfeps << " Mfeps" << std::endl;
+        }
+
         return res;
     };
     
@@ -388,7 +609,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G, typename H>
     Qmc<T,D,U,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100<U>()), verbosity(0)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100<U>()), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

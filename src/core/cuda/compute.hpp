@@ -46,6 +46,35 @@ namespace integrators
                 QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
             };
+
+            template <typename F1, typename T, typename D, typename U, typename G>
+            void generate_samples(
+                                     const Qmc<T, D, U, G>& qmc,
+                                     const U i_start, const U work_this_iteration,
+                                     std::unique_ptr<integrators::core::cuda::detail::cuda_memory<U>>& d_z,
+                                     std::unique_ptr<integrators::core::cuda::detail::cuda_memory<D>>& d_d,
+                                     std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>>& d_r,
+                                     const U n,
+                                     std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F1>>& d_func,
+                                     const U dim,
+                                     const int device
+                                 )
+            {
+                if (qmc.verbosity > 1) qmc.logger << "- (" << device << ") computing samples " << i_start << ", work_this_iteration " << work_this_iteration << ", n " << n << std::endl;
+
+                if(qmc.verbosity > 2) qmc.logger << "- (" << device << ") launching gpu kernel<<<" << qmc.cudablocks << "," << qmc.cudathreadsperblock << ">>>" << std::endl;
+
+                integrators::core::cuda::generate_samples_kernel<<< qmc.cudablocks, qmc.cudathreadsperblock >>>(i_start, work_this_iteration,
+                                                                                                                static_cast<U*>(*d_z),
+                                                                                                                static_cast<D*>(*d_d),
+                                                                                                                static_cast<T*>(*d_r),
+                                                                                                                n,
+                                                                                                                static_cast<F1*>(*d_func),
+                                                                                                                dim
+                                                                                                                );
+                QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+
+            };
         };
     };
 };

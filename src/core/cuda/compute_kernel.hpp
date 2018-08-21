@@ -46,6 +46,25 @@ namespace integrators
                     }
                 }
             };
+
+            template <typename T, typename D, typename U, typename F1>
+            __global__
+            void generate_samples_kernel(const U work_offset, const U work_this_iteration, const U* z, const D* d, T* r, const U n, F1* func, const U dim)
+            {
+                U i = blockIdx.x*blockDim.x + threadIdx.x;
+                if (i < work_this_iteration)
+                {
+                    D mynull = 0;
+                    D x[25]; // TODO - template parameter?
+
+                    for (U sDim = 0; sDim < dim; sDim++)
+                    {
+                        x[sDim] = modf(integrators::math::mul_mod<D, D, U>(work_offset + i, z[sDim], n) / n + d[sDim], &mynull);
+                    }
+
+                    r[i] = (*func)(x);
+                }
+            };
         };
     };
 };
