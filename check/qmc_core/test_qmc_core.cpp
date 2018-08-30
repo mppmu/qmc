@@ -213,6 +213,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         real_integrator.generatingvectors = gv;
 
+        real_integrator.minnevaluate = 0; // no fitting because there are too few points
         real_integrator.minn = 1;
         real_integrator.cputhreads = 5;
 
@@ -271,6 +272,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         complex_integrator.generatingvectors = gv;
 
+        complex_integrator.minnevaluate = 0; // no fitting because there are too few points
         complex_integrator.minn = 1;
         complex_integrator.cputhreads = 5;
 

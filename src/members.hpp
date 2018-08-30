@@ -14,6 +14,7 @@
 #include <iterator> // advance
 #include <mutex>
 #include <memory> // unique_ptr
+#include <numeric> // partial_sum
 #include <cassert> // assert
 #include <chrono>
 
@@ -296,14 +297,14 @@ namespace integrators
 
         points_computed = 0;
 
-        // Setup worker // TODO: fix cuda
+        // Setup worker
 #ifdef __CUDACC__
         // define device pointers (must be accessible in local scope of the entire function)
         U d_r_size = cudablocks*cudathreadsperblock;
         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F1>> d_func;
         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<U>> d_z;
         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<D>> d_d;
-        std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>> d_r; // TODO: allocate two arrays for simultaneous computation and cudaMemcpy
+        std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>> d_r;
 #endif
         U i;
         U  work_this_iteration;
@@ -365,7 +366,6 @@ namespace integrators
 #endif
         }
 
-        // TODO: synchronize here when the async copy is implemented
         std::chrono::steady_clock::time_point time_after_compute = std::chrono::steady_clock::now();
         time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_after_compute - time_before_compute).count();
 
@@ -373,13 +373,10 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G, typename H>
     template <typename F1>
-    samples<T,D,U> Qmc<T,D,U,G,H>::evaluate(F1& func, const U dim) // TODO: this function needs to be written and tested
+    samples<T,D,U> Qmc<T,D,U,G,H>::evaluate(F1& func, const U dim) // TODO - test case
     {
-        if ( cputhreads == 0 )
-        {
-            cputhreads = 1; // Correct cputhreads if hardware_concurrency is 0, i.e. not well defined or not computable
-            if (verbosity > 1) logger << "Qmc increased cputhreads from 0 to 1." << std::endl;
-        }
+        if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
+        if ( cputhreads < 1 ) throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
 
         // no transform
         using F2 = transforms::Trivial<D,U>;
@@ -419,7 +416,7 @@ namespace integrators
 
         std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
 
-        if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1) // TODO: check this case
+        if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1) // TODO - test case
         {
             // Compute serially on cpu
             if (verbosity > 2) logger << "computing serially" << std::endl;
@@ -508,7 +505,61 @@ namespace integrators
 
         return res;
     };
-    
+
+    template <typename T, typename D, typename U, typename G, typename H>
+    template <typename F1>
+    FitTransform<F1,D,U> Qmc<T,D,U,G,H>::fit(F1& func, const U dim) // TODO - test case
+    {
+        std::vector<D> x,y;
+        std::vector<std::vector<D>> fit_parameters;
+        fit_parameters.reserve(dim);
+
+        FitFunction<D> fit_function;
+        FitFunctionJacobian<D> fit_function_jacobian;
+
+        // Generate data to be fitted
+        integrators::samples<T,D,U> result = evaluate(func, dim);
+
+        // fit FitFunction (adapted from fit.py)
+        for (U idim = 0; idim < dim; ++idim)
+        {
+            // compute the x values
+            std::vector<D> unordered_x;
+            unordered_x.reserve(result.n);
+            for (size_t i = 0; i < result.n; ++i)
+            {
+                unordered_x.push_back( result.get_x(i, idim) );
+            }
+
+            // data=raw[raw[:,dim].argsort()].transpose()
+            std::vector<size_t> sort_key = math::argsort(unordered_x);
+            x.clear();
+            y.clear();
+            for (const auto& idx : sort_key)
+            {
+                x.push_back( unordered_x.at(idx) );
+                y.push_back( abs(result.r.at(idx)) );
+            }
+
+            // y=np.cumsum(data[numdims])/sumy
+            std::partial_sum(y.begin(), y.end(), y.begin());
+            for (auto& element : y)
+            {
+                element /= y.back();
+            }
+
+            // fitf = optimize.least_squares(optf,[1.1,0.5,0.1,0.1],args=(y,x),verbose=2,xtol=1e-10)
+            fit_parameters.push_back( fit::least_squares(fit_function,fit_function_jacobian,y,x,verbosity,logger) );
+        }
+
+        FitTransform<F1,D> transformed_functor{func, dim};
+        for (size_t d = 0; d < dim; ++d)
+            for (size_t i = 0; i < fit_parameters.at(d).size(); ++i)
+                transformed_functor.p[d][i] = fit_parameters.at(d).at(i);
+
+        return transformed_functor;
+    }
+
     template <typename T, typename D, typename U, typename G, typename H>
     void Qmc<T,D,U,G,H>::update(result<T,U>& res, U& n, U& m, U& function_evaluations) const
     {
@@ -574,7 +625,7 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G, typename H>
     template <typename F1, typename F2>
-    result<T,U> Qmc<T,D,U,G,H>::integrate(F1& func, const U dim, F2& integral_transform)
+    result<T,U> Qmc<T,D,U,G,H>::integrate_impl(F1& func, const U dim, F2& integral_transform)
     {
         if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
@@ -597,6 +648,18 @@ namespace integrators
             update(res,n,m,function_evaluations);
         } while  ( integrators::overloads::compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && function_evaluations < maxeval );
         return res;
+    };
+
+    template <typename T, typename D, typename U, typename G, typename H>
+    template <typename F1, typename F2>
+    result<T,U> Qmc<T,D,U,G,H>::integrate(F1& func, const U dim, F2& integral_transform)
+    {
+        if (minnevaluate > 0) {
+            FitTransform<F1,D> transformed_functor = fit(func, dim);
+            return integrate_impl(transformed_functor, dim, integral_transform);
+        } else {
+            return integrate_impl(func, dim, integral_transform);
+        }
     };
     
     template <typename T, typename D, typename U, typename G, typename H>

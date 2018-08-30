@@ -31,7 +31,7 @@ namespace integrators
             void copy_back(const std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>>& d_r, const U d_r_size, T* r_element, const int device, const U verbosity, const Logger& logger)
             {
                 // Copy r_element to host
-                QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(r_element, static_cast<T*>(*d_r), d_r_size * sizeof(T), cudaMemcpyDeviceToHost)); // TODO: async memcpy
+                QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(r_element, static_cast<T*>(*d_r), d_r_size * sizeof(T), cudaMemcpyDeviceToHost));
                 if (verbosity > 1) logger << "- (" << device << ") copied r_element to host memory" << std::endl;
             };
         };
