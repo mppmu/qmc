@@ -10,6 +10,7 @@
 #include "qmc.hpp"
 
 struct my_functor_t {
+    const unsigned long long int dim = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -37,7 +38,7 @@ int main() {
     integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100<U>();
     integrator.verbosity = 0;
 
-    integrators::samples<D,D> samples = integrator.evaluate(my_functor, 3);
+    integrators::samples<D,D> samples = integrator.evaluate(my_functor);
 
     std::cout << "generating vector samples.z = " << std::endl;
     for (const U& item : samples.z)

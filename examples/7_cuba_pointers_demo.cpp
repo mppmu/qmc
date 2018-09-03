@@ -163,6 +163,9 @@ integrand* get_device_address_func11()
 
 // Generic functor for storing pointers to the functions
 struct my_functor_t {
+
+    const unsigned long long int dim = 3;
+    
     get_device_address* device_address_getter;
 
     integrand* host_address;
@@ -222,7 +225,7 @@ int main() {
     integrators::result<double> real_result;
     for( const auto& functor : functors )
     {
-        real_result = real_integrator.integrate(functor,3);
+        real_result = real_integrator.integrate(functor);
         std::cout << real_result.integral << " " << real_result.error << std::endl;
     }
 

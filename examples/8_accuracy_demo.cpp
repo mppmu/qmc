@@ -22,13 +22,13 @@
 #endif
 
 template< typename I, typename F>
-int count_fails(I& integrator, F& function, unsigned long long int dimension, unsigned long long int iterations, double true_result)
+int count_fails(I& integrator, F& function, unsigned long long int iterations, double true_result)
 {
     unsigned fail = 0;
     integrators::result<double,unsigned long long> result;
     for(int i = 0; i<iterations; i++)
     {
-        result = integrator.integrate(function,dimension);
+        result = integrator.integrate(function);
 //        std::cout << (true_result-result.integral) << " " << result.error;
         if ( std::abs( (true_result-result.integral) ) < std::abs(result.error)  )
         {
@@ -77,23 +77,23 @@ int main() {
     unsigned long long int fail5;
     
     integrators::Qmc<double,double> integrator;
+    integrator.minnevaluate = 0;
     integrator.minn = 8191;
-    integrator.cputhreads = 1;
 
     std::cout << "-- Function 1 --" << std::endl;
-    fail1 = count_fails(integrator,function1,function1.dim,iterations,function1_result);
+    fail1 = count_fails(integrator,function1,iterations,function1_result);
 
     std::cout << "-- Function 2 --" << std::endl;
-    fail2 = count_fails(integrator,function2,function2.dim,iterations,function2_result);
+    fail2 = count_fails(integrator,function2,iterations,function2_result);
 
     std::cout << "-- Function 3 --" << std::endl;
-    fail3 = count_fails(integrator,function3,function3.dim,iterations,function3_result);
+    fail3 = count_fails(integrator,function3,iterations,function3_result);
 
     std::cout << "-- Function 4 --" << std::endl;
-    fail4 = count_fails(integrator,function4,function4.dim,iterations,function4_result);
+    fail4 = count_fails(integrator,function4,iterations,function4_result);
 
     std::cout << "-- Function 5 --" << std::endl;
-    fail5 = count_fails(integrator,function5,function5.dim,iterations,function5_result);
+    fail5 = count_fails(integrator,function5,iterations,function5_result);
 
     std::cout << "-- Summary --" << std::endl;
     std::cout << fail1 << " " << static_cast<double>(fail1)/ static_cast<double>(iterations) << std::endl;

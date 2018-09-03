@@ -10,9 +10,9 @@ namespace integrators
         namespace cuda
         {
             // TODO - make use of restricted pointers?
-            template <typename T, typename D, typename U, typename F1, typename F2>
+            template <typename T, typename D, typename U, typename F1>
             __global__
-            void compute_kernel(const U work_offset, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U d_r_size_over_m, const U n, const U m, F1* func, const U dim, F2* integral_transform)
+            void compute_kernel(const U work_offset, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U d_r_size_over_m, const U n, const U m, F1* func)
             {
                 U i = blockIdx.x*blockDim.x + threadIdx.x;
                 if (i < work_this_iteration)
@@ -26,12 +26,10 @@ namespace integrators
                             D mynull = 0;
                             D x[25]; // TODO - template parameter?
 
-                            for (U sDim = 0; sDim < dim; sDim++)
+                            for (U sDim = 0; sDim < func->dim; sDim++)
                             {
-                                x[sDim] = modf(integrators::math::mul_mod<D, D, U>(offset, z[sDim], n) / n + d[k*dim + sDim], &mynull);
+                                x[sDim] = modf(integrators::math::mul_mod<D, D, U>(offset, z[sDim], n) / n + d[k*func->dim + sDim], &mynull);
                             }
-
-                            (*integral_transform)(x, wgt, dim);
 
                             T point = (*func)(x);
 
@@ -49,7 +47,7 @@ namespace integrators
 
             template <typename T, typename D, typename U, typename F1>
             __global__
-            void generate_samples_kernel(const U work_offset, const U work_this_iteration, const U* z, const D* d, T* r, const U n, F1* func, const U dim)
+            void generate_samples_kernel(const U work_offset, const U work_this_iteration, const U* z, const D* d, T* r, const U n, F1* func)
             {
                 U i = blockIdx.x*blockDim.x + threadIdx.x;
                 if (i < work_this_iteration)
@@ -57,7 +55,7 @@ namespace integrators
                     D mynull = 0;
                     D x[25]; // TODO - template parameter?
 
-                    for (U sDim = 0; sDim < dim; sDim++)
+                    for (U sDim = 0; sDim < func->dim; sDim++)
                     {
                         x[sDim] = modf(integrators::math::mul_mod<D, D, U>(work_offset + i, z[sDim], n) / n + d[sDim], &mynull);
                     }

@@ -15,14 +15,20 @@ namespace integrators
         /*
          * Korobov Transform: Korobov<D,U,r>(x,weight,dim) takes the weight r Korobov transform of x
          */
-        template<typename D, typename U, U r>
+        template<typename F1, typename D, typename U, U r>
         struct Korobov
         {
+            F1 f; // original function
+            const U dim;
+
+            Korobov(F1 f) : f(f), dim(f.dim) {};
+
 #ifdef __CUDACC__
             __host__ __device__
 #endif
-            void operator()(D* x, D& wgt, const U dim) const
+            auto operator()(D* x) -> decltype(f(x)) const
             {
+                D wgt = 1;
                 const D prefactor = (D(2)*r+D(1))*detail::Binomial<U,2*r,r>::value;
                 for(U s = 0; s<dim; s++)
                 {
@@ -32,6 +38,7 @@ namespace integrators
                     if (x[s] > D(1)) x[s] = D(1);
                     if (x[s] < D(0)) x[s] = D(0);
                 }
+                return wgt * f(x);
             }
         };
     };

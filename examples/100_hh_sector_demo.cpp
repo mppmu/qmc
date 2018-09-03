@@ -19,6 +19,7 @@ typedef std::complex<double> dcmplx;
 #endif
 
 struct ReduzeF1L2_021111010ord0f3_t {
+    const unsigned long long int dim = 5;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -523,18 +524,21 @@ return (FOUT);
 int main() {
 
     integrators::Qmc<dcmplx,double> integrator;
+
+    // fit function to reduce variance
+    integrators::FitTransform<ReduzeF1L2_021111010ord0f3_t,double,unsigned long long int> fitted_ReduzeF1L2_021111010ord0f3 = integrator.fit(ReduzeF1L2_021111010ord0f3);
+
+    integrator.minnevaluate = 0; // disable fitting on call to integrate
     integrator.minm = 20;
     integrator.maxeval = 1; // do not iterate
 
-    integrators::transforms::Korobov<double,unsigned long long int,3> integral_transform;
 
     std::cout << "# n m Re[I] Im[I] Re[Abs. Err.] Im[Abs. Err.]" << std::endl;
     std::cout << std::setprecision(16);
-
     for(const auto& generating_vector : integrator.generatingvectors)
     {
         integrator.minn = generating_vector.first;
-        integrators::result<dcmplx> result = integrator.integrate(ReduzeF1L2_021111010ord0f3,5,integral_transform);
+        integrators::result<dcmplx> result = integrator.integrate(fitted_ReduzeF1L2_021111010ord0f3);
 
         std::cout
         << result.n

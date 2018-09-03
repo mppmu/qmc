@@ -15,6 +15,7 @@
 typedef boost::multiprecision::cpp_bin_float_quad quad;
 
 struct my_functor_t {
+    const unsigned long long int dim = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -29,7 +30,7 @@ int main() {
     integrators::Qmc<quad,quad,unsigned long long int,boost::random::mt19937,boost::random::uniform_real_distribution<quad>> integrator;
     integrator.minn = 1000000;
     integrator.devices = {-1}; // quad only implemented for cpu
-    integrators::result<quad,unsigned long long int> result = integrator.integrate(my_functor, 3);
+    integrators::result<quad,unsigned long long int> result = integrator.integrate(my_functor);
     std::cout << "integral = " << result.integral << std::endl;
     std::cout << "error    = " << result.error    << std::endl;
 

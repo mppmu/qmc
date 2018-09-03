@@ -46,8 +46,8 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G, typename H>
-    template <typename F1, typename F2>
-    void Qmc<T,D,U,G,H>::sample_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform, const int device, D& time_in_ns, U& points_computed) const
+    template <typename F1>
+    void Qmc<T,D,U,G,H>::sample_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m, F1& func, const int device, D& time_in_ns, U& points_computed) const
     {
         std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
 
@@ -58,7 +58,6 @@ namespace integrators
         // define device pointers (must be accessible in local scope of the entire function)
         U d_r_size = m*cudablocks*cudathreadsperblock;
         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F1>> d_func;
-        std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F2>> d_integral_transform;
         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<U>> d_z;
         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<D>> d_d;
         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>> d_r;
@@ -70,7 +69,7 @@ namespace integrators
         } else {
             work_this_iteration = cudablocks*cudathreadsperblock;
 #ifdef __CUDACC__
-            integrators::core::cuda::setup_sample(d_z, z, d_d, d, d_r, d_r_size/m, &r[thread_id], r.size()/m, m, d_func, func, d_integral_transform, integral_transform, device, verbosity, logger);
+            integrators::core::cuda::setup_sample(d_z, z, d_d, d, d_r, d_r_size/m, &r[thread_id], r.size()/m, m, d_func, func, device, verbosity, logger);
 #endif
         }
 
@@ -103,12 +102,12 @@ namespace integrators
             // Do work
             if (device == -1)
             {
-                integrators::core::generic::compute(i, z, d, &r[thread_id], r.size()/m, total_work_packages, n, m, func, dim, integral_transform);
+                integrators::core::generic::compute(i, z, d, &r[thread_id], r.size()/m, total_work_packages, n, m, func);
             }
             else
             {
 #ifdef __CUDACC__
-                integrators::core::cuda::compute(*this, i, work_this_iteration, total_work_packages, d_z, d_d, d_r, d_r_size/m, n, m, d_func, dim, d_integral_transform, device);
+                integrators::core::cuda::compute(*this, i, work_this_iteration, total_work_packages, d_z, d_d, d_r, d_r_size/m, n, m, d_func, device);
 #endif
             }
 
@@ -129,8 +128,8 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G, typename H>
-    template <typename F1, typename F2>
-    result<T,U> Qmc<T,D,U,G,H>::sample(F1& func, const U dim, F2& integral_transform, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
+    template <typename F1>
+    result<T,U> Qmc<T,D,U,G,H>::sample(F1& func, const U n, const U m, std::vector<result<T,U>> & previous_iterations)
     {
         std::vector<U> z;
         std::vector<D> d;
@@ -163,14 +162,14 @@ namespace integrators
             }
 
             // Generate z, d, r
-            init_z(z, n, dim);
-            init_d(d, shifts, dim);
+            init_z(z, n, func.dim);
+            init_d(d, shifts, func.dim);
             init_r(r, shifts, r_size_over_m);
 
             if (verbosity > 0)
             {
                 logger << "-- qmc::sample called --" << std::endl;
-                logger << "dim " << dim << std::endl;
+                logger << "func.dim " << func.dim << std::endl;
                 logger << "minn " << minn << std::endl;
                 logger << "minm " << minm << std::endl;
                 logger << "epsrel " << epsrel << std::endl;
@@ -205,7 +204,7 @@ namespace integrators
                 if (verbosity > 2) logger << "computing serially" << std::endl;
                 for( U i=0; i < total_work_packages; i++)
                 {
-                    integrators::core::generic::compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, n, shifts, func, dim, integral_transform);
+                    integrators::core::generic::compute(i, z, d, &r[0], r.size()/shifts, total_work_packages, n, shifts, func);
                 }
             }
             else
@@ -236,7 +235,7 @@ namespace integrators
                     if( device != -1)
                     {
 #ifdef __CUDACC__
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::sample_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number])  ) ); // Launch non-cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::sample_worker<F1>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number])  ) ); // Launch non-cpu workers
                         thread_id += cudablocks*cudathreadsperblock;
                         thread_number += 1;
 #else
@@ -248,7 +247,7 @@ namespace integrators
                 {
                     for ( U i=0; i < cputhreads; i++)
                     {
-                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::sample_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), dim, std::ref(integral_transform), -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
+                        thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::sample_worker<F1>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
                         thread_id += 1;
                         thread_number += 1;
                     }
@@ -291,8 +290,8 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G, typename H>
-    template <typename F1, typename F2>
-    void Qmc<T,D,U,G,H>::evaluate_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, F1& func, const U dim, const int device, D& time_in_ns, U& points_computed) const
+    template <typename F1>
+    void Qmc<T,D,U,G,H>::evaluate_worker(const U thread_id, U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, F1& func, const int device, D& time_in_ns, U& points_computed) const
     {
         std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
 
@@ -347,12 +346,12 @@ namespace integrators
             // Do work
             if (device == -1)
             {
-                integrators::core::generic::generate_samples(i, z, d, &r[i], n, func, dim);
+                integrators::core::generic::generate_samples(i, z, d, &r[i], n, func);
             }
             else
             {
 #ifdef __CUDACC__
-                integrators::core::cuda::generate_samples(*this, i, work_this_iteration, d_z, d_d, d_r, n, d_func, dim, device);
+                integrators::core::cuda::generate_samples(*this, i, work_this_iteration, d_z, d_d, d_r, n, d_func, device);
 #endif
             }
 
@@ -374,13 +373,10 @@ namespace integrators
     
     template <typename T, typename D, typename U, typename G, typename H>
     template <typename F1>
-    samples<T,D,U> Qmc<T,D,U,G,H>::evaluate(F1& func, const U dim) // TODO - test case
+    samples<T,D,U> Qmc<T,D,U,G,H>::evaluate(F1& func) // TODO - test case
     {
-        if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
+        if ( func.dim < 1 ) throw std::invalid_argument("qmc::integrate called with func.dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( cputhreads < 1 ) throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
-
-        // no transform
-        using F2 = transforms::Trivial<D,U>;
 
         // allocate memory
         samples<T,D,U> res;
@@ -391,8 +387,8 @@ namespace integrators
         std::vector<T>& r = res.r;
 
         // initialize z, d, r
-        init_z(z, n, dim);
-        init_d(d, 1, dim);
+        init_z(z, n, func.dim);
+        init_d(d, 1, func.dim);
         init_r(r, 1, n); // memory required for result vector
 
         U extra_threads = devices.size() - devices.count(-1);
@@ -400,7 +396,7 @@ namespace integrators
         if (verbosity > 0)
         {
             logger << "-- qmc::evaluate called --" << std::endl;
-            logger << "dim " << dim << std::endl;
+            logger << "func.dim " << func.dim << std::endl;
             logger << "minnevaluate " << minnevaluate << std::endl;
             logger << "cputhreads " << cputhreads << std::endl;
             logger << "cudablocks " << cudablocks << std::endl;
@@ -423,7 +419,7 @@ namespace integrators
             if (verbosity > 2) logger << "computing serially" << std::endl;
             for( U i=0; i < n; i++)
             {
-                integrators::core::generic::generate_samples(i, z, d, &r[i], n, func, dim);
+                integrators::core::generic::generate_samples(i, z, d, &r[i], n, func);
             }
         }
         else // TODO: check this case
@@ -454,7 +450,7 @@ namespace integrators
                 if( device != -1)
                 {
 #ifdef __CUDACC__
-                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::evaluate_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), n, std::ref(func), dim, device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch non-cpu workers
+                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::evaluate_worker<F1>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), n, std::ref(func), device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch non-cpu workers
                     thread_id += cudablocks*cudathreadsperblock;
                     thread_number += 1;
 #else
@@ -466,7 +462,7 @@ namespace integrators
             {
                 for ( U i=0; i < cputhreads; i++)
                 {
-                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::evaluate_worker<F1,F2>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), n, std::ref(func), dim, -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
+                    thread_pool.push_back( std::thread( &Qmc<T,D,U,G,H>::evaluate_worker<F1>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), n, std::ref(func), -1, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number]) ) ); // Launch cpu workers
                     thread_id += 1;
                     thread_number += 1;
                 }
@@ -509,30 +505,29 @@ namespace integrators
 
     template <typename T, typename D, typename U, typename G, typename H>
     template <typename F1>
-    FitTransform<F1,D,U> Qmc<T,D,U,G,H>::fit(F1& func, const U dim) // TODO - test case
+    FitTransform<F1,D,U> Qmc<T,D,U,G,H>::fit(F1& func) // TODO - test case
     {
         std::vector<D> x,y;
         std::vector<std::vector<D>> fit_parameters;
-        fit_parameters.reserve(dim);
+        fit_parameters.reserve(func.dim);
 
         FitFunction<D> fit_function;
         FitFunctionJacobian<D> fit_function_jacobian;
 
         // Generate data to be fitted
-        integrators::samples<T,D,U> result = evaluate(func, dim);
+        integrators::samples<T,D,U> result = evaluate(func);
 
         // fit FitFunction (adapted from fit.py)
-        for (U idim = 0; idim < dim; ++idim)
+        for (U sdim = 0; sdim < func.dim; ++sdim)
         {
             // compute the x values
             std::vector<D> unordered_x;
             unordered_x.reserve(result.n);
             for (size_t i = 0; i < result.n; ++i)
             {
-                unordered_x.push_back( result.get_x(i, idim) );
+                unordered_x.push_back( result.get_x(i, sdim) );
             }
 
-            // data=raw[raw[:,dim].argsort()].transpose()
             std::vector<size_t> sort_key = math::argsort(unordered_x);
             x.clear();
             y.clear();
@@ -542,7 +537,7 @@ namespace integrators
                 y.push_back( abs(result.r.at(idx)) );
             }
 
-            // y=np.cumsum(data[numdims])/sumy
+            // compute cumulative sum
             std::partial_sum(y.begin(), y.end(), y.begin());
             for (auto& element : y)
             {
@@ -553,8 +548,8 @@ namespace integrators
             fit_parameters.push_back( fit::least_squares(fit_function,fit_function_jacobian,y,x,verbosity,logger) );
         }
 
-        FitTransform<F1,D> transformed_functor{func, dim};
-        for (size_t d = 0; d < dim; ++d)
+        FitTransform<F1,D> transformed_functor{func};
+        for (size_t d = 0; d < transformed_functor.dim; ++d)
             for (size_t i = 0; i < fit_parameters.at(d).size(); ++i)
                 transformed_functor.p[d][i] = fit_parameters.at(d).at(i);
 
@@ -625,10 +620,10 @@ namespace integrators
     };
     
     template <typename T, typename D, typename U, typename G, typename H>
-    template <typename F1, typename F2>
-    result<T,U> Qmc<T,D,U,G,H>::integrate_impl(F1& func, const U dim, F2& integral_transform)
+    template <typename F1>
+    result<T,U> Qmc<T,D,U,G,H>::integrate_impl(F1& func)
     {
-        if ( dim < 1 ) throw std::invalid_argument("qmc::integrate called with dim < 1. Check that your integrand depends on at least one variable of integration.");
+        if ( func.dim < 1 ) throw std::invalid_argument("qmc::integrate called with func.dim < 1. Check that your integrand depends on at least one variable of integration.");
         if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
         if ( maxmperpackage < 2 ) throw std::domain_error("qmc::integrate called with maxmperpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperpackage.");
         if ( maxnperpackage == 0 ) throw std::domain_error("qmc::integrate called with maxnperpackage = 0. Please set maxnperpackage to a positive integer.");
@@ -644,7 +639,7 @@ namespace integrators
         do
         {
             if (verbosity > 1) logger << "iterating" << std::endl;
-            res = sample(func,dim,integral_transform,n,m, previous_iterations);
+            res = sample(func,n,m, previous_iterations);
             if (verbosity > 1) logger << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m,function_evaluations);
         } while  ( integrators::overloads::compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && function_evaluations < maxeval );
@@ -652,28 +647,39 @@ namespace integrators
     };
 
     template <typename T, typename D, typename U, typename G, typename H>
-    template <typename F1, typename F2>
-    result<T,U> Qmc<T,D,U,G,H>::integrate(F1& func, const U dim, F2& integral_transform)
+    template <typename F1>
+    result<T,U> Qmc<T,D,U,G,H>::integrate(F1& func)
     {
-        if (minnevaluate > 0) {
-            FitTransform<F1,D> transformed_functor = fit(func, dim);
-            return integrate_impl(transformed_functor, dim, integral_transform);
-        } else {
-            return integrate_impl(func, dim, integral_transform);
+        bool apply_fit = (minnevaluate > 0);
+        if( apply_fit && defaulttransform )
+        {
+            FitTransform<F1,D> fitted_func = fit(func);
+            integrators::transforms::Korobov<FitTransform<F1,D>,D,U,3> transformed_fitted_func = integrators::transforms::Korobov<FitTransform<F1,D>,D,U,3>(fitted_func);
+            return integrate_impl(transformed_fitted_func);
+        }
+        else if ( apply_fit && !defaulttransform )
+        {
+            FitTransform<F1,D> fitted_func = fit(func);
+            return integrate_impl(fitted_func);
+        }
+        else if ( !apply_fit && defaulttransform )
+        {
+            integrators::transforms::Korobov<F1,D,U,3> transformed_func = integrators::transforms::Korobov<F1,D,U,3>(func);
+            return integrate_impl(transformed_func);
+        }
+        else if ( !apply_fit && !defaulttransform )
+        {
+            return integrate_impl(func);
+        }
+        else
+        {
+            throw std::invalid_argument("Invalid combination of auto_fit and auto_transform in call to integrate");
         }
     };
     
     template <typename T, typename D, typename U, typename G, typename H>
-    template <typename F1>
-    result<T,U> Qmc<T,D,U,G,H>::integrate(F1& func, const U dim)
-    {
-        integrators::transforms::Korobov<D,U,3> default_integral_transform;
-        return integrate(func, dim, default_integral_transform);
-    };
-    
-    template <typename T, typename D, typename U, typename G, typename H>
     Qmc<T,D,U,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100<U>()), verbosity(0)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), defaulttransform(true), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100<U>()), verbosity(0)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

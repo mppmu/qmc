@@ -260,158 +260,158 @@ TEST_CASE( "KorobovTerm", "[transform]")
 
 };
 
-TEST_CASE( "Korobov Transform", "[transform]")
-{
-    using D = double;
-    using U = unsigned long long int;
+//TEST_CASE( "Korobov Transform", "[transform]")
+//{
+//    using D = double;
+//    using U = unsigned long long int;
+//
+//    U dim = 9;
+//
+//    D x[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+//    D wgt = 1.;
+//
+//    SECTION( "Korobov<D,U,1>" )
+//    {
+//        D x_goal[] = {std::stod("7")/std::stod("250"),std::stod("13")/std::stod("125"),std::stod("27")/std::stod("125"),std::stod("44")/std::stod("125"),std::stod("1")/std::stod("2"),std::stod("81")/std::stod("125"),std::stod("98")/std::stod("125"),std::stod("112")/std::stod("125"),std::stod("243")/std::stod("250")};
+//        D wgt_goal = std::stod("202491775584")/std::stod("152587890625");
+//
+//        integrators::transforms::Korobov<D,U,1> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//    SECTION( "Korobov<D,U,2>" )
+//    {
+//        D x_goal[] = {std::stod("107")/std::stod("12500"),std::stod("181")/std::stod("3125"),std::stod("4077")/std::stod("25000"),std::stod("992")/std::stod("3125"),std::stod("1")/std::stod("2"),std::stod("2133")/std::stod("3125"),std::stod("20923")/std::stod("25000"),std::stod("2944")/std::stod("3125"),std::stod("12393")/std::stod("12500")};
+//        D wgt_goal = std::stod("4068679902545286")/std::stod("11920928955078125");
+//
+//        integrators::transforms::Korobov<D,U,2> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//    SECTION( "Korobov<D,U,3>" )
+//    {
+//        D x_goal[] = {std::stod("341")/std::stod("125000"),std::stod("521")/std::stod("15625"),std::stod("31509")/std::stod("250000"),std::stod("4528")/std::stod("15625"),std::stod("1")/std::stod("2"),std::stod("11097")/std::stod("15625"),std::stod("218491")/std::stod("250000"),std::stod("15104")/std::stod("15625"),std::stod("124659")/std::stod("125000")};
+//        D wgt_goal = std::stod("85814502186767229614757312")/std::stod("1818989403545856475830078125");
+//
+//        integrators::transforms::Korobov<D,U,3> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//    SECTION( "Korobov<D,U,4>" )
+//    {
+//        D x_goal[] = {std::stod("22273")/std::stod("25000000"),std::stod("7649")/std::stod("390625"),std::stod("4940433")/std::stod("50000000"),std::stod("104128")/std::stod("390625"),std::stod("1")/std::stod("2"),std::stod("286497")/std::stod("390625"),std::stod("45059567")/std::stod("50000000"),std::stod("382976")/std::stod("390625"),std::stod("24977727")/std::stod("25000000")};
+//        D wgt_goal = std::stod("167004977867137272381311782609848204543")/std::stod("35527136788005009293556213378906250000000");
+//
+//        integrators::transforms::Korobov<D,U,4> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//    SECTION( "Korobov<D,U,8>" )
+//    {
+//        D x_goal[] = {std::stod("28661089993")/std::stod("2500000000000000"),std::stod("393899969")/std::stod("152587890625"),std::stod("201384680271273")/std::stod("5000000000000000"),std::stod("30355299328")/std::stod("152587890625"),std::stod("1")/std::stod("2"),std::stod("122232591297")/std::stod("152587890625"),std::stod("4798615319728727")/std::stod("5000000000000000"),std::stod("152193990656")/std::stod("152587890625"),std::stod("2499971338910007")/std::stod("2500000000000000")};
+//        D wgt_goal = std::stod("131091990195656860194070898236198433121817941509319027782237707310507220432586957239")/std::stod("1262177448353618888658765704452457967477130296174436807632446289062500000000000000000000000");
+//
+//        integrators::transforms::Korobov<D,U,8> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//};
 
-    U dim = 9;
-
-    D x[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-    D wgt = 1.;
-
-    SECTION( "Korobov<D,U,1>" )
-    {
-        D x_goal[] = {std::stod("7")/std::stod("250"),std::stod("13")/std::stod("125"),std::stod("27")/std::stod("125"),std::stod("44")/std::stod("125"),std::stod("1")/std::stod("2"),std::stod("81")/std::stod("125"),std::stod("98")/std::stod("125"),std::stod("112")/std::stod("125"),std::stod("243")/std::stod("250")};
-        D wgt_goal = std::stod("202491775584")/std::stod("152587890625");
-
-        integrators::transforms::Korobov<D,U,1> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-    SECTION( "Korobov<D,U,2>" )
-    {
-        D x_goal[] = {std::stod("107")/std::stod("12500"),std::stod("181")/std::stod("3125"),std::stod("4077")/std::stod("25000"),std::stod("992")/std::stod("3125"),std::stod("1")/std::stod("2"),std::stod("2133")/std::stod("3125"),std::stod("20923")/std::stod("25000"),std::stod("2944")/std::stod("3125"),std::stod("12393")/std::stod("12500")};
-        D wgt_goal = std::stod("4068679902545286")/std::stod("11920928955078125");
-
-        integrators::transforms::Korobov<D,U,2> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-    SECTION( "Korobov<D,U,3>" )
-    {
-        D x_goal[] = {std::stod("341")/std::stod("125000"),std::stod("521")/std::stod("15625"),std::stod("31509")/std::stod("250000"),std::stod("4528")/std::stod("15625"),std::stod("1")/std::stod("2"),std::stod("11097")/std::stod("15625"),std::stod("218491")/std::stod("250000"),std::stod("15104")/std::stod("15625"),std::stod("124659")/std::stod("125000")};
-        D wgt_goal = std::stod("85814502186767229614757312")/std::stod("1818989403545856475830078125");
-
-        integrators::transforms::Korobov<D,U,3> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-    SECTION( "Korobov<D,U,4>" )
-    {
-        D x_goal[] = {std::stod("22273")/std::stod("25000000"),std::stod("7649")/std::stod("390625"),std::stod("4940433")/std::stod("50000000"),std::stod("104128")/std::stod("390625"),std::stod("1")/std::stod("2"),std::stod("286497")/std::stod("390625"),std::stod("45059567")/std::stod("50000000"),std::stod("382976")/std::stod("390625"),std::stod("24977727")/std::stod("25000000")};
-        D wgt_goal = std::stod("167004977867137272381311782609848204543")/std::stod("35527136788005009293556213378906250000000");
-
-        integrators::transforms::Korobov<D,U,4> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-    SECTION( "Korobov<D,U,8>" )
-    {
-        D x_goal[] = {std::stod("28661089993")/std::stod("2500000000000000"),std::stod("393899969")/std::stod("152587890625"),std::stod("201384680271273")/std::stod("5000000000000000"),std::stod("30355299328")/std::stod("152587890625"),std::stod("1")/std::stod("2"),std::stod("122232591297")/std::stod("152587890625"),std::stod("4798615319728727")/std::stod("5000000000000000"),std::stod("152193990656")/std::stod("152587890625"),std::stod("2499971338910007")/std::stod("2500000000000000")};
-        D wgt_goal = std::stod("131091990195656860194070898236198433121817941509319027782237707310507220432586957239")/std::stod("1262177448353618888658765704452457967477130296174436807632446289062500000000000000000000000");
-
-        integrators::transforms::Korobov<D,U,8> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-};
-
-TEST_CASE( "Baker Transform", "[transform]")
-{
-    using D = double;
-    using U = unsigned long long int;
-
-    U dim = 9;
-
-    D x[]      = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-    D wgt = 1.;
-
-    D x_goal[] = {0.2, 0.4, 0.6, 0.8, 1., 0.8, 0.6, 0.4, 0.2};
-    D wgt_goal = 1.;
-
-    SECTION( "Trivial" )
-    {
-        integrators::transforms::Baker<D> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-    SECTION( "Trivial" )
-    {
-        integrators::transforms::Baker<D,U> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-};
-
-TEST_CASE( "Trivial Transform", "[transform]")
-{
-    using D = double;
-    using U = unsigned long long int;
-
-    U dim = 9;
-
-    D x[]      = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-    D wgt = 1.;
-
-    D x_goal[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-    D wgt_goal = 1.;
-
-    SECTION( "Trivial" )
-    {
-        integrators::transforms::Trivial<D> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-    SECTION( "Trivial" )
-    {
-        integrators::transforms::Trivial<D,U> transform;
-        transform(x,wgt,dim);
-        for(U s = 0; s < dim; s++)
-        {
-            REQUIRE( x[s] == Approx(x_goal[s]) );
-        }
-        REQUIRE( wgt == Approx(wgt_goal) );
-    };
-
-};
+//TEST_CASE( "Baker Transform", "[transform]")
+//{
+//    using D = double;
+//    using U = unsigned long long int;
+//
+//    U dim = 9;
+//
+//    D x[]      = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+//    D wgt = 1.;
+//
+//    D x_goal[] = {0.2, 0.4, 0.6, 0.8, 1., 0.8, 0.6, 0.4, 0.2};
+//    D wgt_goal = 1.;
+//
+//    SECTION( "Trivial" )
+//    {
+//        integrators::transforms::Baker<D> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//    SECTION( "Trivial" )
+//    {
+//        integrators::transforms::Baker<D,U> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//};
+//
+//TEST_CASE( "Trivial Transform", "[transform]")
+//{
+//    using D = double;
+//    using U = unsigned long long int;
+//
+//    U dim = 9;
+//
+//    D x[]      = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+//    D wgt = 1.;
+//
+//    D x_goal[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+//    D wgt_goal = 1.;
+//
+//    SECTION( "Trivial" )
+//    {
+//        integrators::transforms::Trivial<D> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//    SECTION( "Trivial" )
+//    {
+//        integrators::transforms::Trivial<D,U> transform;
+//        transform(x,wgt,dim);
+//        for(U s = 0; s < dim; s++)
+//        {
+//            REQUIRE( x[s] == Approx(x_goal[s]) );
+//        }
+//        REQUIRE( wgt == Approx(wgt_goal) );
+//    };
+//
+//};

@@ -10,6 +10,7 @@
 #include "qmc.hpp"
 
 struct my_functor_t {
+    const unsigned long long int dim = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -28,6 +29,8 @@ int main() {
     // All settings set to their default value
     integrator.logger = std::cout;
     integrator.randomgenerator = std::mt19937_64();
+    integrator.defaulttransform = true;
+    integrator.minnevaluate = 100000;
     integrator.minn = 8191;
     integrator.minm = 32;
     integrator.epsrel = 0.01;
@@ -43,7 +46,7 @@ int main() {
     integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100<U>();
     integrator.verbosity = 0;
 
-    integrators::result<D> result = integrator.integrate(my_functor, 3);
+    integrators::result<D> result = integrator.integrate(my_functor);
 
     std::cout << "integral = " << result.integral << std::endl;
     std::cout << "error    = " << result.error    << std::endl;

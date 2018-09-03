@@ -118,21 +118,33 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
 
 TEST_CASE( "Exceptions", "[Qmc]" ) {
 
-    std::function<double(double[])> constant_function = [] (double x[]) { return 1; };
-    std::function<double(double[])> real_function = [] (double x[]) { return x[0]*x[1]*x[2]; };
+    struct zero_dim_function_t {
+        const unsigned long long int dim = 0;
+        double operator()(double x[]) { return 1; }
+    } zero_dim_function;
+
+    struct constant_function_t {
+        const unsigned long long int dim = 1;
+        double operator()(double x[]) { return 1; }
+    } constant_function;
+
+    struct real_function_t {
+        const unsigned long long int dim = 3;
+        double operator()(double x[]) { return x[0]*x[1]*x[2]; }
+    } real_function;
 
     integrators::Qmc<double,double> real_integrator;
 
     SECTION( "Invalid Dimension", "[Qmc]" ) {
 
-        REQUIRE_THROWS_AS( real_integrator.integrate(constant_function,0) , std::invalid_argument);
-
+        REQUIRE_THROWS_AS( real_integrator.integrate(zero_dim_function) , std::invalid_argument);
+        
     };
 
     SECTION( "Invalid Number of Random Shifts", "[Qmc]" ) {
 
         real_integrator.minm = 1;
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,3) , std::domain_error);
+        REQUIRE_THROWS_AS( real_integrator.integrate(real_function) , std::domain_error);
 
     };
 
@@ -148,7 +160,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         real_integrator.generatingvectors = gv;
 
         // Call integrate on function with 3 dimensions
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,3) , std::domain_error);
+        REQUIRE_THROWS_AS( real_integrator.integrate(real_function) , std::domain_error);
         
     };
     
@@ -162,11 +174,26 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     integrators::result<double> real_result;
     integrators::result<std::complex<double>> complex_result;
 
-    std::function<double(double[])> univariate_real_function = [] (double x[]) { return x[0]; };
-    std::function<std::complex<double>(double[])> univariate_complex_function = [] (double x[]) { return std::complex<double>(x[0],x[0]); };
+    struct univariate_real_function_t {
+        const unsigned long long int dim = 1;
+        double operator()(double x[]) { return x[0]; }
+    } univariate_real_function;
 
-    std::function<double(double[])> real_function = [] (double x[]) { return x[0]*x[1]; };
-    std::function<std::complex<double>(double[])> complex_function = [] (double x[]) { return std::complex<double>(x[0],x[0]*x[1]); };
+    struct univariate_complex_function_t {
+        const unsigned long long int dim = 1;
+        std::complex<double> operator()(double x[]) { return std::complex<double>(x[0],x[0]); }
+    } univariate_complex_function;
+
+    struct real_function_t {
+        const unsigned long long int dim = 2;
+        double operator()(double x[]) { return x[0]*x[1]; }
+    } real_function;
+
+    struct complex_function_t {
+        const unsigned long long int dim = 2;
+        std::complex<double> operator()(double x[]) { return std::complex<double>(x[0],x[0]*x[1]); };
+
+    } complex_function;
 
     integrators::Qmc<double,double> real_integrator;
     real_integrator.minn = 10000;
@@ -177,7 +204,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     SECTION( "Real Function (Default Block Size)" )
     {
 
-        real_result = real_integrator.integrate(real_function,2);
+        real_result = real_integrator.integrate(real_function);
 
         REQUIRE( real_result.integral == Approx(0.25).epsilon(eps) );
         REQUIRE( real_result.error < eps );
@@ -188,7 +215,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     {
         real_integrator.cputhreads = 1;
 
-        real_result = real_integrator.integrate(real_function,2);
+        real_result = real_integrator.integrate(real_function);
 
         REQUIRE( real_result.integral == Approx(0.25).epsilon(eps) );
         REQUIRE( real_result.error < eps );
@@ -199,7 +226,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     {
         real_integrator.cputhreads = 2;
 
-        real_result = real_integrator.integrate(real_function,2);
+        real_result = real_integrator.integrate(real_function);
 
         REQUIRE( real_result.integral == Approx(0.25).epsilon(eps) );
         REQUIRE( real_result.error < eps );
@@ -217,7 +244,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         real_integrator.minn = 1;
         real_integrator.cputhreads = 5;
 
-        real_result = real_integrator.integrate(univariate_real_function,1);
+        real_result = real_integrator.integrate(univariate_real_function);
 
         REQUIRE( real_integrator.cputhreads == 5 );
         REQUIRE( real_result.integral == Approx(0.5).epsilon(badeps) );
@@ -227,7 +254,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     SECTION( "Complex Function (Default Block Size)" )
     {
-        complex_result = complex_integrator.integrate(complex_function,2);
+        complex_result = complex_integrator.integrate(complex_function);
 
         REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(eps) );
         REQUIRE( complex_result.integral.imag() == Approx(0.25).epsilon(eps) );
@@ -241,7 +268,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     {
         complex_integrator.cputhreads = 1;
 
-        complex_result = complex_integrator.integrate(complex_function,2);
+        complex_result = complex_integrator.integrate(complex_function);
 
         REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(eps) );
         REQUIRE( complex_result.integral.imag() == Approx(0.25).epsilon(eps) );
@@ -255,7 +282,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     {
         complex_integrator.cputhreads = 2;
 
-        complex_result = complex_integrator.integrate(complex_function,2);
+        complex_result = complex_integrator.integrate(complex_function);
 
         REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(eps) );
         REQUIRE( complex_result.integral.imag() == Approx(0.25).epsilon(eps) );
@@ -276,7 +303,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         complex_integrator.minn = 1;
         complex_integrator.cputhreads = 5;
 
-        complex_result = complex_integrator.integrate(univariate_complex_function,1);
+        complex_result = complex_integrator.integrate(univariate_complex_function);
 
         REQUIRE( complex_integrator.cputhreads == 5 );
         REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(badeps) );
@@ -292,7 +319,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
         real_integrator.randomgenerator = std::mt19937_64(1);
 
-        real_result = real_integrator.integrate(real_function,2);
+        real_result = real_integrator.integrate(real_function);
 
         REQUIRE( real_result.integral == Approx(0.25).epsilon(eps) );
         REQUIRE( real_result.error < eps );
@@ -305,7 +332,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         std::random_device rd;
         real_integrator.randomgenerator = std::mt19937_64(rd());
 
-        real_result = real_integrator.integrate(real_function,2);
+        real_result = real_integrator.integrate(real_function);
 
         REQUIRE( real_result.integral == Approx(0.25).epsilon(eps) );
         REQUIRE( real_result.error < eps );
@@ -317,7 +344,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         real_integrator.cputhreads = 0;
         complex_integrator.cputhreads = 0;
 
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function,2) , std::domain_error );
+        REQUIRE_THROWS_AS( real_integrator.integrate(real_function) , std::domain_error );
 
     };
 
@@ -325,21 +352,24 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
 TEST_CASE( "Transform Validity", "[Qmc]" ) {
 
-    std::function<double(double[])> throw_function = [] (double x[]) {
-        if ( x[0] < 0. ) {
-            throw std::invalid_argument("x[0] < 0.");
-        } else if ( x[0] > 1. ) {
-            throw std::invalid_argument("x[0] > 1.");
-        }
-        return x[0];
-    };
+    struct throw_function_t {
+        const unsigned long long int dim = 1;
+        double operator()(double x[]) {
+            if ( x[0] < 0. ) {
+                throw std::invalid_argument("x[0] < 0.");
+            } else if ( x[0] > 1. ) {
+                throw std::invalid_argument("x[0] > 1.");
+            }
+            return x[0];
+        };
+    } throw_function;
 
     integrators::Qmc<double,double> real_integrator;
     real_integrator.minn = 10000;
 
     SECTION( "Check integration parameters x satisfy x >= 0 and x <= 1" )
     {
-        REQUIRE_NOTHROW( real_integrator.integrate(throw_function,1));
+        REQUIRE_NOTHROW( real_integrator.integrate(throw_function));
     };
 
 };

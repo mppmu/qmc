@@ -16,7 +16,7 @@ namespace integrators
     {
         namespace cuda
         {
-            template <typename F1, typename F2, typename T, typename D, typename U, typename G>
+            template <typename F1, typename T, typename D, typename U, typename G>
             void compute(
                          const Qmc<T, D, U, G>& qmc,
                          const U i, const U work_this_iteration, const U total_work_packages,
@@ -25,8 +25,6 @@ namespace integrators
                          std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>>& d_r,
                          const U d_r_size_over_m, const U n, const U m,
                          std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F1>>& d_func,
-                         const U dim,
-                         std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F2>>& d_integral_transform,
                          const int device
                          )
             {
@@ -39,9 +37,7 @@ namespace integrators
                                                                                                        static_cast<D*>(*d_d),
                                                                                                        static_cast<T*>(*d_r),
                                                                                                        d_r_size_over_m, n, m,
-                                                                                                       static_cast<F1*>(*d_func),
-                                                                                                       dim,
-                                                                                                       static_cast<F2*>(*d_integral_transform)
+                                                                                                       static_cast<F1*>(*d_func)
                                                                                                        );
                 QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
@@ -56,7 +52,6 @@ namespace integrators
                                      std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>>& d_r,
                                      const U n,
                                      std::unique_ptr<integrators::core::cuda::detail::cuda_memory<F1>>& d_func,
-                                     const U dim,
                                      const int device
                                  )
             {
@@ -69,8 +64,7 @@ namespace integrators
                                                                                                                 static_cast<D*>(*d_d),
                                                                                                                 static_cast<T*>(*d_r),
                                                                                                                 n,
-                                                                                                                static_cast<F1*>(*d_func),
-                                                                                                                dim
+                                                                                                                static_cast<F1*>(*d_func)
                                                                                                                 );
                 QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 

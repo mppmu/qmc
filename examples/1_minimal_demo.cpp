@@ -9,6 +9,7 @@
 #include "qmc.hpp"
 
 struct my_functor_t {
+    const unsigned long long int dim = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -21,7 +22,7 @@ struct my_functor_t {
 int main() {
 
     integrators::Qmc<double,double> integrator;
-    integrators::result<double> result = integrator.integrate(my_functor, 3);
+    integrators::result<double> result = integrator.integrate(my_functor);
     std::cout << "integral = " << result.integral << std::endl;
     std::cout << "error    = " << result.error    << std::endl;
 

@@ -11,8 +11,8 @@ namespace integrators
     {
         namespace generic
         {
-            template <typename T, typename D, typename U, typename F1, typename F2>
-            void compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, F1& func, const U dim, F2& integral_transform)
+            template <typename T, typename D, typename U, typename F1>
+            void compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, F1& func)
             {
                 using std::modf;
 
@@ -23,19 +23,17 @@ namespace integrators
                     {
                         D wgt = 1.;
                         D mynull = 0;
-                        std::vector<D> x(dim,0);
+                        std::vector<D> x(func.dim,0);
 
-                        for (U sDim = 0; sDim < dim; sDim++)
+                        for (U sDim = 0; sDim < func.dim; sDim++)
                         {
-                            #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D,U>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*dim+sDim), &mynull)
+                            #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D,U>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*func.dim+sDim), &mynull)
 
                             static_assert(std::is_same<decltype(QMC_MODF_CALL),D>::value, "Downcast detected in integrators::core::generic::compute. Please implement \"D modf(D)\".");
                             x[sDim] = QMC_MODF_CALL;
 
                             #undef QMC_MODF_CALL
                         }
-
-                        integral_transform(x.data(), wgt, dim);
 
                         T point = func(x.data());
 
@@ -51,14 +49,14 @@ namespace integrators
             }
 
             template <typename T, typename D, typename U, typename F1>
-            void generate_samples(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U n, F1& func, const U dim)
+            void generate_samples(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U n, F1& func)
             {
                 using std::modf;
 
                 D mynull = 0;
-                std::vector<D> x(dim,0);
+                std::vector<D> x(func.dim,0);
 
-                for (U sDim = 0; sDim < dim; sDim++)
+                for (U sDim = 0; sDim < func.dim; sDim++)
                 {
                     #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D,U>(i,z.at(sDim),n)/(static_cast<D>(n)) + d.at(sDim), &mynull)
 

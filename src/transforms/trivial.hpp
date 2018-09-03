@@ -5,13 +5,21 @@ namespace integrators
 {
     namespace transforms
     {
-        template<typename D, typename U = unsigned long long int>
+        template<typename F1, typename D, typename U = unsigned long long int>
         struct Trivial
         {
+            F1 f; // original function
+            U dim;
+
+            Trivial(F1 f) : f(f), dim(f.dim) {};
+
 #ifdef __CUDACC__
             __host__ __device__
 #endif
-            void operator()(D* x, D& wgt, const U dim) const {}
+            auto operator()(D* x) -> decltype(f(x)) const
+            {
+                return f(x);
+            };
         };
 
     };

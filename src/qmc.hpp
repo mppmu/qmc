@@ -28,17 +28,17 @@ namespace integrators
         void init_d(std::vector<D>& d, const U m, const U dim);
         void init_r(std::vector<T>& r, const U m, const U r_size_over_m) const;
 
-        template<typename F1> FitTransform<F1,D,U> fit(F1& func, const U dim);
-        template <typename F1, typename F2> void sample_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  F1& func, const U dim, F2& integral_transform, const int device, D& time_in_ns, U& points_computed) const;
-        template <typename F1, typename F2> void evaluate_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, F1& func, const U dim, const int device, D& time_in_ns, U& points_computed) const;
-        template <typename F1, typename F2> result<T,U> sample(F1& func, const U dim, F2& integral_transform, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
+        template <typename F1> void sample_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  F1& func, const int device, D& time_in_ns, U& points_computed) const;
+        template <typename F1> void evaluate_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, F1& func, const int device, D& time_in_ns, U& points_computed) const;
+        template <typename F1> result<T,U> sample(F1& func, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
         void update(result<T,U>& res, U& n, U& m, U& function_evaluations) const;
-        template <typename F1, typename F2> result<T,U> integrate_impl(F1& func, const U dim, F2& integral_transform);
+        template <typename F1> result<T,U> integrate_impl(F1& func);
 
     public:
 
         Logger logger;
         G randomgenerator;
+        bool defaulttransform;
         U minnevaluate;
         U minn;
         U minm;
@@ -57,10 +57,9 @@ namespace integrators
 
         U get_next_n(U preferred_n) const;
 
-        template <typename F1, typename F2> result<T,U> integrate(F1& func, const U dim, F2& integral_transform);
-        template <typename F1> result<T,U> integrate(F1& func, const U dim);
-
-        template <typename F1> samples<T,D,U> evaluate(F1& func, const U dim); // TODO: explicit test cases fo this function
+        template <typename F1> result<T,U> integrate(F1& func);
+        template <typename F1> samples<T,D,U> evaluate(F1& func); // TODO: explicit test cases for this function
+        template<typename F1> FitTransform<F1,D,U> fit(F1& func); // TODO: explicit test cases for this function (minnevaluate = 0)
 
         Qmc();
         virtual ~Qmc() {}
