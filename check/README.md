@@ -12,6 +12,11 @@ make summarize:
    of all integrals for which 'make test' has been run earlier.
    Note that this command does not run any test.
 
+make coverage:
+   Produce html pages showing the coverage of the tests
+   that have been run earlier.
+   Note that this command does not run any test.
+
 make clean:
    Delete all generated files; i.e. run 'make clean'
    in every test directory.

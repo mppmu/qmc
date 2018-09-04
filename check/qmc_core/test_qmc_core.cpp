@@ -1,10 +1,20 @@
 #include "catch.hpp"
 #include "qmc.hpp"
 
-#include <complex>
+#include <cmath> // std::nan
 #include <random>
 #include <stdexcept> // invalid_argument
 #include <limits> // numeric_limits
+
+#ifdef __CUDACC__
+#include <thrust/complex.h>
+using thrust::complex;
+#define HOSTDEVICE __host__ __device__
+#else
+using std::complex;
+#include <complex>
+#define HOSTDEVICE
+#endif
 
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
@@ -116,22 +126,22 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
     
 };
 
+struct zero_dim_function_t {
+    const unsigned long long int dim = 0;
+    HOSTDEVICE double operator()(double x[]) { return 1; }
+} zero_dim_function;
+
+struct constant_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE double operator()(double x[]) { return 1; }
+} constant_function;
+
+struct multivariate_linear_function_t {
+    const unsigned long long int dim = 3;
+    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]*x[2]; }
+} multivariate_linear_function;
+
 TEST_CASE( "Exceptions", "[Qmc]" ) {
-
-    struct zero_dim_function_t {
-        const unsigned long long int dim = 0;
-        double operator()(double x[]) { return 1; }
-    } zero_dim_function;
-
-    struct constant_function_t {
-        const unsigned long long int dim = 1;
-        double operator()(double x[]) { return 1; }
-    } constant_function;
-
-    struct real_function_t {
-        const unsigned long long int dim = 3;
-        double operator()(double x[]) { return x[0]*x[1]*x[2]; }
-    } real_function;
 
     integrators::Qmc<double,double> real_integrator;
 
@@ -144,7 +154,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
     SECTION( "Invalid Number of Random Shifts", "[Qmc]" ) {
 
         real_integrator.minm = 1;
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function) , std::domain_error);
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
 
     };
 
@@ -160,11 +170,32 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         real_integrator.generatingvectors = gv;
 
         // Call integrate on function with 3 dimensions
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function) , std::domain_error);
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
         
     };
     
 };
+
+struct univariate_real_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE double operator()(double x[]) { return x[0]; }
+} univariate_real_function;
+
+struct univariate_complex_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]); }
+} univariate_complex_function;
+
+struct real_function_t {
+    const unsigned long long int dim = 2;
+    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]; }
+} real_function;
+
+struct complex_function_t {
+    const unsigned long long int dim = 2;
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]*x[1]); };
+
+} complex_function;
 
 TEST_CASE( "Integrate", "[Qmc]" ) {
 
@@ -172,33 +203,12 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     double badeps = 0.1; // approximate upper bound on integration error when using very few samples
 
     integrators::result<double> real_result;
-    integrators::result<std::complex<double>> complex_result;
-
-    struct univariate_real_function_t {
-        const unsigned long long int dim = 1;
-        double operator()(double x[]) { return x[0]; }
-    } univariate_real_function;
-
-    struct univariate_complex_function_t {
-        const unsigned long long int dim = 1;
-        std::complex<double> operator()(double x[]) { return std::complex<double>(x[0],x[0]); }
-    } univariate_complex_function;
-
-    struct real_function_t {
-        const unsigned long long int dim = 2;
-        double operator()(double x[]) { return x[0]*x[1]; }
-    } real_function;
-
-    struct complex_function_t {
-        const unsigned long long int dim = 2;
-        std::complex<double> operator()(double x[]) { return std::complex<double>(x[0],x[0]*x[1]); };
-
-    } complex_function;
+    integrators::result<complex<double>> complex_result;
 
     integrators::Qmc<double,double> real_integrator;
     real_integrator.minn = 10000;
 
-    integrators::Qmc<std::complex<double>,double> complex_integrator;
+    integrators::Qmc<complex<double>,double> complex_integrator;
     complex_integrator.minn = 10000;
 
     SECTION( "Real Function (Default Block Size)" )
@@ -350,28 +360,24 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
 };
 
-TEST_CASE( "Transform Validity", "[Qmc]" ) {
+struct nan_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE double operator()(double x[]) {
+        if ( x[0] < 0. && x[0] > 1. ) {
+            return std::nan("");
+        }
+        return x[0];
+    };
+} nan_function;
 
-    struct throw_function_t {
-        const unsigned long long int dim = 1;
-        double operator()(double x[]) {
-            if ( x[0] < 0. ) {
-                throw std::invalid_argument("x[0] < 0.");
-            } else if ( x[0] > 1. ) {
-                throw std::invalid_argument("x[0] > 1.");
-            }
-            return x[0];
-        };
-    } throw_function;
+TEST_CASE( "Transform Validity", "[Qmc]" ) {
 
     integrators::Qmc<double,double> real_integrator;
     real_integrator.minn = 10000;
 
     SECTION( "Check integration parameters x satisfy x >= 0 and x <= 1" )
     {
-        REQUIRE_NOTHROW( real_integrator.integrate(throw_function));
+        REQUIRE( !std::isnan(real_integrator.integrate(nan_function).integral) );
     };
 
 };
-
-// TODO : Check that we can derive from the class and implement a different integralTransform <--- also make an example

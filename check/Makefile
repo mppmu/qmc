@@ -1,3 +1,5 @@
+include test_suite/Makefile.conf
+
 # Setup
 # =====
 .DEFAULT_GOAL=runtests
@@ -25,7 +27,7 @@ $(ALL_EXAMPLES) : test_suite/catch.o
 	|| printf "make clean failed\n@@@ FAILURE @@@\n" \
 		> "$@/test/test.log" \
 	printf "Running 'make test' in $@...\n"
-	$(MAKE) -C "$@" test \
+	$(MAKE) -C "$@" \
 	|| printf "make test failed\n@@@ FAILURE @@@\n" \
 		> "$@/test/test.log"
 	echo ------------------------------------------------------------
@@ -62,10 +64,17 @@ summarize :
 	# return nonzero exit status if any example does not report success
 	for dir in $(ALL_EXAMPLES); do grep -HL "@@@ SUCCESS @@@" $$dir/test.log 2>&1 >/dev/null || exit 1 ; done
 
+# Coverage Report
+# ===============
+.SILENT .PHONY : coverage
+coverage :
+	$(GCOVR) */ $(GCOVRFLAGS) -o coverage.html
+
 # Cleaning up
 # ===========
 .PHONY : clean
 clean :
+	rm -f *.html
 	for f in * ; \
 	do \
 	if test -d "$$f" -a -f "$$f/Makefile" ; \
