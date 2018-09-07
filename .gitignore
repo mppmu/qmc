@@ -78,6 +78,7 @@ Temporary Items
 .libs
 *.log
 *.trs
+*.html
 check/*/test_*
 !check/*/test_*.cpp
 examples/cuba_demo
