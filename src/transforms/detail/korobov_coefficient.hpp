@@ -28,7 +28,7 @@ namespace integrators
             {
                 const static D value()
                 {
-                    return ((D(2)*D(b)+D(1))*D(Binomial<U,2*b,b>::value))/(D(a)+D(1));
+                    return ((D(a)+D(b)+D(1))*D(Binomial<U,a+b,b>::value))/(D(a)+D(1));
                 }
             };
         };

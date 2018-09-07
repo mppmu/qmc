@@ -708,7 +708,7 @@ namespace integrators
         }
         else if ( !apply_fit && defaulttransform )
         {
-            integrators::transforms::Korobov<F1,D,U,3> transformed_func = integrators::transforms::Korobov<F1,D,U,3>(func);
+            integrators::transforms::Korobov<F1,D,U,3,3> transformed_func = integrators::transforms::Korobov<F1,D,U,3,3>(func);
             return integrate_impl(transformed_func);
         }
         return integrate_impl(func); // else if ( !apply_fit && !defaulttransform )

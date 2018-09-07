@@ -13,9 +13,9 @@ namespace integrators
     namespace transforms
     {
         /*
-         * Korobov Transform: Korobov<D,U,r>(x,weight,dim) takes the weight r Korobov transform of x
+         * Korobov Transform: Korobov<D,U,r0,r1>(func) takes the weight r0,r1 Korobov transform of func
          */
-        template<typename F1, typename D, typename U, U r>
+        template<typename F1, typename D, typename U, U r0, U r1>
         struct Korobov
         {
             F1 f; // original function
@@ -29,11 +29,11 @@ namespace integrators
             auto operator()(D* x) -> decltype(f(x)) const
             {
                 D wgt = 1;
-                const D prefactor = (D(2)*r+D(1))*detail::Binomial<U,2*r,r>::value;
+                const D prefactor = (D(r0)+D(r1)+D(1))*detail::Binomial<U,r0+r1,r0>::value;
                 for(U s = 0; s<dim; s++)
                 {
-                    wgt *= prefactor*detail::IPow<D,U,r>::value(x[s])*detail::IPow<D,U,r>::value(D(1)-x[s]);
-                    x[s] = detail::IPow<D,U,r+1>::value(x[s])*detail::KorobovTerm<D,U,r,r,r>::value(x[s]);
+                    wgt *= prefactor*detail::IPow<D,U,r0>::value(x[s])*detail::IPow<D,U,r1>::value(D(1)-x[s]);
+                    x[s] = detail::IPow<D,U,r0+1>::value(x[s])*detail::KorobovTerm<D,U,r1,r0,r1>::value(x[s]);
                     // loss of precision can cause x < 0 or x > 1 must keep in x \elem [0,1]
                     if (x[s] > D(1)) x[s] = D(1);
                     if (x[s] < D(0)) x[s] = D(0);
