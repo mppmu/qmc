@@ -12,7 +12,7 @@ The latest release of the single header can be downloaded directly using this li
 
 Prerequisites:
 * A C++11 compatible C++ compiler.
-* (Optional)  For GPU support a CUDA compatible compiler (typically `nvcc` or `clang`).
+* (Optional GPU support)  A CUDA compatible compiler (typically `nvcc` or `clang`).
 
 The qmc library is header only. Simply put the file somewhere reachable from your project or directly into your project tree itself then `#include "qmc.hpp"` in your project.
 
@@ -22,12 +22,13 @@ The qmc integrator library is redistributed by the `pysecdec` project and will b
 
 ## Usage
 
-Example:
+Example: Integrate x0*x1*x2 over the unit hypercube
 ```cpp
 #include <iostream>
 #include "qmc.hpp"
 
 struct my_functor_t {
+  const unsigned long long int dim = 3;
 #ifdef __CUDACC__
   __host__ __device__
 #endif
@@ -40,7 +41,7 @@ struct my_functor_t {
 int main() {
 
   integrators::Qmc<double,double> integrator;
-  integrators::result<double> result = integrator.integrate(my_functor, 3);
+  integrators::result<double> result = integrator.integrate(my_functor);
   std::cout << "integral = " << result.integral << std::endl;
   std::cout << "error    = " << result.error    << std::endl;
 
