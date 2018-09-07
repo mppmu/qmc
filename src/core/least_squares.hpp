@@ -136,7 +136,10 @@ namespace integrators
             fit_chisqs.reserve(fit_function.initial_parameters.size());
             for (int i = 0; i < fit_function.initial_parameters.size(); i++)
             {
-                std::vector<double> initial_parameters{fit_function.initial_parameters.at(i)};
+                std::vector<double> initial_parameters(fit_function.initial_parameters.at(i).begin(),fit_function.initial_parameters.at(i).end()); // note: cast to double
+
+                if( initial_parameters.size() != fit_function.num_parameters)
+                    throw std::domain_error("least_squares called with incorrect number of initial_parameters (" + std::to_string(initial_parameters.size()) + "), expected " +  std::to_string(fit_function.num_parameters) + " parameters");
 
                 if (verbosity > 0)
                 {
