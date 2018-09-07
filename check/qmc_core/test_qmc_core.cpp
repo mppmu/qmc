@@ -5,6 +5,9 @@
 #include <random>
 #include <stdexcept> // invalid_argument
 #include <limits> // numeric_limits
+#include <sstream> // ostringstream
+#include <string> // to_string
+#include <random> // mt19937_64
 
 #ifdef __CUDACC__
 #include <thrust/complex.h>
@@ -15,6 +18,52 @@ using std::complex;
 #include <complex>
 #define HOSTDEVICE
 #endif
+
+struct zero_dim_function_t {
+    const unsigned long long int dim = 0;
+    HOSTDEVICE double operator()(double x[]) { return 1; }
+} zero_dim_function;
+
+struct constant_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE double operator()(double x[]) { return 1; }
+} constant_function;
+
+struct multivariate_linear_function_t {
+    const unsigned long long int dim = 3;
+    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]*x[2]; }
+} multivariate_linear_function;
+
+struct nan_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE double operator()(double x[]) {
+        if ( x[0] < 0. && x[0] > 1. )
+            return std::nan("");
+        else
+            return x[0];
+    };
+} nan_function;
+
+struct univariate_real_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE double operator()(double x[]) { return x[0]; }
+} univariate_real_function;
+
+struct univariate_complex_function_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]); }
+} univariate_complex_function;
+
+struct real_function_t {
+    const unsigned long long int dim = 2;
+    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]; }
+} real_function;
+
+struct complex_function_t {
+    const unsigned long long int dim = 2;
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]*x[1]); };
+
+} complex_function;
 
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
@@ -32,6 +81,8 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
             REQUIRE( random_sample >= 0 );
             REQUIRE( random_sample <= 1 );
         }
+        REQUIRE( real_integrator.defaulttransform == true);
+        REQUIRE( real_integrator.minnevaluate >= 0);
         REQUIRE( real_integrator.minn > 0 );
         REQUIRE( real_integrator.minm > 1 ); // can not calculate variance if minm <= 1
         REQUIRE( real_integrator.epsrel >= 0 );
@@ -62,37 +113,43 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
     SECTION( "Check Fields", "[Qmc]" ) {
 
         integrators::Qmc<double,double> real_integrator;
+        std::ostringstream stream; real_integrator.logger = integrators::Logger(stream);
+        real_integrator.randomgenerator = std::mt19937_64( std::random_device{}() );
+        real_integrator.defaulttransform = true;
+        real_integrator.minnevaluate = 1;
         real_integrator.minn = 1;
         real_integrator.minm = 2;
-        real_integrator.cputhreads = 3;
+        real_integrator.epsrel = 1.;
+        real_integrator.epsabs = 1.;
+        real_integrator.maxeval = 1;
+        real_integrator.maxnperpackage = 1;
+        real_integrator.maxmperpackage = 1;
+        real_integrator.errormode = integrators::ErrorMode::all;
+        real_integrator.cputhreads = 1;
+        real_integrator.cudablocks = 1;
+        real_integrator.cudathreadsperblock = 1;
+        real_integrator.devices = {1};
         real_integrator.generatingvectors = gv;
+        real_integrator.verbosity = 0;
 
+        REQUIRE( real_integrator.defaulttransform == true );
+        REQUIRE( real_integrator.minnevaluate == 1 );
         REQUIRE( real_integrator.minn == 1 );
         REQUIRE( real_integrator.minm == 2 );
-        REQUIRE( real_integrator.cputhreads == 3);
+        REQUIRE( real_integrator.epsrel == Approx(1.) );
+        REQUIRE( real_integrator.epsabs == Approx(1.) );
+        REQUIRE( real_integrator.maxeval == 1 );
+        REQUIRE( real_integrator.maxnperpackage == 1 );
+        REQUIRE( real_integrator.maxmperpackage == 1 );
+        REQUIRE( real_integrator.errormode == integrators::ErrorMode::all );
+        REQUIRE( real_integrator.cputhreads == 1 );
+        REQUIRE( real_integrator.cudablocks == 1 );
+        REQUIRE( real_integrator.cudathreadsperblock == 1 );
+        REQUIRE( real_integrator.devices.size() == 1 );
         REQUIRE( real_integrator.generatingvectors.size() == 2 );
         REQUIRE( real_integrator.generatingvectors[2] == v2 );
         REQUIRE( real_integrator.generatingvectors[3] == v3 );
-
-
-//        Logger logger;
-//
-//        G randomgenerator;
-//
-//        U minn;
-//        U minm;
-//        D epsrel;
-//        D epsabs;
-//        U maxeval;
-//        U maxnperpackage;
-//        U maxmperpackage;
-//        ErrorMode errormode;
-//        U cputhreads;
-//        U cudablocks;
-//        U cudathreadsperblock;
-//        std::set<int> devices;
-//        std::map<U,std::vector<U>> generatingvectors;
-//        U verbosity;
+        REQUIRE( real_integrator.verbosity == 0  );
 
     };
 
@@ -116,34 +173,26 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         REQUIRE( real_integrator.minn == 4 );
         REQUIRE( real_integrator.get_next_n(4) == 3 ); // fall back to largest available generating vector
 
+        // n larger than representable in signed version of 'U' (invalid)
         real_integrator.generatingvectors[std::numeric_limits<unsigned long long int>::max()] = {1,2,3};
         real_integrator.minn = std::numeric_limits<unsigned long long int>::max();
-        // n larger than representable in signed version of 'U' (invalid)
         REQUIRE( real_integrator.minn == std::numeric_limits<unsigned long long int>::max() );
         REQUIRE_THROWS_AS( real_integrator.get_next_n(std::numeric_limits<unsigned long long int>::max()), std::domain_error );
+
+        // n larger than the largest finite value representable by the mantissa of float
+        integrators::Qmc<float, float, unsigned long long int> float_integrator;
+        float_integrator.generatingvectors = { { std::numeric_limits<long long int>::max()-1, {1,2,3} } };
+        REQUIRE_THROWS_AS( float_integrator.get_next_n(1), std::domain_error );
 
     };
     
 };
 
-struct zero_dim_function_t {
-    const unsigned long long int dim = 0;
-    HOSTDEVICE double operator()(double x[]) { return 1; }
-} zero_dim_function;
-
-struct constant_function_t {
-    const unsigned long long int dim = 1;
-    HOSTDEVICE double operator()(double x[]) { return 1; }
-} constant_function;
-
-struct multivariate_linear_function_t {
-    const unsigned long long int dim = 3;
-    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]*x[2]; }
-} multivariate_linear_function;
-
 TEST_CASE( "Exceptions", "[Qmc]" ) {
 
     integrators::Qmc<double,double> real_integrator;
+    std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
+
 
     SECTION( "Invalid Dimension", "[Qmc]" ) {
 
@@ -154,6 +203,27 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
     SECTION( "Invalid Number of Random Shifts", "[Qmc]" ) {
 
         real_integrator.minm = 1;
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
+
+    };
+
+    SECTION( "Invalid Number of Random Shifts Per Package", "[Qmc]" ) {
+
+        real_integrator.maxmperpackage = 1;
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
+
+    };
+
+    SECTION( "Invalid Number of Points Per Package", "[Qmc]" ) {
+
+        real_integrator.maxnperpackage = 0;
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
+
+    };
+
+    SECTION( "Invalid Number of CPU Threads", "[Qmc]" ) {
+
+        real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
 
     };
@@ -173,43 +243,66 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
         
     };
-    
+
+    SECTION( "Set cputhreads to zero (error)")
+    {
+
+        real_integrator.cputhreads = 0;
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error );
+
+    };
+
+#ifndef __CUDACC__
+    SECTION( "Device set to GPU but CUDA Disabled in sample function", "[Qmc]") {
+
+        real_integrator.devices = {1}; // gpu
+        real_integrator.minnevaluate = 0; // disable fitting
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function), std::invalid_argument);
+
+    }
+#endif
+
+#ifndef __CUDACC__
+    SECTION( "Device set to GPU but CUDA Disabled in evaluate function", "[Qmc]") {
+
+        real_integrator.devices = {1}; // gpu
+        REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function), std::invalid_argument);
+
+    }
+#endif
+
 };
 
-struct univariate_real_function_t {
-    const unsigned long long int dim = 1;
-    HOSTDEVICE double operator()(double x[]) { return x[0]; }
-} univariate_real_function;
+TEST_CASE( "Transform Validity", "[Qmc]" ) {
 
-struct univariate_complex_function_t {
-    const unsigned long long int dim = 1;
-    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]); }
-} univariate_complex_function;
+    integrators::Qmc<double,double> real_integrator;
+    std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
+    real_integrator.minn = 10000;
 
-struct real_function_t {
-    const unsigned long long int dim = 2;
-    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]; }
-} real_function;
+    SECTION( "Check integration parameters x satisfy x >= 0 and x <= 1" )
+    {
+        REQUIRE( !std::isnan(real_integrator.integrate(nan_function).integral) );
+    };
 
-struct complex_function_t {
-    const unsigned long long int dim = 2;
-    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]*x[1]); };
-
-} complex_function;
+};
 
 TEST_CASE( "Integrate", "[Qmc]" ) {
 
-    double eps = 1e-10; // approximate upper bound on integration error we would expect
+    double eps = 1e-6; // approximate upper bound on integration error we would expect
     double badeps = 0.1; // approximate upper bound on integration error when using very few samples
 
     integrators::result<double> real_result;
     integrators::result<complex<double>> complex_result;
 
     integrators::Qmc<double,double> real_integrator;
+    std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
     real_integrator.minn = 10000;
+    real_integrator.verbosity = 3;
 
     integrators::Qmc<complex<double>,double> complex_integrator;
+    std::ostringstream complex_stream; real_integrator.logger = integrators::Logger(complex_stream);
     complex_integrator.minn = 10000;
+    complex_integrator.verbosity = 3;
 
     SECTION( "Real Function (Default Block Size)" )
     {
@@ -349,35 +442,99 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
-    SECTION( "Set cputhreads to zero (error)")
+    SECTION( "Real Function (apply_fit && defaulttransform)" )
     {
-        real_integrator.cputhreads = 0;
-        complex_integrator.cputhreads = 0;
 
-        REQUIRE_THROWS_AS( real_integrator.integrate(real_function) , std::domain_error );
+        real_result = real_integrator.integrate(constant_function);
+
+        REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
+
+    };
+
+    SECTION( "Real Function (apply_fit && !defaulttransform)" )
+    {
+
+        real_integrator.defaulttransform = false;
+        real_result = real_integrator.integrate(constant_function);
+
+        REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
+
+    };
+
+    SECTION( "Real Function (!apply_fit && defaulttransform)" )
+    {
+
+        real_integrator.minnevaluate = 0;
+        real_result = real_integrator.integrate(constant_function);
+
+        REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
+
+    };
+
+    SECTION( "Real Function (!apply_fit && !defaulttransform)" )
+    {
+
+        real_integrator.minnevaluate = 0;
+        real_integrator.defaulttransform = false;
+        real_result = real_integrator.integrate(constant_function);
+
+        REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
 
     };
 
 };
 
-struct nan_function_t {
-    const unsigned long long int dim = 1;
-    HOSTDEVICE double operator()(double x[]) {
-        if ( x[0] < 0. && x[0] > 1. ) {
-            return std::nan("");
-        }
-        return x[0];
-    };
-} nan_function;
+TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" )
+{
+    double eps = 1e-6; // approximate upper bound on integration error we would expect
 
-TEST_CASE( "Transform Validity", "[Qmc]" ) {
+    integrators::result<double> real_result;
 
     integrators::Qmc<double,double> real_integrator;
-    real_integrator.minn = 10000;
+    std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
+    real_integrator.verbosity = 3;
 
-    SECTION( "Check integration parameters x satisfy x >= 0 and x <= 1" )
+    SECTION( "Switch to Monte-Carlo scaling due to available lattice sizes" )
     {
-        REQUIRE( !std::isnan(real_integrator.integrate(nan_function).integral) );
+
+        std::map<unsigned long long int,std::vector<unsigned long long int>> gv;
+        gv[1021] = {1,374,421};
+
+        real_integrator.minnevaluate = 0;
+        real_integrator.generatingvectors = gv;
+        real_integrator.epsrel = 1e-10;
+        real_integrator.epsabs = 1e-10;
+        real_integrator.maxeval = 1000000;
+
+        real_result = real_integrator.integrate(multivariate_linear_function);
+
+        REQUIRE( real_result.integral == Approx(0.125).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
+
     };
 
+    SECTION( "Reduce Lattice Size due to low maxeval" )
+    {
+
+        std::map<unsigned long long int,std::vector<unsigned long long int>> gv;
+        gv[1021] = {1,374,421};
+        gv[2147483647] = {1,367499618,943314825}; // too big to use due to maxeval
+
+        real_integrator.minn = 1;
+        real_integrator.minnevaluate = 0;
+        real_integrator.generatingvectors = gv;
+        real_integrator.epsrel = 1e-10;
+        real_integrator.epsabs = 1e-10;
+        real_integrator.maxeval = 130688;
+
+        real_result = real_integrator.integrate(multivariate_linear_function);
+
+        REQUIRE( real_result.integral == Approx(0.125).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
+
+    };
 };
