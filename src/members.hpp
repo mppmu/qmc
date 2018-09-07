@@ -32,6 +32,7 @@ namespace integrators
     void Qmc<T,D,U,G,H>::init_d(std::vector<D>& d, const U m, const U dim)
     {
         d.clear();
+        d.reserve(m*dim);
         for (U k = 0; k < m; k++)
             for (U sDim = 0; sDim < dim; sDim++)
                 d.push_back(uniform_distribution(randomgenerator));
