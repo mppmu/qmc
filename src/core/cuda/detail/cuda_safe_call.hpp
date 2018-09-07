@@ -21,9 +21,7 @@ namespace integrators
                 inline void cuda_safe_call(cudaError_t error, const char *file, int line)
                 {
                     if (error != cudaSuccess)
-                    {
                         throw cuda_error(std::string(cudaGetErrorString(error)) + ": " + std::string(file) + " line " + std::to_string(line));
-                    }
                 };
             };
         };

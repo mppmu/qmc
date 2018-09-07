@@ -24,7 +24,8 @@ namespace integrators
     void Qmc<T,D,U,G,H>::init_z(std::vector<U>& z, const U n, const U dim) const
     {
         z = generatingvectors.at(n);
-        if ( dim > z.size() ) throw std::domain_error("dim > generating vector dimension. Please supply a generating vector table with a larger number of dimensions.");
+        if ( dim > z.size() )
+            throw std::domain_error("dim > generating vector dimension. Please supply a generating vector table with a larger number of dimensions.");
         z.resize(dim);
     };
     
@@ -375,8 +376,10 @@ namespace integrators
     template <typename F1>
     samples<T,D,U> Qmc<T,D,U,G,H>::evaluate(F1& func) // TODO - test case
     {
-        if ( func.dim < 1 ) throw std::invalid_argument("qmc::integrate called with func.dim < 1. Check that your integrand depends on at least one variable of integration.");
-        if ( cputhreads < 1 ) throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
+        if ( func.dim < 1 )
+            throw std::invalid_argument("qmc::integrate called with func.dim < 1. Check that your integrand depends on at least one variable of integration.");
+        if ( cputhreads < 1 )
+            throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
 
         // allocate memory
         samples<T,D,U> res;
@@ -575,6 +578,13 @@ namespace integrators
             if (verbosity > 2) logger << "error goal reached" << std::endl;
             return;
         }
+
+        if(function_evaluations > maxeval)
+        {
+            if (verbosity > 2) logger << "maxeval reached" << std::endl;
+            return;
+        }
+
         U new_m = minm;
         #define QMC_POW_CALL pow(error_ratio,static_cast<D>(1)/EXPECTED_SCALING)
         static_assert(std::is_same<decltype(QMC_POW_CALL),D>::value, "Downcast detected in qmc::update(. Please implement \"D pow(D)\".");
@@ -607,29 +617,38 @@ namespace integrators
         if ( generatingvectors.lower_bound(preferred_n) == generatingvectors.end() )
         {
             n = generatingvectors.rbegin()->first;
-            if (verbosity > 0) logger << "Qmc integrator does not have generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
+            if (verbosity > 0)
+                logger << "Qmc integrator does not have a generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
         } else {
             n = generatingvectors.lower_bound(preferred_n)->first;
         }
 
         // Check n satisfies requirements of mod_mul implementation
-        if ( n >= std::numeric_limits<typename std::make_signed<U>::type>::max() ) throw std::domain_error("Qmc integrator called with n larger than the largest finite value representable with the signed type corresponding to U. Please decrease minn or use a larger unsigned integer type for U.");
-        if ( n >= std::pow(std::numeric_limits<D>::radix,std::numeric_limits<D>::digits-1) ) throw std::domain_error("Qmc integrator called with n larger than the largest finite value representable by the mantiassa.");
+        if ( n >= std::numeric_limits<typename std::make_signed<U>::type>::max() )
+            throw std::domain_error("Qmc integrator called with n larger than the largest finite value representable with the signed type corresponding to U. Please decrease minn or use a larger unsigned integer type for U.");
+        if ( n >= std::pow(std::numeric_limits<D>::radix,std::numeric_limits<D>::digits-1) )
+            throw std::domain_error("Qmc integrator called with n larger than the largest finite value representable by the mantissa.");
 
         return n;
     };
-    
+
     template <typename T, typename D, typename U, typename G, typename H>
     template <typename F1>
     result<T,U> Qmc<T,D,U,G,H>::integrate_impl(F1& func)
     {
-        if ( func.dim < 1 ) throw std::invalid_argument("qmc::integrate called with func.dim < 1. Check that your integrand depends on at least one variable of integration.");
-        if ( minm < 2 ) throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
-        if ( maxmperpackage < 2 ) throw std::domain_error("qmc::integrate called with maxmperpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperpackage.");
-        if ( maxnperpackage == 0 ) throw std::domain_error("qmc::integrate called with maxnperpackage = 0. Please set maxnperpackage to a positive integer.");
-        if ( cputhreads < 1 ) throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
+        if ( func.dim < 1 )
+            throw std::invalid_argument("qmc::integrate called with func.dim < 1. Check that your integrand depends on at least one variable of integration.");
+        if ( minm < 2 )
+            throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
+        if ( maxmperpackage < 2 )
+            throw std::domain_error("qmc::integrate called with maxmperpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperpackage.");
+        if ( maxnperpackage == 0 )
+            throw std::domain_error("qmc::integrate called with maxnperpackage = 0. Please set maxnperpackage to a positive integer.");
+        if ( cputhreads < 1 )
+            throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
 
-        if (verbosity > 2) logger << "-- qmc::integrate called --" << std::endl;
+        if (verbosity > 2)
+            logger << "-- qmc::integrate called --" << std::endl;
 
         std::vector<result<T,U>> previous_iterations; // keep track of the different interations
         U function_evaluations = 0;
@@ -638,11 +657,21 @@ namespace integrators
         result<T,U> res;
         do
         {
-            if (verbosity > 1) logger << "iterating" << std::endl;
+            if (verbosity > 1)
+                logger << "iterating" << std::endl;
             res = sample(func,n,m, previous_iterations);
-            if (verbosity > 1) logger << "result " << res.integral << " " << res.error << std::endl;
+            if (verbosity > 1)
+                logger << "result " << res.integral << " " << res.error << std::endl;
             update(res,n,m,function_evaluations);
         } while  ( integrators::overloads::compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && function_evaluations < maxeval );
+        if (verbosity > 0)
+        {
+            logger << "-- qmc::integrate returning result --" << std::endl;
+            logger << "integral " << res.integral << std::endl;
+            logger << "error " << res.error << std::endl;
+            logger << "n " << res.n << std::endl;
+            logger << "m " << res.m << std::endl;
+        }
         return res;
     };
 
