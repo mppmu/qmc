@@ -593,22 +593,30 @@ namespace integrators
         #undef QMC_POW_CALL
         if ( new_n <= n or ( error_ratio*error_ratio - static_cast<D>(1) < static_cast<D>(new_n)/static_cast<D>(n)))
         {
-            // n did not increase, or increasing m will be faster
-            // increase m
-            if (verbosity > 2) logger << "n did not increase, or increasing m will be faster, increasing m." << std::endl;
+            // n did not increase, or increasing m will be faster, increase m
             new_n = n;
             new_m = static_cast<U>(static_cast<D>(m)*error_ratio*error_ratio)+1-m;
-            if( verbosity > 2 ) logger << new_m << std::endl;
+            if (verbosity > 2)
+                logger << "n did not increase, or increasing m will be faster, increasing m to " << new_m << "." << std::endl;
         }
         if ( maxeval < function_evaluations + new_n*new_m)
         {
-            // Decrease n
-            if ( verbosity > 2 ) logger << "requested number of function evaluations greater than maxeval, reducing n." << std::endl;
-            new_n = get_next_n((maxeval-function_evaluations)/new_m);
+            // Decrease new_n
+            if ( verbosity > 2 )
+                logger << "requested number of function evaluations greater than maxeval, reducing n." << std::endl;
+            new_n = std::max(n, get_next_n((maxeval-function_evaluations)/new_m));
+        }
+        if ( n == new_n && maxeval < function_evaluations + new_n*new_m)
+        {
+            // Decrease new_m
+            if ( verbosity > 2 )
+                logger << "requested number of function evaluations greater than maxeval, reducing m." << std::endl;
+            new_m = std::max(U(1),(maxeval-function_evaluations)/new_n);
         }
         n = new_n;
         m = new_m;
         if(verbosity > 1 ) logger << "updated n m " << n << " " << m << std::endl;
+
     };
 
     template <typename T, typename D, typename U, typename G, typename H>
