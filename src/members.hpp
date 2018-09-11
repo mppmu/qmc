@@ -507,20 +507,19 @@ namespace integrators
     };
 
     template <typename T, typename D, typename U, typename G, typename H>
-    template <typename F1>
-    FitTransform<F1,D,U> Qmc<T,D,U,G,H>::fit(F1& func) // TODO - test case
+    template <typename F1, typename F2, typename F3, typename F4>
+    F4& Qmc<T,D,U,G,H>::fit(F1& func, F2& fit_function, F3& fit_function_jacobian, F4& fit_function_transform) // TODO - test case
     {
+        using std::abs;
+
         std::vector<D> x,y;
         std::vector<std::vector<D>> fit_parameters;
         fit_parameters.reserve(func.dim);
 
-        FitFunction<D> fit_function;
-        FitFunctionJacobian<D> fit_function_jacobian;
-
         // Generate data to be fitted
         integrators::samples<T,D,U> result = evaluate(func);
 
-        // fit FitFunction (adapted from fit.py)
+        // fit fit_function
         for (U sdim = 0; sdim < func.dim; ++sdim)
         {
             // compute the x values
@@ -531,9 +530,12 @@ namespace integrators
                 unordered_x.push_back( result.get_x(i, sdim) );
             }
 
+            // sort by x value
             std::vector<size_t> sort_key = math::argsort(unordered_x);
             x.clear();
             y.clear();
+            x.reserve( sort_key.size() );
+            y.reserve( sort_key.size() );
             for (const auto& idx : sort_key)
             {
                 x.push_back( unordered_x.at(idx) );
@@ -547,20 +549,19 @@ namespace integrators
                 element /= y.back();
             }
 
-            // fitf = optimize.least_squares(optf,[1.1,0.5,0.1,0.1],args=(y,x),verbose=2,xtol=1e-10)
-            fit_parameters.push_back( fit::least_squares(fit_function,fit_function_jacobian,y,x,verbosity,logger) );
+            // run a least squares fit
+            fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian,y,x,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl) );
         }
 
-        FitTransform<F1,D> transformed_functor{func};
-        for (size_t d = 0; d < transformed_functor.dim; ++d)
+        for (size_t d = 0; d < fit_function_transform.dim; ++d)
             for (size_t i = 0; i < fit_parameters.at(d).size(); ++i)
-                transformed_functor.p[d][i] = fit_parameters.at(d).at(i);
+                fit_function_transform.p[d][i] = fit_parameters.at(d).at(i);
 
-        return transformed_functor;
-    }
+        return fit_function_transform;
+    };
 
     template <typename T, typename D, typename U, typename G, typename H>
-    void Qmc<T,D,U,G,H>::update(result<T,U>& res, U& n, U& m, U& function_evaluations) const
+    void Qmc<T,D,U,G,H>::update(const result<T,U>& res, U& n, U& m, U& function_evaluations) const
     {
         using std::pow;
 
@@ -682,13 +683,19 @@ namespace integrators
         bool apply_fit = (minnevaluate > 0);
         if( apply_fit && defaulttransform )
         {
-            FitTransform<F1,D> fitted_func = fit(func);
-            integrators::transforms::Korobov<FitTransform<F1,D>,D,U,3> transformed_fitted_func = integrators::transforms::Korobov<FitTransform<F1,D>,D,U,3>(fitted_func);
+            fitfunctions::PolySingular<D> fit_function;
+            fitfunctions::PolySingularJacobian<D> fit_function_jacobian;
+            fitfunctions::PolySingularTransform<F1,D> fit_function_transform(func);
+            fitfunctions::PolySingularTransform<F1,D>& fitted_func = fit(func,fit_function,fit_function_jacobian,fit_function_transform); // update and reference fit_function_transform
+            integrators::transforms::Korobov<fitfunctions::PolySingularTransform<F1,D>,D,U,3> transformed_fitted_func(fitted_func);
             return integrate_impl(transformed_fitted_func);
         }
         else if ( apply_fit && !defaulttransform )
         {
-            FitTransform<F1,D> fitted_func = fit(func);
+            fitfunctions::PolySingular<D> fit_function;
+            fitfunctions::PolySingularJacobian<D> fit_function_jacobian;
+            fitfunctions::PolySingularTransform<F1,D> fit_function_transform(func);
+            fitfunctions::PolySingularTransform<F1,D>& fitted_func = fit(func,fit_function,fit_function_jacobian,fit_function_transform); // update and reference fit_function_transform
             return integrate_impl(fitted_func);
         }
         else if ( !apply_fit && defaulttransform )
@@ -696,19 +703,12 @@ namespace integrators
             integrators::transforms::Korobov<F1,D,U,3> transformed_func = integrators::transforms::Korobov<F1,D,U,3>(func);
             return integrate_impl(transformed_func);
         }
-        else if ( !apply_fit && !defaulttransform )
-        {
-            return integrate_impl(func);
-        }
-        else
-        {
-            throw std::invalid_argument("Invalid combination of auto_fit and auto_transform in call to integrate");
-        }
+        return integrate_impl(func); // else if ( !apply_fit && !defaulttransform )
     };
     
     template <typename T, typename D, typename U, typename G, typename H>
     Qmc<T,D,U,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), defaulttransform(true), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100<U>()), verbosity(0)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), defaulttransform(true), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100<U>()), verbosity(0), fitmaxiter(40), fitxtol(1e-10), fitgtol(0.), fitftol(0.), fitparametersgsl(gsl_multifit_nlinear_default_parameters())
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

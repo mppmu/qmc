@@ -7,11 +7,12 @@
 #include <map>
 #include <set>
 
+#include <gsl/gsl_multifit_nlinear.h>
+
 // Custom Types
 #include "types/logger.hpp"
 #include "types/result.hpp"
 #include "types/samples.hpp"
-#include "types/fit.hpp"
 #include "types/errormode.hpp"
 
 namespace integrators
@@ -31,7 +32,7 @@ namespace integrators
         template <typename F1> void sample_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  F1& func, const int device, D& time_in_ns, U& points_computed) const;
         template <typename F1> void evaluate_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, F1& func, const int device, D& time_in_ns, U& points_computed) const;
         template <typename F1> result<T,U> sample(F1& func, const U n, const U m, std::vector<result<T,U>> & previous_iterations);
-        void update(result<T,U>& res, U& n, U& m, U& function_evaluations) const;
+        void update(const result<T,U>& res, U& n, U& m, U& function_evaluations) const;
         template <typename F1> result<T,U> integrate_impl(F1& func);
 
     public:
@@ -55,11 +56,17 @@ namespace integrators
         std::map<U,std::vector<U>> generatingvectors;
         U verbosity;
 
+        int fitmaxiter;
+        double fitxtol;
+        double fitgtol;
+        double fitftol;
+        gsl_multifit_nlinear_parameters fitparametersgsl;
+
         U get_next_n(U preferred_n) const;
 
         template <typename F1> result<T,U> integrate(F1& func);
         template <typename F1> samples<T,D,U> evaluate(F1& func); // TODO: explicit test cases for this function
-        template<typename F1> FitTransform<F1,D,U> fit(F1& func); // TODO: explicit test cases for this function (minnevaluate = 0)
+        template <typename F1, typename F2, typename F3, typename F4> F4& fit(F1& func, F2& fit_function, F3& fit_function_jacobian, F4& fit_function_transform); // TODO: explicit test cases for this function (minnevaluate = 0)
 
         Qmc();
         virtual ~Qmc() {}
@@ -69,9 +76,9 @@ namespace integrators
 // Implementation
 #include "math/mul_mod.hpp"
 #include "math/argsort.hpp"
-#include "fit/gsl_wrapper.hpp"
 #include "overloads/real.hpp"
 #include "overloads/complex.hpp"
+#include "fitfunctions/polysingular.hpp"
 #include "transforms/korobov.hpp"
 #include "transforms/baker.hpp"
 #include "transforms/trivial.hpp"
@@ -84,6 +91,7 @@ namespace integrators
 #include "core/cuda/teardown.hpp"
 #include "core/cuda/get_device_count.hpp"
 #include "core/generic/compute.hpp"
+#include "core/least_squares.hpp"
 #include "core/reduce.hpp"
 #include "members.hpp"
 

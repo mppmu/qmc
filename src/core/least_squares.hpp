@@ -1,9 +1,10 @@
-#ifndef QMC_GSL_WRAPPER_H
-#define QMC_GSL_WRAPPER_H
+#ifndef QMC_LEAST_SQUARES_H
+#define QMC_LEAST_SQUARES_H
 
 #include <algorithm> // std::max
 #include <cassert> // assert
 #include <cmath> // std::nan
+#include <sstream> // std::ostringstream
 #include <string> // std::to_string
 #include <iostream> // std::endl
 #include <iomanip> //  std::setw, std::setfill
@@ -14,11 +15,9 @@
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlinear.h>
 
-#include "../types/fit.hpp"
-
 namespace integrators
 {
-    namespace fit
+    namespace core
     {
         template<typename D, typename F1, typename F2>
         struct least_squares_wrapper_t {
@@ -100,15 +99,8 @@ namespace integrators
         }
 
         template <typename D, typename U, typename F1, typename F2>
-        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger)
+        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const int maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
         {
-            // fit parameters
-            // TODO - Member variables or otherwise settable?
-            const int maxiter = 40;
-            const double xtol = 1e-10;
-            const double gtol = 0.0;
-            const double ftol = 0.0;
-
             const size_t num_points = x.size();
             const size_t num_parameters = fit_function.num_parameters;
 
@@ -120,7 +112,7 @@ namespace integrators
             const gsl_multifit_nlinear_type *method = gsl_multifit_nlinear_trust;
             gsl_multifit_nlinear_workspace *w;
             gsl_multifit_nlinear_fdf fdf;
-            gsl_multifit_nlinear_parameters fdf_params = gsl_multifit_nlinear_default_parameters(); // TODO - set these?
+            gsl_multifit_nlinear_parameters fdf_params = fitparametersgsl;
             gsl_vector *f;
             gsl_matrix *J;
             gsl_matrix *covar = gsl_matrix_alloc(num_parameters, num_parameters);
@@ -133,24 +125,27 @@ namespace integrators
             fdf.p = num_parameters;
             fdf.params = &data;
 
-            double chisq,chisq0,chisq1,chisq2;
+            double chisq,chisq0;
             int status, info;
 
             // allocate workspace with parameters
             w = gsl_multifit_nlinear_alloc(method, &fdf_params, num_points, num_parameters);
 
             std::vector<std::vector<D>> fit_parameters;
-
-            for (int i = 1; i < 3; i++)
+            std::vector<double> fit_chisqs;
+            fit_chisqs.reserve(fit_function.initial_parameters.size());
+            for (int i = 0; i < fit_function.initial_parameters.size(); i++)
             {
-                if (verbosity > 0)
-                    logger << "-- running fit (run " << i << ")" << " --" << std::endl;
+                std::vector<double> initial_parameters{fit_function.initial_parameters.at(i)};
 
-                static std::vector<double> initial_parameters;
-                if (i == 1)
-                    initial_parameters = { 1.1,1.0,0.0,0.0};
-                else
-                    initial_parameters = {-0.1,1.0,0.0,0.0};
+                if (verbosity > 0)
+                {
+                    logger << "-- running fit (run " << i << ")" << " --" << std::endl;
+                    std::ostringstream initial_parameters_stream;
+                    for(const auto& elem: initial_parameters)
+                        initial_parameters_stream << elem << " ";
+                    logger << "with initial_parameters " << initial_parameters_stream.str() << std::endl;
+                }
 
                 gsl_vector_view pv = gsl_vector_view_array(initial_parameters.data(), num_parameters);
 
@@ -205,29 +200,28 @@ namespace integrators
                     logger << "final   |f(x)| = "      << sqrt(chisq) << std::endl;
                     logger << "chisq/dof = "           << chisq/dof << std::endl;
                     for (size_t i = 0; i < num_parameters; i++)
-                        logger << "fit_parameters[" << i << "] = " << this_fit_parameters[i] << " +/- " << c*sqrt(gsl_matrix_get(covar,i,i)*chisq/dof) << std::endl;
+                        logger << "fit_parameters[" << i << "] = " << this_fit_parameters.at(i) << " +/- " << c*sqrt(gsl_matrix_get(covar,i,i)*chisq/dof) << std::endl;
                     logger << "status = "              << gsl_strerror(status) << std::endl;
                     logger << "-----------" << std::endl;
                 }
 
-                if (i == 1)
-                    chisq1 = chisq;
-                else
-                    chisq2 = chisq;
+                fit_chisqs.push_back(chisq);
+
             }
 
             gsl_multifit_nlinear_free(w);
             gsl_matrix_free(covar);
 
-            const size_t solution = chisq1 < chisq2 ? 0 : 1;
+            // get index of best fit (minimum chisq)
+            const int best_fit_index = std::distance(fit_chisqs.begin(), std::min_element(fit_chisqs.begin(),fit_chisqs.end()));
 
             if (verbosity > 1)
             {
-                logger << "choosing solution " << solution+1 << std::endl;
+                logger << "choosing fit run " << best_fit_index << std::endl;
                 logger << "-----------" << std::endl;
             }
 
-            return fit_parameters.at(solution);
+            return fit_parameters.at(best_fit_index);
         }
     };
 };
