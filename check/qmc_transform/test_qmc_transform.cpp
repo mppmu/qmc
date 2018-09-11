@@ -2,6 +2,7 @@
 #include "qmc.hpp"
 
 #include <string> // stod
+#include <type_traits> // is_same
 
 #ifdef __CUDACC__
 #include <thrust/complex.h>
@@ -1298,41 +1299,23 @@ TEST_CASE( "Korobov Transform", "[transform]")
 
 };
 
-//TEST_CASE( "Baker Transform", "[transform]")
-//{
-//    using D = double;
-//    using U = unsigned long long int;
-//
-//    U dim = 9;
-//
-//    D x[]      = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-//    D wgt = 1.;
-//
-//    D x_goal[] = {0.2, 0.4, 0.6, 0.8, 1., 0.8, 0.6, 0.4, 0.2};
-//    D wgt_goal = 1.;
-//
-//    SECTION( "Trivial" )
-//    {
-//        integrators::transforms::Baker<D> transform;
-//        transform(x,wgt,dim);
-//        for(U s = 0; s < dim; s++)
-//        {
-//            REQUIRE( x[s] == Approx(x_goal[s]) );
-//        }
-//        REQUIRE( wgt == Approx(wgt_goal) );
-//    };
-//
-//    SECTION( "Trivial" )
-//    {
-//        integrators::transforms::Baker<D,U> transform;
-//        transform(x,wgt,dim);
-//        for(U s = 0; s < dim; s++)
-//        {
-//            REQUIRE( x[s] == Approx(x_goal[s]) );
-//        }
-//        REQUIRE( wgt == Approx(wgt_goal) );
-//    };
-//
-//};
-//
-//};
+TEST_CASE( "Baker Transform", "[transform]")
+{
+    using D = double;
+    using U = unsigned long long int;
+
+    const U num_tests = 9;
+
+    D x[]      = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+    D x_goal[] = {0.2, 0.4, 0.6, 0.8, 1., 0.8, 0.6, 0.4, 0.2};
+
+    static_assert(std::is_same<integrators::transforms::Baker<trivial_functor_t,D>,integrators::transforms::Baker<trivial_functor_t,D,U>>::value, "Baker has an unexpected default type \"U\".");
+
+    SECTION( "Trivial" )
+    {
+        integrators::transforms::Baker<trivial_functor_t,D,U> baker_transform(trivial_functor);
+        for(U i=0;i<num_tests;i++)
+            REQUIRE( baker_transform(&x[i]) == Approx(x_goal[i]) );
+    };
+
+};
