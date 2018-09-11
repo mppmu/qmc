@@ -276,7 +276,6 @@ The following integral transforms are distributed with the qmc:
 | Korobov<r> | A polynomial integral transform with weight ∝ x^r * (1-x)^r   |
 | Sidi<r> | A trigonometric integral transform with weight ∝ sin^r(pi*x) | 
 | Baker | The baker's transformation, phi(x) = 1 - abs(2x-1)  |
-| Trivial | A trivial integral transform, phi(x) = x |
 
 The integral transform used by the qmc can be selected by passing the desired integral transform to the integrate function. Example (assuming a real type integrator instance named `integrator`):
 ```cpp

@@ -1335,39 +1335,4 @@ TEST_CASE( "Korobov Transform", "[transform]")
 //
 //};
 //
-//TEST_CASE( "Trivial Transform", "[transform]")
-//{
-//    using D = double;
-//    using U = unsigned long long int;
-//
-//    U dim = 9;
-//
-//    D x[]      = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-//    D wgt = 1.;
-//
-//    D x_goal[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-//    D wgt_goal = 1.;
-//
-//    SECTION( "Trivial" )
-//    {
-//        integrators::transforms::Trivial<D> transform;
-//        transform(x,wgt,dim);
-//        for(U s = 0; s < dim; s++)
-//        {
-//            REQUIRE( x[s] == Approx(x_goal[s]) );
-//        }
-//        REQUIRE( wgt == Approx(wgt_goal) );
-//    };
-//
-//    SECTION( "Trivial" )
-//    {
-//        integrators::transforms::Trivial<D,U> transform;
-//        transform(x,wgt,dim);
-//        for(U s = 0; s < dim; s++)
-//        {
-//            REQUIRE( x[s] == Approx(x_goal[s]) );
-//        }
-//        REQUIRE( wgt == Approx(wgt_goal) );
-//    };
-//
 //};

@@ -81,7 +81,6 @@ namespace integrators
 #include "fitfunctions/polysingular.hpp"
 #include "transforms/korobov.hpp"
 #include "transforms/baker.hpp"
-#include "transforms/trivial.hpp"
 #include "generatingvectors/cbcpt_dn1_100.hpp"
 #include "generatingvectors/cbcpt_dn2_6.hpp"
 #include "generatingvectors/cbcpt_cfftw1_6.hpp"
