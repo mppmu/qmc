@@ -15,7 +15,7 @@ namespace integrators
         /*
          * Korobov Transform: Korobov<D,U,r0,r1>(func) takes the weight r0,r1 Korobov transform of func
          */
-        template<typename F1, typename D, typename U, U r0, U r1>
+        template<typename F1, typename D, typename U, U r0, U r1 = r0>
         struct Korobov
         {
             F1 f; // original function
