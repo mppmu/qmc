@@ -1,6 +1,6 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -O -I../src 9_boost_minimal_demo.cpp -o 9_boost_minimal_demo.out -lboost_system -lgsl -lgslcblas
+ *   c++ -std=c++11 -pthread -O -I../src 9_boost_minimal_demo.cpp -o 9_boost_minimal_demo.out -lboost_system -lgsl -lgslcblas
  * Compile with GPU support:
  *   (not supported as boost::multiprecision::cpp_bin_float_quad has no cuda implementation)
  */
