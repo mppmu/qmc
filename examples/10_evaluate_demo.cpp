@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 103_evaluate_demo.cpp -o 103_evaluate_demo.out
+ *   c++ -std=c++11 -pthread -I../src 10_evaluate_demo.cpp -o 10_evaluate_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 103_evaluate_demo.cpp -o 103_evaluate_demo.out
+ *   nvcc -std=c++11 -x cu -I../src 10_evaluate_demo.cpp -o 10_evaluate_demo.out -lgsl -lgslcblas
  */
 
 #include <iostream>

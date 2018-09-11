@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out
+ *   c++ -std=c++11 -pthread -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out
+ *   nvcc -std=c++11 -x cu -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
  */
 
 

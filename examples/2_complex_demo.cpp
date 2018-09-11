@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 2_complex_demo.cpp -o 2_complex_demo.out
+ *   c++ -std=c++11 -pthread -I../src 2_complex_demo.cpp -o 2_complex_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 2_complex_demo.cpp -o 2_complex_demo.out
+ *   nvcc -std=c++11 -x cu -I../src 2_complex_demo.cpp -o 2_complex_demo.out -lgsl -lgslcblas
  */
 
 #include <iostream>

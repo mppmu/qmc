@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 102_ff2_demo.cpp -o 102_ff2_demo.out
+ *   c++ -std=c++11 -pthread -I../src 102_ff2_demo.cpp -o 102_ff2_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 102_ff2_demo.cpp -o 102_ff2_demo.out
+ *   nvcc -std=c++11 -x cu -I../src 102_ff2_demo.cpp -o 102_ff2_demo.out -lgsl -lgslcblas
  */
 
 #include <iostream>
