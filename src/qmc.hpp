@@ -80,6 +80,7 @@ namespace integrators
 #include "overloads/complex.hpp"
 #include "fitfunctions/polysingular.hpp"
 #include "transforms/korobov.hpp"
+#include "transforms/sidi.hpp"
 #include "transforms/baker.hpp"
 #include "generatingvectors/cbcpt_dn1_100.hpp"
 #include "generatingvectors/cbcpt_dn2_6.hpp"
