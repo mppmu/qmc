@@ -2,6 +2,7 @@
 #include "qmc.hpp"
 
 #include <string> // stod
+#include <cmath> // acos
 #include <type_traits> // is_same
 
 #ifdef __CUDACC__
@@ -13,6 +14,11 @@ using std::complex;
 #include <complex>
 #define HOSTDEVICE
 #endif
+
+struct trivial_functor_t {
+    const unsigned long long int dim = 1;
+    HOSTDEVICE double operator()(double* x) { return x[0]; }
+} trivial_functor;
 
 TEST_CASE( "ipow", "[ipow]")
 {
@@ -76,6 +82,584 @@ TEST_CASE( "Binomial", "[transform]")
         static_assert(integrators::transforms::detail::Binomial<U,0,0>::value   == 1ull, "Binomial<U,0,0>::value != 1ull");
         static_assert(integrators::transforms::detail::Binomial<U,0,1>::value   == 0ull, "Binomial<U,0,1>::value != 0ull");
         static_assert(integrators::transforms::detail::Binomial<U,1,0>::value   == 1ull, "Binomial<U,1,0>::value != 1ull");
+    };
+
+};
+
+TEST_CASE( "Factorial", "[transform]")
+{
+
+    SECTION( "Value" )
+    {
+        using U = unsigned long long int;
+
+        // static_assert used as Binomial should evaluate to an unsigned long long int at compile time
+        static_assert(integrators::transforms::detail::Factorial<U,0>::value == 1ull, "Factorial<U,0>::value !=1ull");
+        static_assert(integrators::transforms::detail::Factorial<U,1>::value == 1ull, "Factorial<U,1>::value !=1ull");
+        static_assert(integrators::transforms::detail::Factorial<U,2>::value == 2ull, "Factorial<U,2>::value !=2ull");
+        static_assert(integrators::transforms::detail::Factorial<U,3>::value == 6ull, "Factorial<U,3>::value !=6ull");
+        static_assert(integrators::transforms::detail::Factorial<U,4>::value == 24ull, "Factorial<U,4>::value !=24ull");
+        static_assert(integrators::transforms::detail::Factorial<U,5>::value == 120ull, "Factorial<U,5>::value !=120ull");
+        static_assert(integrators::transforms::detail::Factorial<U,6>::value == 720ull, "Factorial<U,6>::value !=720ull");
+        static_assert(integrators::transforms::detail::Factorial<U,7>::value == 5040ull, "Factorial<U,7>::value !=5040ull");
+        static_assert(integrators::transforms::detail::Factorial<U,8>::value == 40320ull, "Factorial<U,8>::value !=40320ull");
+        static_assert(integrators::transforms::detail::Factorial<U,9>::value == 362880ull, "Factorial<U,9>::value !=362880ull");
+        static_assert(integrators::transforms::detail::Factorial<U,10>::value == 3628800ull, "Factorial<U,10>::value !=3628800ull");
+        static_assert(integrators::transforms::detail::Factorial<U,11>::value == 39916800ull, "Factorial<U,11>::value !=39916800ull");
+        static_assert(integrators::transforms::detail::Factorial<U,12>::value == 479001600ull, "Factorial<U,12>::value !=479001600ull");
+        static_assert(integrators::transforms::detail::Factorial<U,13>::value == 6227020800ull, "Factorial<U,13>::value !=6227020800ull");
+        static_assert(integrators::transforms::detail::Factorial<U,14>::value == 87178291200ull, "Factorial<U,14>::value !=87178291200ull");
+        static_assert(integrators::transforms::detail::Factorial<U,15>::value == 1307674368000ull, "Factorial<U,15>::value !=1307674368000ull");
+        static_assert(integrators::transforms::detail::Factorial<U,16>::value == 20922789888000ull, "Factorial<U,16>::value !=20922789888000ull");
+        static_assert(integrators::transforms::detail::Factorial<U,17>::value == 355687428096000ull, "Factorial<U,17>::value !=355687428096000ull");
+        static_assert(integrators::transforms::detail::Factorial<U,18>::value == 6402373705728000ull, "Factorial<U,18>::value !=6402373705728000ull");
+        static_assert(integrators::transforms::detail::Factorial<U,19>::value == 121645100408832000ull, "Factorial<U,19>::value !=121645100408832000ull");
+    };
+
+};
+
+TEST_CASE( "SidiCoefficient", "[transform]")
+{
+    SECTION( "Double Coefficients" )
+    {
+        using D = double;
+        using U = unsigned long long int;
+
+        double sidi_coefficient; // workaround catch issue
+
+        //r0=1 x=(1 - Cos[Pi*x])/2
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,1>::value();
+        REQUIRE(sidi_coefficient == Approx(-1.) );
+        //r0=2 x=(Pi*x - Sin[2*Pi*x]/2)/Pi
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,2>::value();
+        REQUIRE(sidi_coefficient == Approx(1/2.) );
+        //r0=3 x=(3*(8/3 - 3*Cos[Pi*x] + Cos[3*Pi*x]/3))/16
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,3>::value();
+        REQUIRE(sidi_coefficient == Approx(1/3.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,3>::value();
+        REQUIRE(sidi_coefficient == Approx(-3.) );
+        //r0=4 x=(3*Pi*x - 2*Sin[2*Pi*x] + Sin[4*Pi*x]/4)/(3*Pi)
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,4>::value();
+        REQUIRE(sidi_coefficient == Approx(-1/4.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,4>::value();
+        REQUIRE(sidi_coefficient == Approx(2.) );
+        //r0=5 x=(15*(128/15 - 10*Cos[Pi*x] + (5*Cos[3*Pi*x])/3 - Cos[5*Pi*x]/5))/256
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,5>::value();
+        REQUIRE(sidi_coefficient == Approx(-1/5.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,5>::value();
+        REQUIRE(sidi_coefficient == Approx(5/3.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,2,5>::value();
+        REQUIRE(sidi_coefficient == Approx(-10.) );
+        //r0=6 x=(10*Pi*x - (15*Sin[2*Pi*x])/2 + (3*Sin[4*Pi*x])/2 - Sin[6*Pi*x]/6)/(10*Pi)
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,6>::value();
+        REQUIRE(sidi_coefficient == Approx(1/6.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,6>::value();
+        REQUIRE(sidi_coefficient == Approx(-3/2.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,2,6>::value();
+        REQUIRE(sidi_coefficient == Approx(15/2.) );
+        //r0=7 x=(35*(1024/35 - 35*Cos[Pi*x] + 7*Cos[3*Pi*x] - (7*Cos[5*Pi*x])/5 + Cos[7*Pi*x]/7))/2048
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,7>::value();
+        REQUIRE(sidi_coefficient == Approx(1/7.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,7>::value();
+        REQUIRE(sidi_coefficient == Approx(-7/5.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,2,7>::value();
+        REQUIRE(sidi_coefficient == Approx(7.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,3,7>::value();
+        REQUIRE(sidi_coefficient == Approx(-35.) );
+        //r0=8 x=(35*Pi*x - 28*Sin[2*Pi*x] + 7*Sin[4*Pi*x] - (4*Sin[6*Pi*x])/3 + Sin[8*Pi*x]/8)/(35*Pi)
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,8>::value();
+        REQUIRE(sidi_coefficient == Approx(-1/8.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,8>::value();
+        REQUIRE(sidi_coefficient == Approx(4/3.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,2,8>::value();
+        REQUIRE(sidi_coefficient == Approx(-7.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,3,8>::value();
+        REQUIRE(sidi_coefficient == Approx(28.) );
+        //r0=9 x=(315*(32768/315 - 126*Cos[Pi*x] + 28*Cos[3*Pi*x] - (36*Cos[5*Pi*x])/5 + (9*Cos[7*Pi*x])/7 - Cos[9*Pi*x]/9))/65536
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,9>::value();
+        REQUIRE(sidi_coefficient == Approx(-1/9.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,9>::value();
+        REQUIRE(sidi_coefficient == Approx(9/7.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,2,9>::value();
+        REQUIRE(sidi_coefficient == Approx(-36/5.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,3,9>::value();
+        REQUIRE(sidi_coefficient == Approx(28.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,4,9>::value();
+        REQUIRE(sidi_coefficient == Approx(-126.) );
+        //r0=10 x=(126*Pi*x - 105*Sin[2*Pi*x] + 30*Sin[4*Pi*x] - (15*Sin[6*Pi*x])/2 + (5*Sin[8*Pi*x])/4 - Sin[10*Pi*x]/10)/(126*Pi)
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,0,10>::value();
+        REQUIRE(sidi_coefficient == Approx(1/10.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,1,10>::value();
+        REQUIRE(sidi_coefficient == Approx(-5/4.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,2,10>::value();
+        REQUIRE(sidi_coefficient == Approx(15/2.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,3,10>::value();
+        REQUIRE(sidi_coefficient == Approx(-30.) );
+        sidi_coefficient=integrators::transforms::detail::SidiCoefficient<D,U,4,10>::value();
+        REQUIRE(sidi_coefficient == Approx(105.) );
+    };
+}
+
+TEST_CASE( "SidiTerm","[transform]")
+{
+    using D = double;
+    using U = unsigned long long int;
+
+    const U dim = 9;
+    const D x[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+    D y[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    const D pi = std::acos(-1);
+
+    SECTION( "Pi")
+    {
+        REQUIRE( pi == Approx(3.1415926535897932385) );
+    }
+
+    SECTION( "SidiTerm<D,U,0,1>" )
+    {
+        const D x_goal[] = {0.0489435, 0.190983, 0.412215, 0.690983, 1., 1.30902, 1.58779, 1.80902, 1.95106};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,1>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,2>" )
+    {
+        const D x_goal[] = {0.0202666, 0.15279, 0.46695, 0.962744, 1.5708, 2.17885, 2.67464, 2.9888, 3.12133};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,2>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,3>" )
+    {
+        const D x_goal[] = {-0.137405, -0.436339, -0.650352, -0.603006, -0.333333, -0.063661, -0.0163145, -0.230328, -0.529262};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,3>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,3>" )
+    {
+        const D x_goal[] = {0.00942554, 0.13661, 0.586292, 1.46994, 2.66667, 3.86339, 4.74704, 5.19672, 5.32391};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,3>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,4>" )
+    {
+        const D x_goal[] = {1.18024, 2.0319, 2.68049, 3.53215, 4.71239, 5.89263, 6.74429, 7.39288, 8.24454};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,4>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,4>" )
+    {
+        const D x_goal[] = {0.00467142, 0.129789, 0.778374, 2.35658, 4.71239, 7.0682, 8.6464, 9.29499, 9.42011};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,4>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,5>" )
+    {
+        const D x_goal[] = {0.2, 0.4, 0.2, 0., 0.2, 0.4, 0.2, 0., 0.2};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,5>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,5>" )
+    {
+        const D x_goal[] = {-0.487025, -1.78169, -3.05176, -3.01503, -1.46667, 0.081695, 0.118428, -1.15164, -2.44631};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,5>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,2,5>" )
+    {
+        const D x_goal[] = {0.00241026, 0.128135, 1.07039, 3.8948, 8.53333, 13.1719, 15.9963, 16.9385, 17.0643};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,2,5>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,6>" )
+    {
+        const D x_goal[] = {2.98308, 6.38115, 9.52274, 12.4079, 15.708, 19.0081, 21.8932, 25.0348, 28.4328};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,6>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,6>" )
+    {
+        const D x_goal[] = {4.40967, 7.26283, 8.64106, 10.9813, 15.708, 20.4347, 22.7749, 24.1531, 27.0063};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,6>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,2,6>" )
+    {
+        const D x_goal[] = {0.00127862, 0.129904, 1.50814, 6.57289, 15.708, 24.843, 29.9078, 31.286, 31.4146};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,2,6>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,7>" )
+    {
+        const D x_goal[] = {-0.226826, -0.187002, -0.00699193, -0.258431, -0.142857, -0.0272833, -0.278722, -0.0987119, -0.0588878};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,7>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,7>" )
+    {
+        const D x_goal[] = {1.17317, 2.613, 1.39301, -0.258431, 1.25714, 2.77272, 1.12128, -0.0987119, 1.34111};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,7>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,2,7>" )
+    {
+        const D x_goal[] = {-1.71233, -6.55012, -12.2644, -12.9215, -5.74286, 1.43584, 0.778673, -4.93559, -9.77338};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,2,7>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,3,7>" )
+    {
+        const D x_goal[] = {0.000692231, 0.134284, 2.16313, 11.2629, 29.2571, 47.2514, 56.3512, 58.38, 58.5136};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,3,7>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,8>" )
+    {
+        const D x_goal[] = {11.069, 21.8723, 33.1056, 43.9088, 54.9779, 66.0469, 76.8501, 88.0835, 98.8867};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,8>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,8>" )
+    {
+        const D x_goal[] = {9.80097, 22.656, 33.8893, 42.6407, 54.9779, 67.315, 76.0664, 87.2998, 100.155};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,8>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,2,8>" )
+    {
+        const D x_goal[] = {16.4584, 26.7705, 29.7748, 35.9834, 54.9779, 73.9724, 80.1809, 83.1853, 93.4974};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,2,8>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,3,8>" )
+    {
+        const D x_goal[] = {0.000380639, 0.140894, 3.14524, 19.5254, 54.9779, 90.4304, 106.811, 109.815, 109.955};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,3,8>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,9>" )
+    {
+        const D x_goal[] = {0.216784, 0.0212203, 0.176421, 0.0767759, 0.111111, 0.145446, 0.0458016, 0.201002, 0.00543816};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,9>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,9>" )
+    {
+        const D x_goal[] = {-1.82465, -1.6618, 0.113493, -2.2491, -1.1746, -0.100103, -2.4627, -0.687405, -0.524552};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,9>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,2,9>" )
+    {
+        const D x_goal[] = {5.37535, 12.7382, 7.31349, -2.2491, 6.0254, 14.2999, 4.7373, -0.687405, 6.67545};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,2,9>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,3,9>" )
+    {
+        const D x_goal[] = {-6.16667, -23.9143, -47.3161, -52.9016, -21.9746, 8.95237, 3.36688, -20.0349, -37.7825};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,3,9>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,4,9>" )
+    {
+        const D x_goal[] = {0.000211887, 0.149581, 4.62297, 34.1623, 104.025, 173.889, 203.428, 207.901, 208.051};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,4,9>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,0,10>" )
+    {
+        const D x_goal[] = {39.5841, 79.1681, 118.752, 158.336, 197.92, 237.504, 277.088, 316.673, 356.257};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,0,10>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,1,10>" )
+    {
+        const D x_goal[] = {40.3188, 77.9793, 119.941, 157.602, 197.92, 238.239, 275.9, 317.861, 355.522};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,1,10>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,2,10>" )
+    {
+        const D x_goal[] = {33.1859, 82.3877, 124.349, 150.469, 197.92, 245.372, 271.491, 313.453, 362.655};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,2,10>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,3,10>" )
+    {
+        const D x_goal[] = {61.7176, 100.021, 106.716, 121.937, 197.92, 273.904, 289.125, 295.819, 334.123};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,3,10>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+
+    SECTION( "SidiTerm<D,U,4,10>" )
+    {
+        const D x_goal[] = {0.000119127, 0.160327, 6.85492, 60.2195, 197.92, 335.621, 388.986, 395.68, 395.841};
+        for(U s=0;s<dim;s++)
+        {
+            y[s]=integrators::transforms::detail::SidiTerm<D,U,4,10>::value(x[s],pi);
+        }
+        for(U s=0;s<dim;s++)
+        {
+            REQUIRE( y[s] == Approx(x_goal[s]) );
+        }
+    };
+}
+
+TEST_CASE( "Sidi Transform", "[transform]")
+{
+    using D = double;
+    using U = unsigned long long int;
+
+    const U num_tests = 9;
+    D x[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+
+    SECTION( "Sidi<D,U,0>" )
+    {
+        const D x_goal[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+        integrators::transforms::Sidi<trivial_functor_t,D,U,0> sidi_transform(trivial_functor);
+        for(U i=0;i<num_tests;i++)
+            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
+    };
+
+    SECTION( "Sidi<D,U,1>" )
+    {
+        const D x_goal[] = {0.01187865102937622751, 0.08816643702991969627, 0.26192144094671298393, 0.51613531237408189144, 0.78539816339744830962, 0.97778076999669608075, 1.00887948213210197, 0.83512447821530868236, 0.47352410865199041683};
+        integrators::transforms::Sidi<trivial_functor_t,D,U,1> sidi_transform(trivial_functor);
+        for(U i=0;i<num_tests;i++)
+            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
+    };
+
+    SECTION( "Sidi<D,U,2>" )
+    {
+        const D x_goal[] = {0.0012320450477070521918, 0.033605719586311070994, 0.19456528839492087972, 0.5543751965070493684, 1., 1.2546417978678980557, 1.1144517059800265444, 0.6573772860387415049, 0.18975096057734552371};
+        integrators::transforms::Sidi<trivial_functor_t,D,U,2> sidi_transform(trivial_functor);
+        for(U i=0;i<num_tests;i++)
+            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
+    };
+
+    SECTION( "Sidi<D,U,3>" )
+    {
+        const D x_goal[] = {0.00012287556296861024632, 0.012256063854376712411, 0.13715112135231330351, 0.55863994109473930234, 1.1780972450961724644, 1.4682497447893465584, 1.1104738822308410281, 0.46622768490746347398, 0.0694048829240132569};
+        integrators::transforms::Sidi<trivial_functor_t,D,U,3> sidi_transform(trivial_functor);
+        for(U i=0;i<num_tests;i++)
+            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
+    };
+
+    SECTION( "Sidi<D,U,4>" )
+    {
+        const D x_goal[] = {0.000012052469179381178525, 0.0043833869077198128817, 0.094344487085814463126, 0.54551218893175813157, 1.3333333333333333333, 1.6361828016931542419, 1.0480058406224662943, 0.31392162246736781361, 0.024304286489206528053};
+        integrators::transforms::Sidi<trivial_functor_t,D,U,4> sidi_transform(trivial_functor);
+        for(U i=0;i<num_tests;i++)
+            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
+    };
+
+    SECTION( "Sidi<D,U,5>" )
+    {
+        const D x_goal[] = {1.1720542463784650201e-6, 0.0015514360008735265112, 0.064017887080050213215, 0.52298523149210971216, 1.4726215563702155805, 1.7686884481876467271, 0.95670857060585834522, 0.20508865078800076162, 0.0082979656271389683518};
+        integrators::transforms::Sidi<trivial_functor_t,D,U,5> sidi_transform(trivial_functor);
+        for(U i=0;i<num_tests;i++)
+            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
     };
 
 };
@@ -1084,11 +1668,6 @@ TEST_CASE( "KorobovTerm", "[transform]")
 
 };
 
-struct trivial_functor_t {
-    const unsigned long long int dim = 1;
-    HOSTDEVICE double operator()(double* x) { return x[0]; }
-} trivial_functor;
-
 TEST_CASE( "Korobov Transform", "[transform]")
 {
     using D = double;
@@ -1299,106 +1878,6 @@ TEST_CASE( "Korobov Transform", "[transform]")
 
 };
 
-TEST_CASE( "Sidi Transform", "[transform]")
-{
-    using D = double;
-    using U = unsigned long long int;
-
-    const D pi = 3.1415926535897932385;
-
-    const U num_tests = 9;
-    D x[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-
-    SECTION( "Sidi<D,U,0>" )
-    {
-        const D x_goal[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,0> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,1>" )
-    {
-        const D x_goal[] = {0.011878651029376227510, 0.088166437029919696270, 0.26192144094671298393, 0.51613531237408189144, 0.78539816339744830962, 0.97778076999669608075, 1.0088794821321019700, 0.83512447821530868236, 0.47352410865199041683};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,1> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,2>" )
-    {
-        const D x_goal[] = {0.0012320450477070521918, 0.033605719586311070994, 0.19456528839492087972, 0.55437519650704936840, 1.0000000000000000000, 1.2546417978678980557, 1.1144517059800265444, 0.65737728603874150490, 0.18975096057734552371};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,2> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,3>" )
-    {
-        const D x_goal[] = {0.00012287556296861024632, 0.012256063854376712411, 0.13715112135231330351, 0.55863994109473930234, 1.1780972450961724644, 1.4682497447893465584, 1.1104738822308410281, 0.46622768490746347398, 0.069404882924013256900};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,3> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,4>" )
-    {
-        const D x_goal[] = {0.000012052469179381178525, 0.0043833869077198128817, 0.094344487085814463126, 0.54551218893175813157, 1.3333333333333333333, 1.6361828016931542419, 1.0480058406224662943, 0.31392162246736781361, 0.024304286489206528053};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,4> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,5>" )
-    {
-        const D x_goal[] = {1.1720542463784650201e-6, 0.0015514360008735265112, 0.064017887080050213215, 0.52298523149210971216, 1.4726215563702155805, 1.7686884481876467271, 0.95670857060585834522, 0.20508865078800076162, 0.0082979656271389683518};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,5> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,6>" )
-    {
-        const D x_goal[] = {1.1340562068121032998e-7, 0.00054567385246254333553, 0.043071277434815986396, 0.49544360468050767226, 1.6000000000000000000, 1.8725903840693871759, 0.85414231806514195289, 0.13142033739764260846, 0.0027862910944213795078};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,6> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,7>" )
-    {
-        const D x_goal[] = {1.0937893457575839016e-8, 0.00019114391537382791051, 0.028813226166936351299, 0.46547762707188485042, 1.7180584824319181773, 1.9528337416545437443, 0.75060660366914404982, 0.083099982564958382338, 0.00092456904622401945621};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,7> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,8>" )
-    {
-        const D x_goal[] = {1.0526793666379924560e-9, 0.000066767866695224403527, 0.019197243290207871192, 0.43468414044520826495, 1.8285714285714285714, 2.0132094189296790724, 0.65192723904904629755, 0.052039672758417438234, 0.00030408803663789318635};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,8> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,9>" )
-    {
-        const D x_goal[] = {1.0115709754736600998e-10, 0.000023275375779952967321, 0.012752368887127003301, 0.40406837320011253016, 1.9328157927359079494, 2.0567377063902775791, 0.56115164530501864870, 0.032350148140187997953, 0.000099325622515881967363};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,9> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-    SECTION( "Sidi<D,U,10>" )
-    {
-        const D x_goal[] = {9.7098187714868330762e-12, 8.1016308310804671894e-6, 0.0084519685108400593085, 0.37426495505348828832, 2.0317460317460317460, 2.0858911834632620421, 0.47961100522425603851, 0.019994490011148747881, 0.000032264350432178644179};
-        integrators::transforms::Sidi<trivial_functor_t,D,U,10> sidi_transform(trivial_functor);
-        for(U i=0;i<num_tests;i++)
-            REQUIRE( sidi_transform(&x[i]) == Approx(x_goal[i]) );
-    };
-
-};
-
 TEST_CASE( "Baker Transform", "[transform]")
 {
     using D = double;
@@ -1419,3 +1898,4 @@ TEST_CASE( "Baker Transform", "[transform]")
     };
 
 };
+
