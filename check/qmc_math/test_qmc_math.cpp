@@ -4,6 +4,42 @@
 #include <limits> // numeric_limits
 #include <type_traits> // make_signed
 #include <cmath> // pow
+#include <vector>
+
+TEST_CASE( "Argsort functionality", "[argsort]")
+{
+    std::vector<int> empty_int = {};
+    std::vector<double> empty_double = {};
+    std::vector<size_t> empty_target = {};
+
+    std::vector<int> one_int = {1};
+    std::vector<double> one_double = {1.};
+    std::vector<size_t> one_target = {0};
+
+    std::vector<int> few_int = {3,1,2,6,-6};
+    std::vector<double> few_double = {3.,1.,2.,6.,-6.};
+    std::vector<size_t> few_target = {4,1,2,0,3};
+
+
+    SECTION("Empty vectors")
+    {
+        REQUIRE( integrators::math::argsort(empty_int) == empty_target );
+        REQUIRE( integrators::math::argsort(empty_double) == empty_target );
+    };
+
+    SECTION("Single element vectors")
+    {
+        REQUIRE( integrators::math::argsort(one_int) == one_target );
+        REQUIRE( integrators::math::argsort(one_double) == one_target );
+    };
+
+    SECTION("Few element vectors")
+    {
+        REQUIRE( integrators::math::argsort(few_int) == few_target );
+        REQUIRE( integrators::math::argsort(few_double) == few_target );
+    };
+
+};
 
 TEST_CASE( "Diagnostic Info", "[mul_mod]") {
 
