@@ -8,8 +8,7 @@ namespace integrators
 {
     namespace generatingvectors
     {
-        template <typename U>
-        std::map<U,std::vector<U>> cbcpt_cfftw1_6()
+        inline std::map<U,std::vector<U>> cbcpt_cfftw1_6()
         {
 
             // Vectors generated using custom CBC tool based on FFTW

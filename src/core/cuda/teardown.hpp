@@ -16,7 +16,7 @@ namespace integrators
     {
         namespace cuda
         {
-            template <typename T, typename U>
+            template <typename T>
             void teardown_sample(const std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>>& d_r, const U d_r_size_over_m, T* r_element, const U r_size_over_m, const U m, const int device, const U verbosity, const Logger& logger)
             {
                 // Copy r to host
@@ -27,7 +27,7 @@ namespace integrators
                 if (verbosity > 1) logger << "- (" << device << ") copied r to host memory" << std::endl;
             };
 
-            template <typename T, typename U>
+            template <typename T>
             void copy_back(const std::unique_ptr<integrators::core::cuda::detail::cuda_memory<T>>& d_r, const U d_r_size, T* r_element, const int device, const U verbosity, const Logger& logger)
             {
                 // Copy r_element to host

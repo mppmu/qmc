@@ -3,7 +3,7 @@
 
 namespace integrators
 {
-    template <typename T, typename U = unsigned long long int>
+    template <typename T>
     struct result
     {
         T integral;

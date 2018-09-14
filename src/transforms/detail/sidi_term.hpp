@@ -16,12 +16,12 @@ namespace integrators
             /*
              * Sidi Transform Terms
              */
-            template<typename D, typename U, U k, U r, typename = void>
+            template<typename D, U k, U r, typename = void>
             struct SidiTerm{};
 
             // Odd r
-            template<typename D, typename U, U k, U r>
-            struct SidiTerm<D, U, k, r, typename std::enable_if<(r % 2) != 0 && (k != 0)>::type>
+            template<typename D, U k, U r>
+            struct SidiTerm<D, k, r, typename std::enable_if<(r % 2) != 0 && (k != 0)>::type>
             {
 #ifdef __CUDACC__
                 __host__ __device__
@@ -29,11 +29,11 @@ namespace integrators
                 const static D value(const D& x, const D pi)
                 {
                     using std::cos;
-                    return SidiCoefficient<D,U,k,r>::value()*(cos((D(2)*D(k)-D(r))*pi*x) - D(1)) + SidiTerm<D,U,k-U(1),r>::value(x,pi);
+                    return SidiCoefficient<D,k,r>::value()*(cos((D(2)*D(k)-D(r))*pi*x) - D(1)) + SidiTerm<D,k-U(1),r>::value(x,pi);
                 }
             };
-            template<typename D, typename U, U k, U r>
-            struct SidiTerm<D, U, k, r, typename std::enable_if<((r % 2) != 0) && (k == 0)>::type>
+            template<typename D, U k, U r>
+            struct SidiTerm<D, k, r, typename std::enable_if<((r % 2) != 0) && (k == 0)>::type>
             {
 #ifdef __CUDACC__
                 __host__ __device__
@@ -41,13 +41,13 @@ namespace integrators
                 const static D value(const D& x, const D pi)
                 {
                     using std::cos;
-                    return SidiCoefficient<D,U,0,r>::value()*(cos(-D(r)*pi*x) - D(1));
+                    return SidiCoefficient<D,0,r>::value()*(cos(-D(r)*pi*x) - D(1));
                 }
             };
 
             // Even r
-            template<typename D, typename U, U k, U r>
-            struct SidiTerm<D, U, k, r, typename std::enable_if<(r % 2) == 0 && (k != 0)>::type>
+            template<typename D, U k, U r>
+            struct SidiTerm<D, k, r, typename std::enable_if<(r % 2) == 0 && (k != 0)>::type>
             {
 #ifdef __CUDACC__
                 __host__ __device__
@@ -55,11 +55,11 @@ namespace integrators
                 const static D value(const D& x, const D pi)
                 {
                     using std::sin;
-                    return SidiCoefficient<D,U,k,r>::value()*sin((D(2)*D(k)-D(r))*pi*x) + SidiTerm<D,U,k-U(1),r>::value(x,pi);
+                    return SidiCoefficient<D,k,r>::value()*sin((D(2)*D(k)-D(r))*pi*x) + SidiTerm<D,k-U(1),r>::value(x,pi);
                 }
             };
-            template<typename D, typename U, U k, U r>
-            struct SidiTerm<D, U, k, r, typename std::enable_if<((r % 2) == 0) && (k == 0)>::type>
+            template<typename D, U k, U r>
+            struct SidiTerm<D, k, r, typename std::enable_if<((r % 2) == 0) && (k == 0)>::type>
             {
 #ifdef __CUDACC__
                 __host__ __device__
@@ -67,7 +67,7 @@ namespace integrators
                 const static D value(const D& x, const D pi)
                 {
                     using std::sin;
-                    return SidiCoefficient<D,U,0,r>::value()*sin(-D(r)*pi*x) + D(1)/D(2)*pi*Binomial<U,r,r/2>::value*x;
+                    return SidiCoefficient<D,0,r>::value()*sin(-D(r)*pi*x) + D(1)/D(2)*pi*Binomial<r,r/2>::value*x;
                 }
             };
 

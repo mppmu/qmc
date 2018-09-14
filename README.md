@@ -237,19 +237,15 @@ Returns the lattice size `n` of the lattice in `generatingvectors` that is great
 
 ---
 
-`template <typename F1, typename F2> result<T,U> integrate(F1& func, const U dim, F2& integral_transform)`
+`template <typename I> result<T,U> integrate(I& func)`
 
-Integrates the function `func` in `dim` dimensions using the integral transform `integral_transform`. The result is returned in a `result` struct with the following members:
+Integrates the functor `func`. The result is returned in a `result` struct with the following members:
 * `integral` - the result of the integral
 * `error` - the estimated absolute error of the result
 * `n` - the size of the largest lattice used during integration
 * `m` - the number of shifts of the largest lattice used during integration
 
----
-
-`template <typename F1> result<T,U> integrate(F1& func, const U dim)`
-
-Integrates the function `func` in `dim` dimensions using the default integral transform. The result is returned in a `result` struct.
+The functor `func` must define its dimension as a public member variable `dim`.
 
 ---
 
@@ -342,24 +338,6 @@ integrators::result<double> result = integrator.integrate(my_functor, 3, transfo
 ```
 See also example `4_transform_demo`. 
 
-You can implement your own transform using the skeleton:
-```cpp
-template<typename D, typename U = unsigned long long int>
-struct MyTransform
-{
-#ifdef __CUDACC__
-  __host__ __device__
-#endif
-  void operator()(D* x, D& wgt, const U dim) const
-  {
-    for (U s = 0; s < dim; s++)
-    {
-      wgt *= ...; // Jacobian of transform
-      x[s] = ...; // Transform for each dimension s
-    }
-  }
-};
-```
 See also the existing transforms in `src/transforms`.
 
 **How does the performance of this code compare to other integration libraries (e.g. CUBA, NIntegrate)?**

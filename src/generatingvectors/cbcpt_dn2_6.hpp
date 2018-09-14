@@ -8,8 +8,7 @@ namespace integrators
 {
     namespace generatingvectors
     {
-        template <typename U>
-        std::map<U,std::vector<U>> cbcpt_dn2_6()
+        inline std::map<U,std::vector<U>> cbcpt_dn2_6()
         {
 
             // Vectors generated using Dirk Nuyens' fastrank1pt.m tool https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc

@@ -15,7 +15,7 @@ namespace integrators
     {
         namespace cuda
         {
-            int get_device_count()
+            inline int get_device_count()
             {
                 int device_count;
                 QMC_CORE_CUDA_SAFE_CALL(cudaGetDeviceCount(&device_count));

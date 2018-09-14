@@ -7,7 +7,7 @@ namespace integrators
 {
     namespace math
     {
-        template <typename R, typename D, typename U>
+        template <typename R, typename D>
 #ifdef __CUDACC__
         __host__ __device__
 #endif

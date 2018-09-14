@@ -5,13 +5,13 @@ namespace integrators
 {
     namespace transforms
     {
-        template<typename F1, typename D, typename U = unsigned long long int>
-        struct Baker
+        template<typename I, typename D>
+        struct BakerImpl
         {
-            F1 f; // original function
+            I f; // original function
             const U dim;
 
-            Baker(F1 f) : f(f), dim(f.dim) {};
+            BakerImpl(I f) : f(f), dim(f.dim) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -28,6 +28,10 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
+        };
+        struct Baker
+        {
+            template<typename I, typename D> using type = BakerImpl<I, D>;
         };
     };
 };

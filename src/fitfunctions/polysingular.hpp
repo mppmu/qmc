@@ -1,5 +1,5 @@
-#ifndef QMC_FIT_TRANSFORM_H
-#define QMC_FIT_TRANSFORM_H
+#ifndef QMC_FITFUNCTIONS_POLYSINGULAR_H
+#define QMC_FITFUNCTIONS_POLYSINGULAR_H
 
 #include <stdexcept> // std::domain_error
 #include <vector>
@@ -9,7 +9,7 @@ namespace integrators
     namespace fitfunctions
     {
         template <typename D>
-        struct PolySingular
+        struct PolySingularFunction
         {
             static const int num_parameters = 4;
             const std::vector<std::vector<D>> initial_parameters = { {1.1,1.0,0.0,0.0}, {-0.1,1.0,0.0,0.0} };
@@ -51,16 +51,16 @@ namespace integrators
             }
         };
 
-        template<typename F1, typename D, typename U = unsigned long long int, U maxdim = 25>
+        template<typename I, typename D, U maxdim>
         struct PolySingularTransform
         {
-            static const U num_params = 4;
+            static const U num_parameters = 4;
 
-            F1 f; // original function
+            I f; // original function
             const U dim;
-            D p[maxdim][num_params]; // fit_parameters
+            D p[maxdim][num_parameters]; // fit_parameters
 
-            PolySingularTransform(const F1& f) : f(f), dim(f.dim) {};
+            PolySingularTransform(const I& f) : f(f), dim(f.dim) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -77,6 +77,20 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
+        };
+
+        template<typename I, typename D, U maxdim>
+        struct PolySingularImpl
+        {
+            using function_t = PolySingularFunction<D>;
+            using jacobian_t = PolySingularJacobian<D>;
+            using transform_t = PolySingularTransform<I,D,maxdim>;
+        };
+        
+        template<U maxdim = 25>
+        struct PolySingular
+        {
+            template<typename I, typename D> using type = PolySingularImpl<I, D, maxdim>;
         };
         
     };

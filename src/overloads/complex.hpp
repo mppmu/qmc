@@ -33,8 +33,8 @@ namespace integrators
             return T(error.real()*error.real(), error.imag()*error.imag());
         }
 
-        template <typename T, typename D, typename U>
-        D compute_error_ratio_complex(const result<T,U>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode)
+        template <typename T, typename D>
+        D compute_error_ratio_complex(const result<T>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode)
         {
             if( errormode == all )
             {
@@ -60,14 +60,14 @@ namespace integrators
         template <typename T> std::complex<T> compute_variance(const std::complex<T>& mean, const std::complex<T>& variance, const std::complex<T>& sum, const std::complex<T>& delta ) { return compute_variance_complex(mean,variance,sum,delta); };
         template <typename T> std::complex<T> compute_error(const std::complex<T>& svariance) { return compute_error_complex(svariance); };
         template <typename T> std::complex<T> compute_variance_from_error(const std::complex<T>& error) { return compute_variance_from_error_complex(error); };
-        template <typename T, typename D, typename U> D compute_error_ratio(const result<std::complex<T>,U>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode) { return compute_error_ratio_complex(res, epsrel, epsabs, errormode); };
+        template <typename T, typename D> D compute_error_ratio(const result<std::complex<T>>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode) { return compute_error_ratio_complex(res, epsrel, epsabs, errormode); };
 
 #ifdef __CUDACC__
         // Overloads (thrust::complex)
         template <typename T> thrust::complex<T> compute_variance(const thrust::complex<T>& mean, const thrust::complex<T>& variance, const thrust::complex<T>& sum, const thrust::complex<T>& delta ) { return compute_variance_complex(mean,variance,sum,delta); };
         template <typename T> thrust::complex<T> compute_error(const thrust::complex<T>& svariance) { return compute_error_complex(svariance); };
         template <typename T> thrust::complex<T> compute_variance_from_error(const thrust::complex<T>& error) { return compute_variance_from_error_complex(error); };
-        template <typename T, typename D, typename U> D compute_error_ratio(const result<thrust::complex<T>,U>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode) { return compute_error_ratio_complex(res, epsrel, epsabs, errormode); };
+        template <typename T, typename D> D compute_error_ratio(const result<thrust::complex<T>>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode) { return compute_error_ratio_complex(res, epsrel, epsabs, errormode); };
 #endif
     };
 };

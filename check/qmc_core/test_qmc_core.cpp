@@ -155,7 +155,7 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
 
     SECTION( "Check get_next_n Function", "[Qmc]" ) {
 
-        integrators::Qmc<double,double, unsigned long long int> real_integrator;
+        integrators::Qmc<double,double> real_integrator;
         real_integrator.minn = 1;
         real_integrator.generatingvectors = gv;
 
@@ -180,7 +180,7 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         REQUIRE_THROWS_AS( real_integrator.get_next_n(std::numeric_limits<unsigned long long int>::max()), std::domain_error );
 
         // n larger than the largest finite value representable by the mantissa of float
-        integrators::Qmc<float, float, unsigned long long int> float_integrator;
+        integrators::Qmc<float, float> float_integrator;
         float_integrator.generatingvectors = { { std::numeric_limits<long long int>::max()-1, {1,2,3} } };
         REQUIRE_THROWS_AS( float_integrator.get_next_n(1), std::domain_error );
 

@@ -27,8 +27,8 @@ namespace integrators
             return T(error*error);
         };
 
-        template <typename T, typename D, typename U>
-        D compute_error_ratio(const result<T,U>& res, const D& epsrel, const D&epsabs, const ErrorMode errormode)
+        template <typename T, typename D>
+        D compute_error_ratio(const result<T>& res, const D& epsrel, const D&epsabs, const ErrorMode errormode)
         {
             using std::abs;
 

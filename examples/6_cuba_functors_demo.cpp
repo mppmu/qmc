@@ -26,8 +26,8 @@ struct functor9_t  { const unsigned long long int dim = 3; HOSTDEVICE double ope
 struct functor10_t { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return ( (x[0] > .5) ? 1./sqrt(x[0]*x[1]*x[2] + 1e-5) : sqrt(x[0]*x[1]*x[2]) ); } } functor10;
 struct functor11_t { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return ( ((x[0]*x[0] + x[1]*x[1] + x[2]*x[2]) < 1.) ? 1. : 0. ); } } functor11;
 
-template<typename F1>
-void integrate_and_print(integrators::Qmc<double,double>& real_integrator, F1& functor)
+template<typename I>
+void integrate_and_print(integrators::Qmc<double,double>& real_integrator, I& functor)
 {
     integrators::result<double> real_result = real_integrator.integrate(functor);
     std::cout << real_result.integral << " " << real_result.error << std::endl;

@@ -58,17 +58,15 @@ namespace integrators
             return GSL_SUCCESS;
         }
 
-        template<typename U>
         struct callback_params_t {
             const U& verbosity;
             Logger& logger;
         };
 
-        template<typename U>
-        void callback(const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w)
+        inline void callback(const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w)
         {
-            const U& verbosity = reinterpret_cast<callback_params_t<U>*>(params)->verbosity;
-            Logger& logger = reinterpret_cast<callback_params_t<U>*>(params)->logger;
+            const U& verbosity = reinterpret_cast<callback_params_t*>(params)->verbosity;
+            Logger& logger = reinterpret_cast<callback_params_t*>(params)->logger;
 
             gsl_vector *f = gsl_multifit_nlinear_residual(w);
             gsl_vector *x = gsl_multifit_nlinear_position(w);
@@ -98,7 +96,7 @@ namespace integrators
             logger.display_timing = display_timing;
         }
 
-        template <typename D, typename U, typename F1, typename F2>
+        template <typename D, typename F1, typename F2>
         std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const int maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
         {
             const size_t num_points = x.size();
@@ -160,9 +158,9 @@ namespace integrators
                 gsl_blas_ddot(f, f, &chisq0);
 
                 // solve the system with a maximum of "maxiter" iterations
-                callback_params_t<U> callback_params{verbosity,logger};
+                callback_params_t callback_params{verbosity,logger};
                 if (verbosity > 2)
-                    status = gsl_multifit_nlinear_driver(maxiter, xtol, gtol, ftol, callback<U>, &callback_params, &info, w);
+                    status = gsl_multifit_nlinear_driver(maxiter, xtol, gtol, ftol, callback, &callback_params, &info, w);
                 else
                     status = gsl_multifit_nlinear_driver(maxiter, xtol, gtol, ftol, nullptr, nullptr, &info, w);
 

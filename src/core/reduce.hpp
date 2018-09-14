@@ -7,8 +7,8 @@ namespace integrators
 {
     namespace core
     {
-        template <typename T, typename U>
-        integrators::result<T,U> reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T,U>> & previous_iterations, const U& verbosity, const Logger& logger)
+        template <typename T>
+        integrators::result<T> reduce(const std::vector<T>& r, const U n, const U m, std::vector<result<T>> & previous_iterations, const U& verbosity, const Logger& logger)
         {
             if (verbosity > 1)
             {
@@ -24,7 +24,7 @@ namespace integrators
             U previous_m = 0;
             if(!previous_iterations.empty())
             {
-                result<T,U> & previous_res = previous_iterations.back();
+                result<T> & previous_res = previous_iterations.back();
                 if(previous_res.n == n)
                 {
                     if (verbosity>2) logger << "using additional shifts to improve previous iteration" << std::endl;

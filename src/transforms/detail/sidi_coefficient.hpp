@@ -15,26 +15,26 @@ namespace integrators
             /*
              * Sidi Coefficients
              */
-            template<typename D, typename U, U k, U r, typename = void>
+            template<typename D, U k, U r, typename = void>
             struct SidiCoefficient{};
 
             // Odd r
-            template<typename D, typename U, U k, U r>
-            struct SidiCoefficient<D, U, k, r, typename std::enable_if<(r % 2) != 0>::type>
+            template<typename D, U k, U r>
+            struct SidiCoefficient<D, k, r, typename std::enable_if<(r % 2) != 0>::type>
             {
                 const static D value()
                 {
-                    return IPow<D,U,(r-U(1))/U(2)-k>::value(D(-1))*D(Binomial<U,r,k>::value)/(D(2)*k-r);
+                    return IPow<D,(r-U(1))/U(2)-k>::value(D(-1))*D(Binomial<r,k>::value)/(D(2)*k-r);
                 }
             };
 
             // Even r
-            template<typename D, typename U, U k, U r>
-            struct SidiCoefficient<D, U, k, r, typename std::enable_if<(r % 2) == 0>::type>
+            template<typename D, U k, U r>
+            struct SidiCoefficient<D, k, r, typename std::enable_if<(r % 2) == 0>::type>
             {
                 const static D value()
                 {
-                    return IPow<D,U,r/U(2)-k>::value(D(-1))*D(Binomial<U,r,k>::value)/(D(2)*k-r);
+                    return IPow<D,r/U(2)-k>::value(D(-1))*D(Binomial<r,k>::value)/(D(2)*k-r);
                 }
             };
         };

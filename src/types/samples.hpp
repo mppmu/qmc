@@ -6,7 +6,7 @@
 
 namespace integrators
 {
-    template <typename T, typename D, typename U = unsigned long long int>
+    template <typename T, typename D>
     struct samples
     {
         std::vector<U> z;
@@ -17,7 +17,7 @@ namespace integrators
         D get_x(const U sample_index, const U dimension)
         {
             D mynull;
-            return modf( integrators::math::mul_mod<D,D,U>(sample_index,z.at(dimension),n)/(static_cast<D>(n)) + d.at(dimension), &mynull);
+            return modf( integrators::math::mul_mod<D,D>(sample_index,z.at(dimension),n)/(static_cast<D>(n)) + d.at(dimension), &mynull);
         }
     };
 };

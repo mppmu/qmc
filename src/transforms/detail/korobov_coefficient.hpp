@@ -14,21 +14,21 @@ namespace integrators
             /*
              * Korobov Coefficients
              */
-            template<typename D, typename U, U k, U a, U b, typename = void>
+            template<typename D, U k, U a, U b, typename = void>
             struct KorobovCoefficient
             {
                 const static D value()
                 {
-                    return (D(-1)*(D(b)-D(k)+D(1))*D(KorobovCoefficient<D,U,k-1,a,b>::value())*(D(a)+D(k)))/(D(k)*(D(a)+D(k)+D(1)));
+                    return (D(-1)*(D(b)-D(k)+D(1))*D(KorobovCoefficient<D,k-1,a,b>::value())*(D(a)+D(k)))/(D(k)*(D(a)+D(k)+D(1)));
                 }
             };
 
-            template<typename D, typename U, U k, U a, U b>
-            struct KorobovCoefficient<D, U, k, a, b, typename std::enable_if<k == 0>::type>
+            template<typename D, U k, U a, U b>
+            struct KorobovCoefficient<D, k, a, b, typename std::enable_if<k == 0>::type>
             {
                 const static D value()
                 {
-                    return ((D(a)+D(b)+D(1))*D(Binomial<U,a+b,b>::value))/(D(a)+D(1));
+                    return ((D(a)+D(b)+D(1))*D(Binomial<a+b,b>::value))/(D(a)+D(1));
                 }
             };
         };

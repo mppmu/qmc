@@ -15,7 +15,7 @@ namespace integrators
             /*
              * Korobov Transform Terms
              */
-            template<typename D, typename U, U k, U a, U b, typename = void>
+            template<typename D, U k, U a, U b, typename = void>
             struct KorobovTerm
             {
 #ifdef __CUDACC__
@@ -23,18 +23,18 @@ namespace integrators
 #endif
                 const static D value(const D& x)
                 {
-                    return KorobovTerm<D,U,k-1,a,b>::value(x)*x+KorobovCoefficient<D,U,b-k,a,b>::value();
+                    return KorobovTerm<D,k-1,a,b>::value(x)*x+KorobovCoefficient<D,b-k,a,b>::value();
                 }
             };
-            template<typename D, typename U, U k, U a, U b>
-            struct KorobovTerm<D, U, k, a, b, typename std::enable_if<k == 0>::type>
+            template<typename D, U k, U a, U b>
+            struct KorobovTerm<D,k, a, b, typename std::enable_if<k == 0>::type>
             {
 #ifdef __CUDACC__
                 __host__ __device__
 #endif
                 const static D value(const D& x)
                 {
-                    return KorobovCoefficient<D,U,b,a,b>::value();
+                    return KorobovCoefficient<D,b,a,b>::value();
                 }
             };
         };
