@@ -11,7 +11,7 @@
 #include "qmc.hpp"
 
 struct formfactor4L_t {
-    const unsigned long long int dim = 11;
+    const unsigned long long int number_of_integration_variables = 11;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -56,16 +56,14 @@ struct formfactor4L_t {
 
 int main() {
 
-    integrators::Qmc<double,double> integrator;
+    const unsigned int MAXVAR = 11;
 
     // fit function to reduce variance
-    integrators::FitTransform<formfactor4L_t,double,unsigned long long int> fitted_formfactor4L = integrator.fit(formfactor4L);
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> fitter;
+    integrators::fitfunctions::PolySingularTransform<formfactor4L_t,double,MAXVAR> fitted_formfactor4L = fitter.fit(formfactor4L);
 
-    // apply korobov transform
-    integrators::transforms::Korobov<integrators::FitTransform<formfactor4L_t,double,unsigned long long int>,double,unsigned long long int,2> transformed_fitted_formfactor4L(fitted_formfactor4L);
-
-    integrator.defaulttransform = false; // disable automatic application of default transform on call to integrate
-    integrator.minnevaluate = 0; // disable fitting on call to integrate
+    // setup integrator
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
     integrator.minm = 20;
     integrator.maxeval = 1; // do not iterate
 
@@ -74,7 +72,7 @@ int main() {
     for(const auto& generating_vector : integrator.generatingvectors)
     {
         integrator.minn = generating_vector.first;
-        integrators::result<double> result = integrator.integrate(transformed_fitted_formfactor4L);
+        integrators::result<double> result = integrator.integrate(formfactor4L);
 
         std::cout
         << result.n

@@ -19,7 +19,7 @@ typedef std::complex<double> dcmplx;
 #endif
 
 struct ReduzeF1L2_021111010ord0f3_t {
-    const unsigned long long int dim = 5;
+    const unsigned long long int number_of_integration_variables = 5;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -523,15 +523,16 @@ return (FOUT);
 
 int main() {
 
-    integrators::Qmc<dcmplx,double> integrator;
+    const unsigned int MAXVAR = 5;
 
     // fit function to reduce variance
-    integrators::FitTransform<ReduzeF1L2_021111010ord0f3_t,double,unsigned long long int> fitted_ReduzeF1L2_021111010ord0f3 = integrator.fit(ReduzeF1L2_021111010ord0f3);
+    integrators::Qmc<dcmplx,double,MAXVAR,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> fitter;
+    integrators::fitfunctions::PolySingularTransform<ReduzeF1L2_021111010ord0f3_t,double,MAXVAR> fitted_ReduzeF1L2_021111010ord0f3 = fitter.fit(ReduzeF1L2_021111010ord0f3);
 
-    integrator.minnevaluate = 0; // disable fitting on call to integrate
+    // setup integrator
+    integrators::Qmc<dcmplx,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
     integrator.minm = 20;
     integrator.maxeval = 1; // do not iterate
-
 
     std::cout << "# n m Re[I] Im[I] Re[Abs. Err.] Im[Abs. Err.]" << std::endl;
     std::cout << std::setprecision(16);

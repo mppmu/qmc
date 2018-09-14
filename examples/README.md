@@ -28,9 +28,9 @@ Demonstrates how to integrate a complex function in a way compatible with both C
 
 Demonstrates how to adjust all settings of the QMC. In this demo all values are set to their default.
 
-### 4_transform_demo
+### 4_fitfunctions_demo
 
-Demonstrates how to change the integral transform used by the integator. The available integral transforms are listed in `src/transforms`. In this example we instantiate a `Baker` transform and pass it as an additional (optional) argument to the integrator's `integrate` function, this overrides the default transform and instead causes the integrator to apply the `Baker` transform.
+Demonstrates how to change the fit function used by the integator. The available fit functionsare listed in `src/fitfunctions`. In this example select the `PolySingular` fitfunction when instantiating the integrator, this overrides the default fit function and instead causes the integrator to attempt to reduce the variance of the input function using the `PolySingular` ansatz.
 
 ### 5_generatingvectors_demo
 

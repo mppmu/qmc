@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 6_cuda_functors_demo.cpp -o 6_cuda_functors_demo.out -lgsl -lgslcblas
+ *   c++ -std=c++11 -pthread -I../src 6_cuba_functors_demo.cpp -o 6_cuba_functors_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 6_cuda_functors_demo.cpp -o 6_cuda_functors_demo.out -lgsl -lgslcblas
+ *   nvcc -std=c++11 -x cu -I../src 6_cuba_functors_demo.cpp -o 6_cuba_functors_demo.out -lgsl -lgslcblas
  */
 
 #include <iostream>
@@ -14,20 +14,20 @@
 #else
 #define HOSTDEVICE
 #endif
-struct functor1_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return sin(x[0])*cos(x[1])*exp(x[2]); } } functor1;
-struct functor2_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return 1./( (x[0] + x[1])*(x[0] + x[1]) + .003 )*cos(x[1])*exp(x[2]); } } functor2;
-struct functor3_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return 1./(3.75 - cos(M_PI*x[0]) - cos(M_PI*x[1]) - cos(M_PI*x[2])); } } functor3;
-struct functor4_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return fabs(x[0]*x[0] + x[1]*x[1] + x[2]*x[2] - .125); } } functor4;
-struct functor5_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return exp(-x[0]*x[0] - x[1]*x[1] - x[2]*x[2]); } } functor5;
-struct functor6_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return 1./(1. - x[0]*x[1]*x[2] + 1e-10); } } functor6;
-struct functor7_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return sqrt(fabs(x[0] - x[1] - x[2])); } } functor7;
-struct functor8_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return exp(-x[0]*x[1]*x[2]); } } functor8;
-struct functor9_t  { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return x[0]*x[0]/(cos(x[0] + x[1] + x[2] + 1.) + 5.); } } functor9;
-struct functor10_t { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return ( (x[0] > .5) ? 1./sqrt(x[0]*x[1]*x[2] + 1e-5) : sqrt(x[0]*x[1]*x[2]) ); } } functor10;
-struct functor11_t { const unsigned long long int dim = 3; HOSTDEVICE double operator()(double* x) const { return ( ((x[0]*x[0] + x[1]*x[1] + x[2]*x[2]) < 1.) ? 1. : 0. ); } } functor11;
+struct functor1_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return sin(x[0])*cos(x[1])*exp(x[2]); } } functor1;
+struct functor2_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return 1./( (x[0] + x[1])*(x[0] + x[1]) + .003 )*cos(x[1])*exp(x[2]); } } functor2;
+struct functor3_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return 1./(3.75 - cos(M_PI*x[0]) - cos(M_PI*x[1]) - cos(M_PI*x[2])); } } functor3;
+struct functor4_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return fabs(x[0]*x[0] + x[1]*x[1] + x[2]*x[2] - .125); } } functor4;
+struct functor5_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return exp(-x[0]*x[0] - x[1]*x[1] - x[2]*x[2]); } } functor5;
+struct functor6_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return 1./(1. - x[0]*x[1]*x[2] + 1e-10); } } functor6;
+struct functor7_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return sqrt(fabs(x[0] - x[1] - x[2])); } } functor7;
+struct functor8_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return exp(-x[0]*x[1]*x[2]); } } functor8;
+struct functor9_t  { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return x[0]*x[0]/(cos(x[0] + x[1] + x[2] + 1.) + 5.); } } functor9;
+struct functor10_t { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return ( (x[0] > .5) ? 1./sqrt(x[0]*x[1]*x[2] + 1e-5) : sqrt(x[0]*x[1]*x[2]) ); } } functor10;
+struct functor11_t { const unsigned long long int number_of_integration_variables = 3; HOSTDEVICE double operator()(double* x) const { return ( ((x[0]*x[0] + x[1]*x[1] + x[2]*x[2]) < 1.) ? 1. : 0. ); } } functor11;
 
-template<typename I>
-void integrate_and_print(integrators::Qmc<double,double>& real_integrator, I& functor)
+template<typename Q, typename I>
+void integrate_and_print(Q& real_integrator, I& functor)
 {
     integrators::result<double> real_result = real_integrator.integrate(functor);
     std::cout << real_result.integral << " " << real_result.error << std::endl;
@@ -35,7 +35,9 @@ void integrate_and_print(integrators::Qmc<double,double>& real_integrator, I& fu
 
 int main() {
 
-    integrators::Qmc<double,double> real_integrator;
+    const unsigned int MAXVAR = 3;
+
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> real_integrator;
 
     // TODO - set parameters similar to CUBA demo?
     real_integrator.minn = 10000;

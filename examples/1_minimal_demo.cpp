@@ -9,7 +9,7 @@
 #include "qmc.hpp"
 
 struct my_functor_t {
-    const unsigned long long int dim = 3;
+    const unsigned long long int number_of_integration_variables = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -21,7 +21,9 @@ struct my_functor_t {
 
 int main() {
 
-    integrators::Qmc<double,double> integrator;
+    const unsigned int MAXVAR = 3;
+
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
     integrators::result<double> result = integrator.integrate(my_functor);
     std::cout << "integral = " << result.integral << std::endl;
     std::cout << "error    = " << result.error    << std::endl;

@@ -12,7 +12,7 @@
 #include "qmc.hpp"
 
 struct formfactor2L_t {
-    const unsigned long long int dim = 5;
+    const unsigned long long int number_of_integration_variables = 5;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -48,21 +48,19 @@ int main() {
     using D = double;
     using U = unsigned long long int;
 
-    integrators::Qmc<D,D> integrator;
+    const unsigned int MAXVAR = 11;
 
     // fit function to reduce variance
-    integrators::FitTransform<formfactor2L_t,double,unsigned long long int> fitted_formfactor2L = integrator.fit(formfactor2L);
+    integrators::Qmc<D,D,MAXVAR,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> fitter;
+    integrators::fitfunctions::PolySingularTransform<formfactor2L_t,D,MAXVAR> fitted_formfactor2L = fitter.fit(formfactor2L);
 
-    // apply korobov transform
-    integrators::transforms::Korobov<integrators::FitTransform<formfactor2L_t,double,unsigned long long int>,double,unsigned long long int,5> transformed_fitted_formfactor2L(fitted_formfactor2L);
-
-    integrator.defaulttransform = false; // disable automatic application of default transform on call to integrate
-    integrator.minnevaluate = 0; // disable fitting on call to integrate
+    // setup integrator
+    integrators::Qmc<D,D,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
     integrator.minm = 20;
     integrator.maxeval = 1; // do not iterate
 
     // Append large generating vectors to default generating vectors
-    std::map<U,std::vector<U>> large_vecs = integrators::generatingvectors::cbcpt_cfftw1_6<U>();
+    std::map<U,std::vector<U>> large_vecs = integrators::generatingvectors::cbcpt_cfftw1_6();
     integrator.generatingvectors.insert(large_vecs.begin(),large_vecs.end());
 
     std::cout << "# n m Re[I] Im[I] Re[Abs. Err.] Im[Abs. Err.]" << std::endl;
@@ -70,7 +68,7 @@ int main() {
     for(const auto& generating_vector : integrator.generatingvectors)
     {
         integrator.minn = generating_vector.first;
-        integrators::result<double> result = integrator.integrate(transformed_fitted_formfactor2L);
+        integrators::result<double> result = integrator.integrate(fitted_formfactor2L);
 
         std::cout
         << result.n

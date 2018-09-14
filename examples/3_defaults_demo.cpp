@@ -10,7 +10,7 @@
 #include "qmc.hpp"
 
 struct my_functor_t {
-    const unsigned long long int dim = 3;
+    const unsigned long long int number_of_integration_variables = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -24,12 +24,13 @@ int main() {
     using D = double;
     using U = unsigned long long int;
 
-    integrators::Qmc<D,D> integrator;
+    const unsigned int MAXVAR = 3;
+
+    integrators::Qmc<D,D,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
 
     // All settings set to their default value
     integrator.logger = std::cout;
     integrator.randomgenerator = std::mt19937_64();
-    integrator.defaulttransform = true;
     integrator.minnevaluate = 100000;
     integrator.minn = 8191;
     integrator.minm = 32;
@@ -43,7 +44,7 @@ int main() {
     integrator.cudablocks = 1024;
     integrator.cudathreadsperblock = 256;
     integrator.devices = {-1}; // devices = cpu (Note: default is actually all devices {-1,0,1,...} detected on construction)
-    integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100<U>();
+    integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100();
     integrator.verbosity = 0;
 
     integrators::result<D> result = integrator.integrate(my_functor);

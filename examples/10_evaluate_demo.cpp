@@ -10,7 +10,7 @@
 #include "qmc.hpp"
 
 struct my_functor_t {
-    const unsigned long long int dim = 3;
+    const unsigned long long int number_of_integration_variables = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -25,7 +25,9 @@ int main() {
     using D = double; // input base type of the integrand
     using T = double; // return type of the integrand
 
-    integrators::Qmc<D,D> integrator;
+    const unsigned int MAXVAR = 3;
+
+    integrators::Qmc<D,D,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
 
     // Relevant settings set to their default value
     integrator.logger = std::cout;
@@ -35,7 +37,7 @@ int main() {
     integrator.cudablocks = 1024;
     integrator.cudathreadsperblock = 256;
     integrator.devices = {-1}; // devices = cpu (Note: default is actually all devices {-1,0,1,...} detected on construction)
-    integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100<U>();
+    integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100();
     integrator.verbosity = 0;
 
     integrators::samples<D,D> samples = integrator.evaluate(my_functor);
@@ -50,12 +52,14 @@ int main() {
         std::cout << item << ", ";
     std::cout << std::endl;
 
-    std::cout << "samples samples.r = " << std::endl;
-    for (const auto& item : samples.r)
-        std::cout << item << ", ";
-    std::cout << std::endl;
-
     std::cout << "samples.n = " << samples.n << std::endl;
+
+    const unsigned long long int point_index = 0;
+    std::cout << "f(";
+    for (int sdim = 0; sdim < my_functor.number_of_integration_variables; sdim++ )
+        std::cout << samples.get_x(point_index,sdim) << (sdim == (my_functor.number_of_integration_variables-1) ? "" : ",");
+    std::cout << ") = " << samples.r.at(point_index) << std::endl;
 
     return 0;
 }
+

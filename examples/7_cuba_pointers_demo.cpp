@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 7_cuda_pointers_demo.cpp -o 7_cuda_pointers_demo.out -lgsl -lgslcblas
+ *   c++ -std=c++11 -pthread -I../src 7_cuba_pointers_demo.cpp -o 7_cuba_pointers_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 7_cuda_pointers_demo.cpp -o 7_cuda_pointers_demo.out -lgsl -lgslcblas
+ *   nvcc -std=c++11 -x cu -I../src 7_cuba_pointers_demo.cpp -o 7_cuba_pointers_demo.out -lgsl -lgslcblas
  */
 
 #include <iostream>
@@ -164,7 +164,7 @@ integrand* get_device_address_func11()
 // Generic functor for storing pointers to the functions
 struct my_functor_t {
 
-    const unsigned long long int dim = 3;
+    const unsigned long long int number_of_integration_variables = 3;
     
     get_device_address* device_address_getter;
 
@@ -201,6 +201,8 @@ struct my_functor_t {
 
 int main() {
 
+    const unsigned int MAXVAR = 3;
+
     std::vector<my_functor_t> functors =
     {
         {*func1,*get_device_address_func1},
@@ -216,7 +218,7 @@ int main() {
         {*func11,*get_device_address_func11}
     };
 
-    integrators::Qmc<double,double> real_integrator;
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> real_integrator;
 
     // TODO - set parameters similar to CUBA demo?
     real_integrator.minn = 10000;

@@ -5,10 +5,6 @@
  *   nvcc -std=c++11 -x cu -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
  */
 
-
-
-// TODO - fix this example
-
 #include <iostream>
 #include <limits> // numeric_limits
 #include <cmath> // sin, cos, exp
@@ -21,22 +17,21 @@
 #define HOSTDEVICE
 #endif
 
-template< typename I, typename F>
-int count_fails(I& integrator, F& function, unsigned long long int iterations, double true_result)
+const unsigned int MAXVAR = 5;
+
+template< typename I1, typename I2, typename F>
+int count_fails(I1& integrator_fit, I2& integrator_nofit, F& function, unsigned long long int iterations, double true_result)
 {
     unsigned fail = 0;
-    integrators::result<double,unsigned long long> result;
+    integrators::result<double> result;
+    integrators::fitfunctions::PolySingularTransform<F,double,MAXVAR> fitted_function = integrator_fit.fit(function);
     for(int i = 0; i<iterations; i++)
     {
-        result = integrator.integrate(function);
-//        std::cout << (true_result-result.integral) << " " << result.error;
-        if ( std::abs( (true_result-result.integral) ) < std::abs(result.error)  )
-        {
-//            std::cout << " OK" << std::endl;
-        } else
+        result = integrator_nofit.integrate(fitted_function);
+//        std::cout << (true_result-result.integral) << " " << result.error << std::endl;
+        if ( std::abs( (true_result-result.integral) ) > std::abs(result.error)  )
         {
             fail++;
-//            std::cout << " FAIL" << std::endl;
         }
     }
     return fail;
@@ -47,16 +42,16 @@ int main() {
     std::cout << "numeric_limits<double>::epsilon() " << std::numeric_limits<double>::epsilon() << std::endl;
 
     // Integrands
-    struct { const int dim = 1; HOSTDEVICE double operator()(double x[]) const { return x[0]; }; } function1;
-    struct { const int dim = 2; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]; }; } function2;
+    struct { const int number_of_integration_variables = 1; HOSTDEVICE double operator()(double x[]) const { return x[0]; }; } function1;
+    struct { const int number_of_integration_variables = 2; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]; }; } function2;
     struct {
-        const int dim = 3;
+        const int number_of_integration_variables = 3;
         const double pi = 3.1415926535897932384626433832795028841971693993751;
         HOSTDEVICE double operator()(double x[]) const { return sin(pi*x[0])*cos(pi/2.*x[1])*(1.-cos(pi/4.*x[2])); };
     } function3;
-    struct { const int dim = 4; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]*(1.-x[2]*x[2])/(3.-x[3]); }; } function4;
+    struct { const int number_of_integration_variables = 4; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]*(1.-x[2]*x[2])/(3.-x[3]); }; } function4;
     struct {
-        const int dim = 5;
+        const int number_of_integration_variables = 5;
         const double pi = 3.1415926535897932384626433832795028841971693993751;
         HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]*(1.-x[2]*x[2])/(3.-x[3])*cos(pi/2*x[4]); };
     } function5;
@@ -75,25 +70,27 @@ int main() {
     unsigned long long int fail3;
     unsigned long long int fail4;
     unsigned long long int fail5;
-    
-    integrators::Qmc<double,double> integrator;
-    integrator.minnevaluate = 0;
-    integrator.minn = 8191;
+
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator_fit;
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator_nofit;
+
+    integrator_nofit.minnevaluate = 0;
+    integrator_nofit.minn = 8191;
 
     std::cout << "-- Function 1 --" << std::endl;
-    fail1 = count_fails(integrator,function1,iterations,function1_result);
+    fail1 = count_fails(integrator_fit,integrator_nofit,function1,iterations,function1_result);
 
     std::cout << "-- Function 2 --" << std::endl;
-    fail2 = count_fails(integrator,function2,iterations,function2_result);
+    fail2 = count_fails(integrator_fit,integrator_nofit,function2,iterations,function2_result);
 
     std::cout << "-- Function 3 --" << std::endl;
-    fail3 = count_fails(integrator,function3,iterations,function3_result);
+    fail3 = count_fails(integrator_fit,integrator_nofit,function3,iterations,function3_result);
 
     std::cout << "-- Function 4 --" << std::endl;
-    fail4 = count_fails(integrator,function4,iterations,function4_result);
+    fail4 = count_fails(integrator_fit,integrator_nofit,function4,iterations,function4_result);
 
     std::cout << "-- Function 5 --" << std::endl;
-    fail5 = count_fails(integrator,function5,iterations,function5_result);
+    fail5 = count_fails(integrator_fit,integrator_nofit,function5,iterations,function5_result);
 
     std::cout << "-- Summary --" << std::endl;
     std::cout << fail1 << " " << static_cast<double>(fail1)/ static_cast<double>(iterations) << std::endl;

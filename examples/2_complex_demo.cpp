@@ -17,7 +17,7 @@ typedef std::complex<double> complex_t;
 #endif
 
 struct my_functor_t {
-    const unsigned long long int dim = 3;
+    const unsigned long long int number_of_integration_variables = 3;
 #ifdef __CUDACC__
     __host__ __device__
 #endif
@@ -28,8 +28,10 @@ struct my_functor_t {
 } my_functor;
 
 int main() {
+
+    const unsigned int MAXVAR = 3;
     
-    integrators::Qmc<complex_t,double> integrator;
+    integrators::Qmc<complex_t,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
     integrators::result<complex_t> result = integrator.integrate(my_functor);
     std::cout << "integral = " << result.integral << std::endl;
     std::cout << "error    = " << result.error    << std::endl;
