@@ -51,6 +51,15 @@ namespace integrators
             }
         };
 
+        template <typename D>
+        struct PolySingularHessian
+        {
+            D operator()(const D x, const double* v, const double* p) const
+            {
+                return (D(2)*v[0]*(D(-1)+x)*x*((v[1] + v[2]+ v[3])*(x - p[0]) + v[0]*(D(-1) + p[1] + p[2] + p[3])))/(x - p[0])/(x - p[0])/(x - p[0]);
+            }
+        };
+
         template<typename I, typename D, U maxdim>
         struct PolySingularTransform
         {
@@ -84,6 +93,7 @@ namespace integrators
         {
             using function_t = PolySingularFunction<D>;
             using jacobian_t = PolySingularJacobian<D>;
+            using hessian_t = PolySingularHessian<D>;
             using transform_t = PolySingularTransform<I,D,maxdim>;
         };
         

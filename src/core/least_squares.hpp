@@ -19,21 +19,22 @@ namespace integrators
 {
     namespace core
     {
-        template<typename D, typename F1, typename F2>
+        template<typename D, typename F1, typename F2, typename F3>
         struct least_squares_wrapper_t {
             const F1 fit_function;
             const F2 fit_function_jacobian;
+            const F3 fit_function_hessian;
             const std::vector<D> x;
             const std::vector<D> y;
         };
 
-        template<typename D, typename F1, typename F2>
+        template<typename D, typename F1, typename F2, typename F3>
         int fit_function_wrapper(const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_vector * f)
         {
             // Unpack data
-            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2>*>(xyfunc_ptr)->x;
-            const std::vector<D>& y = reinterpret_cast<least_squares_wrapper_t<D,F1,F2>*>(xyfunc_ptr)->y;
-            const F1& fit_function = reinterpret_cast<least_squares_wrapper_t<D,F1,F2>*>(xyfunc_ptr)->fit_function;
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->x;
+            const std::vector<D>& y = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->y;
+            const F1& fit_function = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->fit_function;
 
             // Compute deviates of fit function for input points
             for (size_t i = 0; i < x.size(); i++)
@@ -44,17 +45,32 @@ namespace integrators
             return GSL_SUCCESS;
         }
 
-        template<typename D, typename F1, typename F2>
+        template<typename D, typename F1, typename F2, typename F3>
         int fit_function_jacobian_wrapper(const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_matrix * J)
         {
             // Unpack data
-            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2>*>(xyfunc_ptr)->x;
-            const F2& fit_function_jacobian = reinterpret_cast<least_squares_wrapper_t<D,F1,F2>*>(xyfunc_ptr)->fit_function_jacobian;
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->x;
+            const F2& fit_function_jacobian = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->fit_function_jacobian;
 
             for (size_t i = 0; i < x.size(); i++)
                 for (size_t j = 0; j < fit_function_jacobian.num_parameters; j++)
                     gsl_matrix_set(J, i, j, static_cast<double>(fit_function_jacobian(x[i], gsl_vector_const_ptr(parameters_vector,0), j)) );
 
+            return GSL_SUCCESS;
+        }
+
+        template<typename D, typename F1, typename F2, typename F3>
+        int fit_function_hessian_wrapper(const gsl_vector * parameters_vector, const gsl_vector * v, void *xyfunc_ptr, gsl_vector * fvv)
+        {
+            // Unpack data
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->x;
+            const F3& fit_function_hessian = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->fit_function_hessian;
+
+            // Compute hessian of fit function
+            for (size_t i = 0; i < x.size(); i++)
+            {
+                gsl_vector_set(fvv, i, static_cast<double>(fit_function_hessian(x[i], gsl_vector_const_ptr(v,0), gsl_vector_const_ptr(parameters_vector,0))) );
+            }
             return GSL_SUCCESS;
         }
 
@@ -70,6 +86,7 @@ namespace integrators
 
             gsl_vector *f = gsl_multifit_nlinear_residual(w);
             gsl_vector *x = gsl_multifit_nlinear_position(w);
+            double avratio = gsl_multifit_nlinear_avratio(w);
             double rcond = std::nan("");
 
             // compute reciprocal condition number of J(x)
@@ -90,14 +107,16 @@ namespace integrators
             }
             logger << std::left << std::setw(10) << std::setfill(separator) << "cond(J) = ";
             logger << std::left << std::setw(num_width) << std::setfill(separator) << 1.0 / rcond;
+            logger << std::left << std::setw(10) << std::setfill(separator) << "|a|/|v| = ";
+            logger << std::left << std::setw(num_width) << std::setfill(separator) << avratio;
             logger << std::left << std::setw(9) << std::setfill(separator) << "|f(x)| = ";
             logger << std::left << std::setw(num_width) << std::setfill(separator) << gsl_blas_dnrm2(f);
             logger << std::endl;
             logger.display_timing = display_timing;
         }
 
-        template <typename D, typename F1, typename F2>
-        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const int maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
+        template <typename D, typename F1, typename F2, typename F3>
+        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const int maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
         {
             const size_t num_points = x.size();
             const size_t num_parameters = fit_function.num_parameters;
@@ -105,7 +124,7 @@ namespace integrators
             assert(x.size() == y.size());
             assert(num_points > num_parameters + 1);
 
-            least_squares_wrapper_t<D,F1,F2> data = { fit_function, fit_function_jacobian, x, y };
+            least_squares_wrapper_t<D,F1,F2,F3> data = { fit_function, fit_function_jacobian, fit_function_hessian, x, y };
 
             const gsl_multifit_nlinear_type *method = gsl_multifit_nlinear_trust;
             gsl_multifit_nlinear_workspace *w;
@@ -116,9 +135,9 @@ namespace integrators
             gsl_matrix *covar = gsl_matrix_alloc(num_parameters, num_parameters);
 
             // define the function to be minimized
-            fdf.f = fit_function_wrapper<D,F1,F2>;
-            fdf.df = fit_function_jacobian_wrapper<D,F1,F2>;
-            fdf.fvv = nullptr; // not using geodesic acceleration
+            fdf.f = fit_function_wrapper<D,F1,F2,F3>;
+            fdf.df = fit_function_jacobian_wrapper<D,F1,F2,F3>;
+            fdf.fvv = fit_function_hessian_wrapper<D,F1,F2,F3>;
             fdf.n = num_points;
             fdf.p = num_parameters;
             fdf.params = &data;
@@ -189,6 +208,7 @@ namespace integrators
                     logger << "number of iterations: " << gsl_multifit_nlinear_niter(w) << std::endl;
                     logger << "function evaluations: " << fdf.nevalf << std::endl;
                     logger << "Jacobian evaluations: " << fdf.nevaldf << std::endl;
+                    logger << "Hessian evaluations: " << fdf.nevalfvv << std::endl;
                     if (info == 0)
                         logger << "reason for stopping: " << "maximal number of iterations (maxiter)" << std::endl;
                     else if (info == 1)

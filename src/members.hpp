@@ -18,6 +18,8 @@
 #include <cassert> // assert
 #include <chrono>
 
+#include <gsl/gsl_multifit_nlinear.h>
+
 namespace integrators
 {
     template <typename T, typename D, template<typename,typename> class P, template<typename,typename> class F, typename G, typename H>
@@ -512,13 +514,10 @@ namespace integrators
     {
         using std::abs;
 
-        typename F<I,D>::function_t fit_function;
-        typename F<I,D>::jacobian_t fit_function_jacobian;
-        typename F<I,D>::hessian_t fit_function_hessian;
-        typename F<I,D>::transform_t fit_function_transform(func);
-
-        if (fit_function.num_parameters <= 0)
-            return fit_function_transform;
+        typename F<I>::function_t fit_function;
+        typename F<I>::jacobian_t fit_function_jacobian;
+        typename F<I>::hessian_t fit_function_hessian;
+        typename F<I>::transform_t fit_function_transform(func);
 
         std::vector<D> x,y;
         std::vector<std::vector<D>> fit_parameters;
@@ -558,7 +557,7 @@ namespace integrators
             }
 
             // run a least squares fit
-            fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian,y,x,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl) );
+            fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian, fit_function_hessian, y,x,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl) );
         }
 
         for (size_t d = 0; d < fit_function_transform.dim; ++d)
@@ -706,7 +705,7 @@ namespace integrators
 
     template <typename T, typename D, template<typename,typename> class P, template<typename,typename> class F, typename G, typename H>
     Qmc<T,D,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), fitmaxiter(40), fitxtol(1e-10), fitgtol(0.), fitftol(0.), fitparametersgsl(gsl_multifit_nlinear_default_parameters())
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), fitmaxiter(40), fitxtol(1e-10), fitgtol(0.), fitftol(0.), fitparametersgsl({})
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
@@ -724,6 +723,9 @@ namespace integrators
         for(int i = 0; i < device_count; i++)
             devices.insert(i);
 #endif
+
+        fitparametersgsl = gsl_multifit_nlinear_default_parameters();
+        fitparametersgsl.trs = gsl_multifit_nlinear_trs_lmaccel;
     };
 };
 
