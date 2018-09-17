@@ -35,7 +35,7 @@ namespace integrators
     template <
                  typename T, typename D,
                  template<typename,typename> class P = transforms::Korobov<3>::template type,
-                 template<typename,typename> class F = fitfunctions::PolySingular<>::template type,
+                 template<typename,typename> class F = fitfunctions::None<>::template type,
                  typename G = std::mt19937_64, typename H = std::uniform_real_distribution<D>
              >
     class Qmc
