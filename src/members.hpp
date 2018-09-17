@@ -705,7 +705,7 @@ namespace integrators
 
     template <typename T, typename D, template<typename,typename> class P, template<typename,typename> class F, typename G, typename H>
     Qmc<T,D,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), fitmaxiter(40), fitxtol(1e-10), fitgtol(0.), fitftol(0.), fitparametersgsl({})
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minnevaluate(100000), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), fitmaxiter(40), fitxtol(1e-8), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({})
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");
