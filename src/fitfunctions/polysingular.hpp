@@ -92,8 +92,8 @@ namespace integrators
         struct PolySingularImpl
         {
             using function_t = PolySingularFunction<D>;
-            using jacobian_t = PolySingularJacobian<D>;
-            using hessian_t = PolySingularHessian<D>;
+            using jacobian_t = PolySingularJacobian<D>; // set to std::nullptr_t to compute numerically
+            using hessian_t = PolySingularHessian<D>; // set to std::nullptr_t to compute numerically (also set fitparametersgsl.trs = gsl_multifit_nlinear_trs_lm);
             using transform_t = PolySingularTransform<I,D,maxdim>;
         };
         

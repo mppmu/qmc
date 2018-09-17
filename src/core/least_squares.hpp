@@ -4,6 +4,7 @@
 #include <algorithm> // std::max
 #include <cassert> // assert
 #include <cmath> // std::nan
+#include <cstddef> // std::nullptr_t
 #include <sstream> // std::ostringstream
 #include <string> // std::to_string
 #include <iostream> // std::endl
@@ -19,6 +20,9 @@ namespace integrators
 {
     namespace core
     {
+        using fit_function_jacobian_wrapper_ptr = int (*)(const gsl_vector * , void *, gsl_matrix *);
+        using fit_function_hessian_wrapper_ptr = int (*)(const gsl_vector *, const gsl_vector *, void *, gsl_vector *);
+
         template<typename D, typename F1, typename F2, typename F3>
         struct least_squares_wrapper_t {
             const F1 fit_function;
@@ -116,6 +120,36 @@ namespace integrators
         }
 
         template <typename D, typename F1, typename F2, typename F3>
+        fit_function_jacobian_wrapper_ptr get_fit_function_jacobian_wrapper(const F2& fit_function_jacobian, const U& verbosity, Logger& logger)
+        {
+            if (verbosity > 1)
+                logger << "using analytic jacobian" << std::endl;
+            return fit_function_jacobian_wrapper<D,F1,F2,F3>;
+        }
+        template <typename D, typename F1, typename F2, typename F3>
+        std::nullptr_t get_fit_function_jacobian_wrapper(const std::nullptr_t& fit_function_jacobian, const U& verbosity, Logger& logger)
+        {
+            if (verbosity > 1)
+                logger << "using numeric jacobian" << std::endl;
+            return nullptr;
+        }
+
+        template <typename D, typename F1, typename F2, typename F3>
+        fit_function_hessian_wrapper_ptr get_fit_function_hessian_wrapper(const F3& fit_function_hessian, const U& verbosity, Logger& logger)
+        {
+            if (verbosity > 1)
+                logger << "using analytic hessian" << std::endl;
+            return fit_function_hessian_wrapper<D,F1,F2,F3>;
+        }
+        template <typename D, typename F1, typename F2, typename F3>
+        std::nullptr_t get_fit_function_hessian_wrapper(const std::nullptr_t& fit_function_hessian, const U& verbosity, Logger& logger)
+        {
+            if (verbosity > 1)
+                logger << "using numeric hessian" << std::endl;
+            return nullptr;
+        }
+
+        template <typename D, typename F1, typename F2, typename F3>
         std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const int maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
         {
             const size_t num_points = x.size();
@@ -136,8 +170,8 @@ namespace integrators
 
             // define the function to be minimized
             fdf.f = fit_function_wrapper<D,F1,F2,F3>;
-            fdf.df = fit_function_jacobian_wrapper<D,F1,F2,F3>;
-            fdf.fvv = fit_function_hessian_wrapper<D,F1,F2,F3>;
+            fdf.df = get_fit_function_jacobian_wrapper<D,F1,F2,F3>(fit_function_jacobian, verbosity, logger);
+            fdf.fvv = get_fit_function_hessian_wrapper<D,F1,F2,F3>(fit_function_hessian, verbosity, logger);
             fdf.n = num_points;
             fdf.p = num_parameters;
             fdf.params = &data;
