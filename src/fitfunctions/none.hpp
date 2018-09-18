@@ -50,10 +50,9 @@ namespace integrators
             using transform_t = NoneTransform<I,D,maxdim>;
         };
 
-        template<U maxdim = 25>
         struct None
         {
-            template<typename I, typename D> using type = NoneImpl<I, D, maxdim>;
+            template<typename I, typename D, U maxdim> using type = NoneImpl<I, D, maxdim>;
         };
     };
 };

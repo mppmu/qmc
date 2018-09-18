@@ -25,7 +25,7 @@ namespace integrators
         };
         struct None
         {
-            template<typename I, typename D> using type = NoneImpl<I, D>;
+            template<typename I, typename D, U maxdim> using type = NoneImpl<I, D>;
         };
     };
 };

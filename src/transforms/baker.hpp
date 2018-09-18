@@ -31,7 +31,7 @@ namespace integrators
         };
         struct Baker
         {
-            template<typename I, typename D> using type = BakerImpl<I, D>;
+            template<typename I, typename D, U maxdim> using type = BakerImpl<I, D>;
         };
     };
 };

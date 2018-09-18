@@ -44,7 +44,7 @@ namespace integrators
         template<U r0, U r1 = r0>
         struct Korobov
         {
-            template<typename I, typename D> using type = KorobovImpl<I, D, r0, r1>;
+            template<typename I, typename D, U maxdim> using type = KorobovImpl<I, D, r0, r1>;
         };
     };
 };

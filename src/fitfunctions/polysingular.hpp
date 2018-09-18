@@ -97,10 +97,9 @@ namespace integrators
             using transform_t = PolySingularTransform<I,D,maxdim>;
         };
         
-        template<U maxdim = 25>
         struct PolySingular
         {
-            template<typename I, typename D> using type = PolySingularImpl<I, D, maxdim>;
+            template<typename I, typename D, U maxdim> using type = PolySingularImpl<I, D, maxdim>;
         };
         
     };

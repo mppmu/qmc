@@ -113,7 +113,7 @@ namespace integrators
         template<U r0>
         struct Sidi
         {
-            template<typename I, typename D> using type = SidiImpl<I, D, r0>;
+            template<typename I, typename D, U maxdim> using type = SidiImpl<I, D, r0>;
         };
 
     };
