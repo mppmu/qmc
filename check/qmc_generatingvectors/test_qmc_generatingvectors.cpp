@@ -5,7 +5,7 @@ TEST_CASE( "cbcpt_cfftw1_6", "[generatingvectors]")
 {
     using U = unsigned long long int;
 
-    std::map<U,std::vector<U>> gvec = integrators::generatingvectors::cbcpt_cfftw1_6<U>();
+    std::map<U,std::vector<U>> gvec = integrators::generatingvectors::cbcpt_cfftw1_6();
 
     SECTION("Length")
     {
@@ -18,7 +18,7 @@ TEST_CASE( "cbcpt_dn1_100", "[generatingvectors]")
 {
     using U = unsigned long long int;
 
-    std::map<U,std::vector<U>> gvec = integrators::generatingvectors::cbcpt_dn1_100<U>();
+    std::map<U,std::vector<U>> gvec = integrators::generatingvectors::cbcpt_dn1_100();
 
     SECTION("Length")
     {
@@ -31,7 +31,7 @@ TEST_CASE( "cbcpt_dn2_6", "[generatingvectors]")
 {
     using U = unsigned long long int;
 
-    std::map<U,std::vector<U>> gvec = integrators::generatingvectors::cbcpt_dn2_6<U>();
+    std::map<U,std::vector<U>> gvec = integrators::generatingvectors::cbcpt_dn2_6();
 
     SECTION("Length")
     {

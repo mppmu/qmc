@@ -20,22 +20,27 @@ using std::complex;
 #endif
 
 struct zero_dim_function_t {
-    const unsigned long long int dim = 0;
+    const unsigned long long int number_of_integration_variables = 0;
     HOSTDEVICE double operator()(double x[]) { return 1; }
 } zero_dim_function;
 
+struct too_many_dim_function_t {
+    const unsigned long long int number_of_integration_variables = 4;
+    HOSTDEVICE double operator()(double x[]) { return 1; }
+} too_many_dim_function;
+
 struct constant_function_t {
-    const unsigned long long int dim = 1;
+    const unsigned long long int number_of_integration_variables = 1;
     HOSTDEVICE double operator()(double x[]) { return 1; }
 } constant_function;
 
 struct multivariate_linear_function_t {
-    const unsigned long long int dim = 3;
+    const unsigned long long int number_of_integration_variables = 3;
     HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]*x[2]; }
 } multivariate_linear_function;
 
 struct nan_function_t {
-    const unsigned long long int dim = 1;
+    const unsigned long long int number_of_integration_variables = 1;
     HOSTDEVICE double operator()(double x[]) {
         if ( x[0] < 0. && x[0] > 1. )
             return std::nan("");
@@ -45,29 +50,29 @@ struct nan_function_t {
 } nan_function;
 
 struct univariate_real_function_t {
-    const unsigned long long int dim = 1;
+    const unsigned long long int number_of_integration_variables = 1;
     HOSTDEVICE double operator()(double x[]) { return x[0]; }
 } univariate_real_function;
 
 struct univariate_complex_function_t {
-    const unsigned long long int dim = 1;
+    const unsigned long long int number_of_integration_variables = 1;
     HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]); }
 } univariate_complex_function;
 
 struct real_function_t {
-    const unsigned long long int dim = 2;
+    const unsigned long long int number_of_integration_variables = 2;
     HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]; }
 } real_function;
 
 struct complex_function_t {
-    const unsigned long long int dim = 2;
+    const unsigned long long int number_of_integration_variables = 2;
     HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]*x[1]); };
 
 } complex_function;
 
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
-    integrators::Qmc<double,double> real_integrator;
+    integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
 
     SECTION( "Check Fields", "[Qmc]" ) {
 
@@ -81,7 +86,6 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
             REQUIRE( random_sample >= 0 );
             REQUIRE( random_sample <= 1 );
         }
-        REQUIRE( real_integrator.defaulttransform == true);
         REQUIRE( real_integrator.minnevaluate >= 0);
         REQUIRE( real_integrator.minn > 0 );
         REQUIRE( real_integrator.minm > 1 ); // can not calculate variance if minm <= 1
@@ -112,10 +116,9 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
 
     SECTION( "Check Fields", "[Qmc]" ) {
 
-        integrators::Qmc<double,double> real_integrator;
+        integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
         std::ostringstream stream; real_integrator.logger = integrators::Logger(stream);
         real_integrator.randomgenerator = std::mt19937_64( std::random_device{}() );
-        real_integrator.defaulttransform = true;
         real_integrator.minnevaluate = 1;
         real_integrator.minn = 1;
         real_integrator.minm = 2;
@@ -132,7 +135,6 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         real_integrator.generatingvectors = gv;
         real_integrator.verbosity = 0;
 
-        REQUIRE( real_integrator.defaulttransform == true );
         REQUIRE( real_integrator.minnevaluate == 1 );
         REQUIRE( real_integrator.minn == 1 );
         REQUIRE( real_integrator.minm == 2 );
@@ -155,7 +157,7 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
 
     SECTION( "Check get_next_n Function", "[Qmc]" ) {
 
-        integrators::Qmc<double,double> real_integrator;
+        integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
         real_integrator.minn = 1;
         real_integrator.generatingvectors = gv;
 
@@ -180,7 +182,7 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         REQUIRE_THROWS_AS( real_integrator.get_next_n(std::numeric_limits<unsigned long long int>::max()), std::domain_error );
 
         // n larger than the largest finite value representable by the mantissa of float
-        integrators::Qmc<float, float> float_integrator;
+        integrators::Qmc<float, float,3,integrators::transforms::Korobov<3>::type> float_integrator;
         float_integrator.generatingvectors = { { std::numeric_limits<long long int>::max()-1, {1,2,3} } };
         REQUIRE_THROWS_AS( float_integrator.get_next_n(1), std::domain_error );
 
@@ -190,9 +192,8 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
 
 TEST_CASE( "Exceptions", "[Qmc]" ) {
 
-    integrators::Qmc<double,double> real_integrator;
+    integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
     std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
-
 
     SECTION( "Invalid Dimension", "[Qmc]" ) {
 
@@ -244,6 +245,11 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         
     };
 
+    SECTION ( "number_of_integration_variables > M", "[Qmc]")
+    {
+        REQUIRE_THROWS_AS( real_integrator.integrate(too_many_dim_function), std::invalid_argument );
+    };
+
     SECTION( "Set cputhreads to zero (error)")
     {
 
@@ -275,7 +281,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
 TEST_CASE( "Transform Validity", "[Qmc]" ) {
 
-    integrators::Qmc<double,double> real_integrator;
+    integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
     std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
     real_integrator.minn = 10000;
 
@@ -294,12 +300,12 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     integrators::result<double> real_result;
     integrators::result<complex<double>> complex_result;
 
-    integrators::Qmc<double,double> real_integrator;
+    integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
     std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
     real_integrator.minn = 10000;
     real_integrator.verbosity = 3;
 
-    integrators::Qmc<complex<double>,double> complex_integrator;
+    integrators::Qmc<complex<double>,double,3,integrators::transforms::Korobov<3>::type> complex_integrator;
     std::ostringstream complex_stream; real_integrator.logger = integrators::Logger(complex_stream);
     complex_integrator.minn = 10000;
     complex_integrator.verbosity = 3;
@@ -442,7 +448,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
-    SECTION( "Real Function (apply_fit && defaulttransform)" )
+    SECTION( "Real Function (apply_fit && transform)" )
     {
 
         real_result = real_integrator.integrate(constant_function);
@@ -452,10 +458,9 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
-    SECTION( "Real Function (apply_fit && !defaulttransform)" )
+    SECTION( "Real Function (apply_fit && !transform)" )
     {
 
-        real_integrator.defaulttransform = false;
         real_result = real_integrator.integrate(constant_function);
 
         REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
@@ -463,7 +468,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
-    SECTION( "Real Function (!apply_fit && defaulttransform)" )
+    SECTION( "Real Function (!apply_fit && transform)" )
     {
 
         real_integrator.minnevaluate = 0;
@@ -474,11 +479,10 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
-    SECTION( "Real Function (!apply_fit && !defaulttransform)" )
+    SECTION( "Real Function (!apply_fit && !transform)" )
     {
 
         real_integrator.minnevaluate = 0;
-        real_integrator.defaulttransform = false;
         real_result = real_integrator.integrate(constant_function);
 
         REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
@@ -494,7 +498,7 @@ TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" )
 
     integrators::result<double> real_result;
 
-    integrators::Qmc<double,double> real_integrator;
+    integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
     std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
     real_integrator.verbosity = 3;
 
