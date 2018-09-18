@@ -380,6 +380,8 @@ namespace integrators
     {
         if ( func.number_of_integration_variables < 1 )
             throw std::invalid_argument("qmc::evaluate called with func.number_of_integration_variables < 1. Check that your integrand depends on at least one variable of integration.");
+        if ( func.number_of_integration_variables > M )
+            throw std::invalid_argument("qmc::evaluate called with func.number_of_integration_variables > M. Please increase M (maximal number of integration variables).");
         if ( cputhreads < 1 )
             throw std::domain_error("qmc::evaluate called with cputhreads < 1. Please set cputhreads to a positive integer.");
 
@@ -657,6 +659,8 @@ namespace integrators
     {
         if ( func.number_of_integration_variables < 1 )
             throw std::invalid_argument("qmc::integrate called with func.number_of_integration_variables < 1. Check that your integrand depends on at least one variable of integration.");
+        if ( func.number_of_integration_variables > M )
+            throw std::invalid_argument("qmc::integrate called with func.number_of_integration_variables > M. Please increase M (maximal number of integration variables).");
         if ( minm < 2 )
             throw std::domain_error("qmc::integrate called with minm < 2. This algorithm can not be used with less than 2 random shifts. Please increase minm.");
         if ( maxmperpackage < 2 )
