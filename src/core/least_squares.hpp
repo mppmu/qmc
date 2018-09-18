@@ -176,8 +176,8 @@ namespace integrators
                 // store fit parameters
                 std::vector<D> this_fit_parameters;
                 this_fit_parameters.reserve(num_parameters);
-                for (size_t i = 0; i < num_parameters; i++)
-                    this_fit_parameters.push_back( gsl_vector_get(w->x, i) );
+                for (size_t j = 0; j < num_parameters; j++)
+                    this_fit_parameters.push_back( gsl_vector_get(w->x, j) );
                 fit_parameters.push_back( this_fit_parameters );
 
                 // Report output of fit function
