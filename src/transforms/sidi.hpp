@@ -25,10 +25,10 @@ namespace integrators
         struct SidiImpl<I, D, r, typename std::enable_if<(r % 2) != 0 && (r != 0)>::type>
         {
             I f; // original function
-            const U dim;
+            const U number_of_integration_variables;
             const D pi = acos( D(-1) );
 
-            SidiImpl(I f) : f(f), dim(f.dim) {};
+            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -44,7 +44,7 @@ namespace integrators
 
                 const D wgt_prefactor = pi/detail::IPow<D,r>::value(D(2))*fac1/fac2/fac2;
                 const D transform_prefactor = D(1)/detail::IPow<D,U(2)*r-U(1)>::value(D(2))*fac1/fac2/fac2;
-                for(U s = 0; s<dim; s++)
+                for(U s = 0; s<number_of_integration_variables; s++)
                 {
                     wgt *= wgt_prefactor*detail::IPow<D,r>::value(sin(pi*x[s]));
                     x[s] = transform_prefactor*detail::SidiTerm<D,(r-U(1))/U(2),r>::value(x[s],pi);
@@ -61,10 +61,10 @@ namespace integrators
         struct SidiImpl<I, D, r, typename std::enable_if<(r % 2) == 0 && (r != 0)>::type>
         {
             I f; // original function
-            const U dim;
+            const U number_of_integration_variables;
             const D pi = acos( D(-1) );
 
-            SidiImpl(I f) : f(f), dim(f.dim) {};
+            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -80,7 +80,7 @@ namespace integrators
 
                 const D wgt_prefactor = detail::IPow<D,r-U(2)>::value(D(2))*D(r)*fac1*fac1/fac2;
                 const D transform_prefactor = D(r)/D(2)/pi*fac1*fac1/fac2;
-                for(U s = 0; s<dim; s++)
+                for(U s = 0; s<number_of_integration_variables; s++)
                 {
                     wgt *= wgt_prefactor*detail::IPow<D,r>::value(sin(pi*x[s]));
                     x[s] = transform_prefactor*detail::SidiTerm<D,r/U(2)-U(1),r>::value(x[s],pi);
@@ -97,9 +97,9 @@ namespace integrators
         struct SidiImpl<I, D, r, typename std::enable_if<r == 0>::type>
         {
             I f; // original function
-            const U dim;
+            const U number_of_integration_variables;
 
-            SidiImpl(I f) : f(f), dim(f.dim) {};
+            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -113,7 +113,7 @@ namespace integrators
         template<U r0>
         struct Sidi
         {
-            template<typename I, typename D, U maxdim> using type = SidiImpl<I, D, r0>;
+            template<typename I, typename D, U M> using type = SidiImpl<I, D, r0>;
         };
 
     };

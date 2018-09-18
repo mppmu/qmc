@@ -19,9 +19,9 @@ namespace integrators
         struct KorobovImpl
         {
             I f; // original function
-            const U dim;
+            const U number_of_integration_variables;
 
-            KorobovImpl(I f) : f(f), dim(f.dim) {};
+            KorobovImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -30,7 +30,7 @@ namespace integrators
             {
                 D wgt = 1;
                 const D prefactor = (D(r0)+D(r1)+D(1))*detail::Binomial<r0+r1,r0>::value;
-                for(U s = 0; s<dim; s++)
+                for(U s = 0; s<number_of_integration_variables; s++)
                 {
                     wgt *= prefactor*detail::IPow<D,r0>::value(x[s])*detail::IPow<D,r1>::value(D(1)-x[s]);
                     x[s] = detail::IPow<D,r0+1>::value(x[s])*detail::KorobovTerm<D,r1,r0,r1>::value(x[s]);
@@ -44,7 +44,7 @@ namespace integrators
         template<U r0, U r1 = r0>
         struct Korobov
         {
-            template<typename I, typename D, U maxdim> using type = KorobovImpl<I, D, r0, r1>;
+            template<typename I, typename D, U M> using type = KorobovImpl<I, D, r0, r1>;
         };
     };
 };

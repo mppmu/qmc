@@ -33,7 +33,7 @@ namespace integrators
 namespace integrators
 {
     template <
-                 typename T, typename D, U maxdim,
+                 typename T, typename D, U M,
                  template<typename,typename,U> class P = transforms::Korobov<3>::template type,
                  template<typename,typename,U> class F = fitfunctions::None::template type,
                  typename G = std::mt19937_64, typename H = std::uniform_real_distribution<D>
@@ -45,8 +45,8 @@ namespace integrators
 
         H uniform_distribution{0,1};
 
-        void init_z(std::vector<U>& z, const U n, const U dim) const;
-        void init_d(std::vector<D>& d, const U m, const U dim);
+        void init_z(std::vector<U>& z, const U n, const U number_of_integration_variables) const;
+        void init_d(std::vector<D>& d, const U m, const U number_of_integration_variables);
         void init_r(std::vector<T>& r, const U m, const U r_size_over_m) const;
 
         template <typename I> void sample_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  I& func, const int device, D& time_in_ns, U& points_computed) const;
@@ -85,7 +85,7 @@ namespace integrators
 
         template <typename I> result<T> integrate(I& func);
         template <typename I> samples<T,D> evaluate(I& func); // TODO: explicit test cases for this function
-        template <typename I> typename F<I,D,maxdim>::transform_t fit(I& func); // TODO: explicit test cases for this function
+        template <typename I> typename F<I,D,M>::transform_t fit(I& func); // TODO: explicit test cases for this function
         Qmc();
         virtual ~Qmc() {}
     };

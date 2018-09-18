@@ -60,16 +60,16 @@ namespace integrators
             }
         };
 
-        template<typename I, typename D, U maxdim>
+        template<typename I, typename D, U M>
         struct PolySingularTransform
         {
             static const U num_parameters = 4;
 
             I f; // original function
-            const U dim;
-            D p[maxdim][num_parameters]; // fit_parameters
+            const U number_of_integration_variables;
+            D p[M][num_parameters]; // fit_parameters
 
-            PolySingularTransform(const I& f) : f(f), dim(f.dim) {};
+            PolySingularTransform(const I& f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -77,7 +77,7 @@ namespace integrators
             auto operator()(D* x) -> decltype(f(x)) const
             {
                 D wgt = 1;
-                for (U d = 0; d < dim ; ++d)
+                for (U d = 0; d < number_of_integration_variables ; ++d)
                 {
                     D q = D(1)-p[d][1]-p[d][2]-p[d][3];
                     wgt *= p[d][1] + x[d]*(D(2)*p[d][2]+x[d]*D(3)*p[d][3]) + q*p[d][0]*(p[d][0]-D(1))/(p[d][0]-x[d])/(p[d][0]-x[d]);
@@ -88,18 +88,18 @@ namespace integrators
             }
         };
 
-        template<typename I, typename D, U maxdim>
+        template<typename I, typename D, U M>
         struct PolySingularImpl
         {
             using function_t = PolySingularFunction<D>;
             using jacobian_t = PolySingularJacobian<D>; // set to std::nullptr_t to compute numerically
             using hessian_t = PolySingularHessian<D>; // set to std::nullptr_t to compute numerically (also set fitparametersgsl.trs = gsl_multifit_nlinear_trs_lm);
-            using transform_t = PolySingularTransform<I,D,maxdim>;
+            using transform_t = PolySingularTransform<I,D,M>;
         };
         
         struct PolySingular
         {
-            template<typename I, typename D, U maxdim> using type = PolySingularImpl<I, D, maxdim>;
+            template<typename I, typename D, U M> using type = PolySingularImpl<I, D, M>;
         };
         
     };

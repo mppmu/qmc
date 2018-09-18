@@ -16,7 +16,7 @@ namespace integrators
     {
         namespace cuda
         {
-            template <U maxdim, typename I, typename T, typename D, typename Q>
+            template <U M, typename I, typename T, typename D, typename Q>
             void compute(
                          const Q& qmc,
                          const U i, const U work_this_iteration, const U total_work_packages,
@@ -32,7 +32,7 @@ namespace integrators
 
                 if(qmc.verbosity > 2) qmc.logger << "- (" << device << ") launching gpu kernel<<<" << qmc.cudablocks << "," << qmc.cudathreadsperblock << ">>>" << std::endl;
 
-                integrators::core::cuda::compute_kernel<maxdim><<< qmc.cudablocks, qmc.cudathreadsperblock >>>(i, work_this_iteration, total_work_packages,
+                integrators::core::cuda::compute_kernel<M><<< qmc.cudablocks, qmc.cudathreadsperblock >>>(i, work_this_iteration, total_work_packages,
                                                                                                        static_cast<U*>(*d_z),
                                                                                                        static_cast<D*>(*d_d),
                                                                                                        static_cast<T*>(*d_r),
@@ -43,7 +43,7 @@ namespace integrators
 
             };
 
-            template <U maxdim, typename I, typename T, typename D, typename Q>
+            template <U M, typename I, typename T, typename D, typename Q>
             void generate_samples(
                                      const Q& qmc,
                                      const U i_start, const U work_this_iteration,
@@ -59,7 +59,7 @@ namespace integrators
 
                 if(qmc.verbosity > 2) qmc.logger << "- (" << device << ") launching gpu kernel<<<" << qmc.cudablocks << "," << qmc.cudathreadsperblock << ">>>" << std::endl;
 
-                integrators::core::cuda::generate_samples_kernel<maxdim><<< qmc.cudablocks, qmc.cudathreadsperblock >>>(i_start, work_this_iteration,
+                integrators::core::cuda::generate_samples_kernel<M><<< qmc.cudablocks, qmc.cudathreadsperblock >>>(i_start, work_this_iteration,
                                                                                                                 static_cast<U*>(*d_z),
                                                                                                                 static_cast<D*>(*d_d),
                                                                                                                 static_cast<T*>(*d_r),

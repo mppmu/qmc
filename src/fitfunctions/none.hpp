@@ -21,16 +21,16 @@ namespace integrators
             }
         };
 
-        template<typename I, typename D, U maxdim>
+        template<typename I, typename D, U M>
         struct NoneTransform
         {
             static const U num_parameters = 0;
 
             I f; // original function
-            const U dim;
-            D p[maxdim][0]; // fit_parameters
+            const U number_of_integration_variables;
+            D p[M][0]; // fit_parameters
 
-            NoneTransform(const I& f) : f(f), dim(f.dim) {};
+            NoneTransform(const I& f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -41,18 +41,18 @@ namespace integrators
             }
         };
 
-        template<typename I, typename D, U maxdim>
+        template<typename I, typename D, U M>
         struct NoneImpl
         {
             using function_t = NoneFunction<D>;
             using jacobian_t = std::nullptr_t;
             using hessian_t = std::nullptr_t;
-            using transform_t = NoneTransform<I,D,maxdim>;
+            using transform_t = NoneTransform<I,D,M>;
         };
 
         struct None
         {
-            template<typename I, typename D, U maxdim> using type = NoneImpl<I, D, maxdim>;
+            template<typename I, typename D, U M> using type = NoneImpl<I, D, M>;
         };
     };
 };

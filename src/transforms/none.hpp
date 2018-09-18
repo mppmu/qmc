@@ -11,9 +11,9 @@ namespace integrators
         struct NoneImpl
         {
             I f; // original function
-            const U dim;
+            const U number_of_integration_variables;
 
-            NoneImpl(I f) : f(f), dim(f.dim) {};
+            NoneImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -25,7 +25,7 @@ namespace integrators
         };
         struct None
         {
-            template<typename I, typename D, U maxdim> using type = NoneImpl<I, D>;
+            template<typename I, typename D, U M> using type = NoneImpl<I, D>;
         };
     };
 };

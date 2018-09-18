@@ -23,11 +23,11 @@ namespace integrators
                     {
                         D wgt = 1.;
                         D mynull = 0;
-                        std::vector<D> x(func.dim,0);
+                        std::vector<D> x(func.number_of_integration_variables,0);
 
-                        for (U sDim = 0; sDim < func.dim; sDim++)
+                        for (U sDim = 0; sDim < func.number_of_integration_variables; sDim++)
                         {
-                            #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*func.dim+sDim), &mynull)
+                            #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*func.number_of_integration_variables+sDim), &mynull)
 
                             static_assert(std::is_same<decltype(QMC_MODF_CALL),D>::value, "Downcast detected in integrators::core::generic::compute. Please implement \"D modf(D)\".");
                             x[sDim] = QMC_MODF_CALL;
@@ -54,9 +54,9 @@ namespace integrators
                 using std::modf;
 
                 D mynull = 0;
-                std::vector<D> x(func.dim,0);
+                std::vector<D> x(func.number_of_integration_variables,0);
 
-                for (U sDim = 0; sDim < func.dim; sDim++)
+                for (U sDim = 0; sDim < func.number_of_integration_variables; sDim++)
                 {
                     #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D>(i,z.at(sDim),n)/(static_cast<D>(n)) + d.at(sDim), &mynull)
 
