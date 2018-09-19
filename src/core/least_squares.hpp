@@ -175,6 +175,38 @@ namespace integrators
             fdf.n = num_points;
             fdf.p = num_parameters;
             fdf.params = &data;
+            
+            // compute dx/dy of input points, which should be used as an additional weight in the evaluation of chisq
+            std::vector<D> dxdy(x.size());
+            D maxwgt;
+
+            const size_t nsteps = 1; 
+            for (size_t i = 0; i < x.size(); i++)
+            {
+                D dy = (i<nsteps) ? D(0) : -y[i-nsteps];  
+                D dx = (i<nsteps) ? D(0) : -x[i-nsteps];
+                if(i != x.size()-nsteps)
+                {
+                    dy += y[i+nsteps];
+                    dx += x[i+nsteps];
+                }
+                else
+                {
+                    dy += D(1);
+                    dx += D(1);
+                }
+                dxdy[i] = dx/dy;
+                
+                maxwgt=std::max(maxwgt,dxdy[i]);
+            }
+            
+            // the gsl fit doesn't seem to work with weights>1 
+            for(size_t i=0; i< x.size(); i++)
+            {
+                dxdy[i]/=maxwgt;
+            }
+            
+            gsl_vector_view wgt = gsl_vector_view_array(dxdy.data(), dxdy.size());
 
             double chisq,chisq0;
             int status, info;
@@ -204,7 +236,7 @@ namespace integrators
                 gsl_vector_view pv = gsl_vector_view_array(initial_parameters.data(), num_parameters);
 
                 // initialize solver with starting point
-                gsl_multifit_nlinear_init(&pv.vector, &fdf, w);
+                gsl_multifit_nlinear_winit(&pv.vector, &wgt.vector, &fdf, w);
 
                 // compute initial cost function
                 f = gsl_multifit_nlinear_residual(w);
@@ -264,15 +296,20 @@ namespace integrators
 
             }
 
+
             gsl_multifit_nlinear_free(w);
             gsl_matrix_free(covar);
 
             // get index of best fit (minimum chisq)
             const int best_fit_index = std::distance(fit_chisqs.begin(), std::min_element(fit_chisqs.begin(),fit_chisqs.end()));
 
-            if (verbosity > 1)
+            if (verbosity > 0)
             {
-                logger << "choosing fit run " << best_fit_index << std::endl;
+                if (verbosity>2) logger << "choosing fit run " << best_fit_index << std::endl;
+                std::ostringstream final_parameters_stream;
+                for(const auto& elem: fit_parameters.at(best_fit_index))
+                    final_parameters_stream << elem << " ";
+                logger << "fit final_parameters " << final_parameters_stream.str() << std::endl;
                 logger << "-----------" << std::endl;
             }
 
