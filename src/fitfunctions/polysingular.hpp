@@ -11,16 +11,16 @@ namespace integrators
         template <typename D>
         struct PolySingularFunction
         {
-            static const int num_parameters = 4;
-            const std::vector<std::vector<D>> initial_parameters = { {1.1,1.0,0.0,0.0}, {-0.1,1.0,0.0,0.0} };
+            static const int num_parameters = 6;
+            const std::vector<std::vector<D>> initial_parameters = { {1.1,-0.1, 0.1,0.1, 1.0,0.0} };
 
             D operator()(const D x, const double* p) const
             {
-                // constraint: no singularity
-                if (p[0]>=static_cast<D>(0) && p[0]<=static_cast<D>(1))
+                // constraint: no singularity and singular terms have positive coefficients
+                if (p[0]<=static_cast<D>(1.001) or p[0]>=static_cast<D>(1.5) or p[1]>=static_cast<D>(-0.001) or p[1]<=static_cast<D>(-0.5) or p[2]<static_cast<D>(0) or p[3]<static_cast<D>(0))
                     return std::numeric_limits<D>::max();
 
-                D y = x*(p[1]+x*(p[2]+x*p[3])) + (D(1)-p[1]-p[2]-p[3])*(x*(p[0]-D(1)))/(p[0]-x);
+                D y = p[2]*(x*(p[0]-D(1)))/(p[0]-x) + p[3]*(x*(p[1]-D(1)))/(p[1]-x)  + x*(p[4]+x*(p[5]+x*(D(1)-p[2]-p[3]-p[4]-p[5])));
 
                 // constraint: transformed variable within unit hypercube
                 if ( y<static_cast<D>(0) || y>static_cast<D>(1) )
@@ -33,37 +33,43 @@ namespace integrators
         template <typename D>
         struct PolySingularJacobian
         {
-            static const int num_parameters = 4;
+            static const int num_parameters = 6;
 
             D operator()(const D x, const double* p, const size_t parameter) const
             {
+
                 if (parameter == 0) {
-                    return ((D(-1) + x)*x*(D(-1) + p[1] + p[2] + p[3]))/(x - p[0])/(x - p[0]);
+                    return p[2]*((D(1) - x)*x)/(x - p[0])/(x - p[0]);
                 } else if (parameter == 1) {
-                    return x - (x*(D(-1) + p[0]))/(-x + p[0]);
+                    return p[3]*((D(1) - x)*x)/(x - p[1])/(x - p[1]);
                 } else if (parameter == 2) {
-                    return x*x - (x*(D(-1) + p[0]))/(-x + p[0]);
+                    return (x*(p[0]-D(1)))/(p[0]-x) -x*x*x;
                 } else if (parameter == 3) {
-                    return x*x*x - (x*(D(-1) + p[0]))/(-x + p[0]);
+                    return (x*(p[1]-D(1)))/(p[1]-x) -x*x*x;
+                } else if (parameter == 4) {
+                    return  x*(D(1)-x*x);
+                } else if (parameter == 5) {
+                    return  x*x*(D(1)-x);
                 } else {
                     throw std::domain_error("fit_function_jacobian called with invalid parameter: " + std::to_string(parameter));
                 }
             }
         };
-
         template <typename D>
         struct PolySingularHessian
         {
             D operator()(const D x, const double* v, const double* p) const
             {
-                return (D(2)*v[0]*(D(-1)+x)*x*((v[1] + v[2]+ v[3])*(x - p[0]) + v[0]*(D(-1) + p[1] + p[2] + p[3])))/(x - p[0])/(x - p[0])/(x - p[0]);
+						    D xmp0 = x-p[0];
+						    D xmp1 = x-p[1];
+                return x*(D(1)-x)*D(2)* ( v[0]*(p[2]*v[0]+(x - p[0])*v[2])/xmp0/xmp0/xmp0  + v[1]*(p[3]*v[1]+(x - p[1])*v[3])/xmp1/xmp1/xmp1 );
             }
         };
 
         template<typename I, typename D, U M>
         struct PolySingularTransform
         {
-            static const U num_parameters = 4;
+            static const U num_parameters = 6;
 
             I f; // original function
             const U number_of_integration_variables;
@@ -79,9 +85,8 @@ namespace integrators
                 D wgt = 1;
                 for (U d = 0; d < number_of_integration_variables ; ++d)
                 {
-                    D q = D(1)-p[d][1]-p[d][2]-p[d][3];
-                    wgt *= p[d][1] + x[d]*(D(2)*p[d][2]+x[d]*D(3)*p[d][3]) + q*p[d][0]*(p[d][0]-D(1))/(p[d][0]-x[d])/(p[d][0]-x[d]);
-                    x[d] = x[d]*(p[d][1]+x[d]*(p[d][2]+x[d]*p[d][3])) + q*x[d]*(p[d][0]-D(1))/(p[d][0]-x[d]);
+                    wgt *= p[d][2]*p[d][0]*(p[d][0]-D(1))/(p[d][0]-x[d])/(p[d][0]-x[d]) + p[d][3]*p[d][1]*(p[d][1]-D(1))/(p[d][1]-x[d])/(p[d][1]-x[d]) + p[d][4] + x[d]*(D(2)*p[d][5]+x[d]*D(3)*(D(1)-p[d][2]-p[d][3]-p[d][4]-p[d][5]));
+                    x[d] = p[d][2]*(x[d]*(p[d][0]-D(1)))/(p[d][0]-x[d]) + p[d][3]*(x[d]*(p[d][1]-D(1)))/(p[d][1]-x[d])  + x[d]*(p[d][4]+x[d]*(p[d][5]+x[d]*(D(1)-p[d][2]-p[d][3]-p[d][4]-p[d][5])));
                     if ( x[d] > D(1) || x[d] < D(0) ) return D(0);
                 }
                 return wgt * f(x);
