@@ -86,7 +86,6 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
             REQUIRE( random_sample >= 0 );
             REQUIRE( random_sample <= 1 );
         }
-        REQUIRE( real_integrator.minnevaluate >= 0);
         REQUIRE( real_integrator.minn > 0 );
         REQUIRE( real_integrator.minm > 1 ); // can not calculate variance if minm <= 1
         REQUIRE( real_integrator.epsrel >= 0 );
@@ -101,7 +100,7 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
         REQUIRE( real_integrator.devices.size() > 0 );
         REQUIRE( real_integrator.generatingvectors.size() > 0 );
         REQUIRE( real_integrator.verbosity >= 0 );
-
+        REQUIRE( real_integrator.fitminn >= 0);
         REQUIRE( real_integrator.fitstepsize > 0);
         REQUIRE( real_integrator.fitmaxiter > 0);
         REQUIRE( real_integrator.fitxtol >= 0);
@@ -126,7 +125,6 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
         std::ostringstream stream; real_integrator.logger = integrators::Logger(stream);
         real_integrator.randomgenerator = std::mt19937_64( std::random_device{}() );
-        real_integrator.minnevaluate = 1;
         real_integrator.minn = 1;
         real_integrator.minm = 2;
         real_integrator.epsrel = 1.;
@@ -141,13 +139,13 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         real_integrator.devices = {1};
         real_integrator.generatingvectors = gv;
         real_integrator.verbosity = 0;
+        real_integrator.fitminn = 1;
         real_integrator.fitstepsize = 1;
         real_integrator.fitmaxiter =1;
         real_integrator.fitxtol = 2.;
         real_integrator.fitgtol = 2.;
         real_integrator.fitftol = 2.;
 
-        REQUIRE( real_integrator.minnevaluate == 1 );
         REQUIRE( real_integrator.minn == 1 );
         REQUIRE( real_integrator.minm == 2 );
         REQUIRE( real_integrator.epsrel == Approx(1.) );
@@ -164,6 +162,7 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         REQUIRE( real_integrator.generatingvectors[2] == v2 );
         REQUIRE( real_integrator.generatingvectors[3] == v3 );
         REQUIRE( real_integrator.verbosity == 0  );
+        REQUIRE( real_integrator.fitminn == 1 );
         REQUIRE( real_integrator.fitstepsize == 1 );
         REQUIRE( real_integrator.fitmaxiter == 1 );
         REQUIRE( real_integrator.fitxtol == Approx(2.) );
@@ -279,7 +278,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
     SECTION( "Device set to GPU but CUDA Disabled in sample function", "[Qmc]") {
 
         real_integrator.devices = {1}; // gpu
-        real_integrator.minnevaluate = 0; // disable fitting
+        real_integrator.fitminn = 0; // disable fitting
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function), std::invalid_argument);
 
     }
@@ -366,7 +365,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         real_integrator.generatingvectors = gv;
 
-        real_integrator.minnevaluate = 0; // no fitting because there are too few points
+        real_integrator.fitminn = 0; // no fitting because there are too few points
         real_integrator.minn = 1;
         real_integrator.cputhreads = 5;
 
@@ -425,7 +424,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         gv[3] = v1;
         complex_integrator.generatingvectors = gv;
 
-        complex_integrator.minnevaluate = 0; // no fitting because there are too few points
+        complex_integrator.fitminn = 0; // no fitting because there are too few points
         complex_integrator.minn = 1;
         complex_integrator.cputhreads = 5;
 
@@ -488,7 +487,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     SECTION( "Real Function (!apply_fit && transform)" )
     {
 
-        real_integrator.minnevaluate = 0;
+        real_integrator.fitminn = 0;
         real_result = real_integrator.integrate(constant_function);
 
         REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
@@ -499,7 +498,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     SECTION( "Real Function (!apply_fit && !transform)" )
     {
 
-        real_integrator.minnevaluate = 0;
+        real_integrator.fitminn = 0;
         real_result = real_integrator.integrate(constant_function);
 
         REQUIRE( real_result.integral == Approx(1.).epsilon(eps) );
@@ -525,7 +524,7 @@ TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" )
         std::map<unsigned long long int,std::vector<unsigned long long int>> gv;
         gv[1021] = {1,374,421};
 
-        real_integrator.minnevaluate = 0;
+        real_integrator.fitminn = 0;
         real_integrator.generatingvectors = gv;
         real_integrator.epsrel = 1e-10;
         real_integrator.epsabs = 1e-10;
@@ -546,7 +545,7 @@ TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" )
         gv[2147483647] = {1,367499618,943314825}; // too big to use due to maxeval
 
         real_integrator.minn = 1;
-        real_integrator.minnevaluate = 0;
+        real_integrator.fitminn = 0;
         real_integrator.generatingvectors = gv;
         real_integrator.epsrel = 1e-10;
         real_integrator.epsabs = 1e-10;

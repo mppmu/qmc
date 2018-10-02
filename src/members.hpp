@@ -388,7 +388,7 @@ namespace integrators
         // allocate memory
         samples<T,D> res;
         U& n = res.n;
-        n = get_next_n(minnevaluate); // get next available n >= minnevaluate
+        n = get_next_n(fitminn); // get next available n >= fitminn
         std::vector<U>& z = res.z;
         std::vector<D>& d = res.d;
         std::vector<T>& r = res.r;
@@ -404,7 +404,7 @@ namespace integrators
         {
             logger << "-- qmc::evaluate called --" << std::endl;
             logger << "func.number_of_integration_variables " << func.number_of_integration_variables << std::endl;
-            logger << "minnevaluate " << minnevaluate << std::endl;
+            logger << "fitminn " << fitminn << std::endl;
             logger << "cputhreads " << cputhreads << std::endl;
             logger << "cudablocks " << cudablocks << std::endl;
             logger << "cudathreadsperblock " << cudathreadsperblock << std::endl;
@@ -721,7 +721,7 @@ namespace integrators
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     Qmc<T,D,M,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), minnevaluate(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-4), fitftol(1e-8), fitparametersgsl({})
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), fitminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-4), fitftol(1e-8), fitparametersgsl({})
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

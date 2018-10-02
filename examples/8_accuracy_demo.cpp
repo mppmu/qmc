@@ -74,7 +74,7 @@ int main() {
     integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator_fit;
     integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator_nofit;
 
-    integrator_nofit.minnevaluate = 0;
+    integrator_nofit.fitminn = 0;
     integrator_nofit.minn = 8191;
 
     std::cout << "-- Function 1 --" << std::endl;

@@ -32,13 +32,13 @@ int main() {
     // Relevant settings set to their default value
     integrator.logger = std::cout;
     integrator.randomgenerator = std::mt19937_64();
-    integrator.minnevaluate = 100000;
     integrator.cputhreads = std::thread::hardware_concurrency();
     integrator.cudablocks = 1024;
     integrator.cudathreadsperblock = 256;
     integrator.devices = {-1}; // devices = cpu (Note: default is actually all devices {-1,0,1,...} detected on construction)
     integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100();
     integrator.verbosity = 0;
+    integrator.fitminn = 100000;
 
     integrators::samples<D,D> samples = integrator.evaluate(my_functor);
 

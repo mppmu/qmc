@@ -59,7 +59,6 @@ namespace integrators
 
         Logger logger;
         G randomgenerator;
-        U minnevaluate;
         U minn;
         U minm;
         D epsrel;
@@ -75,6 +74,7 @@ namespace integrators
         std::map<U,std::vector<U>> generatingvectors;
         U verbosity;
 
+        U fitminn;
         U fitstepsize;
         int fitmaxiter;
         double fitxtol;

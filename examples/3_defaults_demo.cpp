@@ -31,7 +31,6 @@ int main() {
     // All settings set to their default value
     integrator.logger = std::cout;
     integrator.randomgenerator = std::mt19937_64();
-    integrator.minnevaluate = 100000;
     integrator.minn = 8191;
     integrator.minm = 32;
     integrator.epsrel = 0.01;
@@ -46,6 +45,13 @@ int main() {
     integrator.devices = {-1}; // devices = cpu (Note: default is actually all devices {-1,0,1,...} detected on construction)
     integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100();
     integrator.verbosity = 0;
+    integrator.fitminn = 100000;
+    integrator.fitstepsize = 10;
+    integrator.fitmaxiter = 40;
+    integrator.fitxtol = 3e-3;
+    integrator.fitgtol = 1e-4;
+    integrator.fitftol = 1e-8;
+//    integrator.fitparametersgsl = {}; // Default constructed
 
     integrators::result<D> result = integrator.integrate(my_functor);
 
