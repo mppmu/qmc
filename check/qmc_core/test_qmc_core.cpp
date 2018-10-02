@@ -102,6 +102,13 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
         REQUIRE( real_integrator.generatingvectors.size() > 0 );
         REQUIRE( real_integrator.verbosity >= 0 );
 
+        REQUIRE( real_integrator.fitstepsize > 0);
+        REQUIRE( real_integrator.fitmaxiter > 0);
+        REQUIRE( real_integrator.fitxtol >= 0);
+        REQUIRE( real_integrator.fitgtol >= 0);
+        REQUIRE( real_integrator.fitftol >= 0);
+//        REQUIRE( fitparametersgsl == ???); // Not checked
+
     };
 
 };
@@ -134,6 +141,11 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         real_integrator.devices = {1};
         real_integrator.generatingvectors = gv;
         real_integrator.verbosity = 0;
+        real_integrator.fitstepsize = 1;
+        real_integrator.fitmaxiter =1;
+        real_integrator.fitxtol = 2.;
+        real_integrator.fitgtol = 2.;
+        real_integrator.fitftol = 2.;
 
         REQUIRE( real_integrator.minnevaluate == 1 );
         REQUIRE( real_integrator.minn == 1 );
@@ -152,6 +164,11 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         REQUIRE( real_integrator.generatingvectors[2] == v2 );
         REQUIRE( real_integrator.generatingvectors[3] == v3 );
         REQUIRE( real_integrator.verbosity == 0  );
+        REQUIRE( real_integrator.fitstepsize == 1 );
+        REQUIRE( real_integrator.fitmaxiter == 1 );
+        REQUIRE( real_integrator.fitxtol == Approx(2.) );
+        REQUIRE( real_integrator.fitgtol == Approx(2.) );
+        REQUIRE( real_integrator.fitftol == Approx(2.) );
 
     };
 
