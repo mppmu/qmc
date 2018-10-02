@@ -2,9 +2,7 @@
 
 A Quasi-Monte-Carlo integrator library with Nvidia CUDA support.
 
-The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++11 threading library and multiple CUDA compatible accelerators are supported.
-
-Kahan summation is used to reduce the numerical error due to adding many finite precision floating point numbers. - TODO (remove?)
+The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++11 threading library and multiple CUDA compatible accelerators are supported. A variance reduction procedure based on fitting a smooth function to the inverse cumulative distribution function of the integrand dimension-by-dimension is also implemented.
 
 ## Installation (standalone)
 
@@ -14,7 +12,7 @@ Prerequisites:
 * A C++11 compatible C++ compiler.
 * (Optional GPU support)  A CUDA compatible compiler (typically `nvcc` or `clang`).
 
-The qmc library is header only. Simply put the file somewhere reachable from your project or directly into your project tree itself then `#include "qmc.hpp"` in your project.
+The qmc library is header only. Simply put the single header file somewhere reachable from your project or directly into your project tree itself then `#include "qmc.hpp"` in your project.
 
 ## Installation (with [pysecdec](https://github.com/mppmu/secdec))
 
@@ -28,7 +26,7 @@ Example: Integrate x0*x1*x2 over the unit hypercube
 #include "qmc.hpp"
 
 struct my_functor_t {
-  const unsigned long long int dim = 3;
+  const unsigned long long int number_of_integration_variables = 3;
 #ifdef __CUDACC__
   __host__ __device__
 #endif
@@ -40,7 +38,9 @@ struct my_functor_t {
 
 int main() {
 
-  integrators::Qmc<double,double> integrator;
+  const unsigned int MAXVAR = 3; // Maximum number of integration variables of integrand
+
+  integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
   integrators::result<double> result = integrator.integrate(my_functor);
   std::cout << "integral = " << result.integral << std::endl;
   std::cout << "error    = " << result.error    << std::endl;
@@ -51,12 +51,12 @@ int main() {
 
 Compile without GPU support:
 ```shell
-$ c++ -std=c++11 -pthread -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out
+$ c++ -std=c++11 -pthread -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
 ```
 
 Compute with GPU support:
 ```shell
-$ nvcc -std=c++11 -x cu -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out
+$ nvcc -std=c++11 -x cu -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
 ```
 
 Output:
@@ -79,10 +79,12 @@ TODO:
 
 ## API Documentation
 
-The Qmc class has 4 template parameters:
-* `T` the return type of the  function to be integrated 
+The Qmc class has 7 template parameters:
+* `T` the return type of the  function to be integrated (assumed to be a floating point type)
 * `D` the argument type of the function to be integrated (assumed to be a floating point type) 
-* `U` an unsigned int type (default: `unsigned long long int`)
+* `M` the maximum number of integration variables of any integrand that will be passed to the integrator
+* `P` an integral transform to be applied to the integrand before integration
+* `F` a function to be fitted to the inverse cumulative distribution function of the integrand in each dimension, used to reduce the variance of the integrand
 * `G` a C++11 style pseudo-random number engine (default: `std::mt19937_64`)
 * `H` a C++11 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
 
@@ -227,9 +229,53 @@ Default: `0`.
 
 ---
 
-### Public Member Functions
+`U fitminn`
+
+The minimum lattice size that should be used for fitting the inverse cumulative distribution function of the integrand. If a lattice of the requested size is not available then `n` will be the size of the next available lattice with at least `fitminn` points. 
+
+Default: `100000`.
 
 ---
+
+`int fitmaxiter`
+
+See `maxiter` in the nonlinear least-squares fitting GSL documentation.
+
+Default: `40`.
+
+---
+
+`double fitxtol`
+
+See `xtol` in the nonlinear least-squares fitting GSL documentation.
+
+Default: `3e-3`.
+
+---
+
+`double fitgtol`
+
+See `gtol`  in the nonlinear least-squares fitting GSL documentation.
+
+Default: `1e-4`.
+
+---
+
+`double fitftol`
+
+See `ftol`  in the nonlinear least-squares fitting GSL documentation.
+
+Default: `1e-8`.
+
+---
+
+`gsl_multifit_nlinear_parameters fitparametersgsl`
+
+See `gsl_multifit_nlinear_parameters` nonlinear least-squares fitting GSL documentation.
+
+Default: `{}`.
+
+### Public Member Functions
 
 `U get_next_n(U preferred_n)`
 
@@ -240,14 +286,33 @@ Returns the lattice size `n` of the lattice in `generatingvectors` that is great
 `template <typename I> result<T,U> integrate(I& func)`
 
 Integrates the functor `func`. The result is returned in a `result` struct with the following members:
-* `integral` - the result of the integral
-* `error` - the estimated absolute error of the result
-* `n` - the size of the largest lattice used during integration
-* `m` - the number of shifts of the largest lattice used during integration
+* `T integral` - the result of the integral
+* `T error` - the estimated absolute error of the result
+* `U n` - the size of the largest lattice used during integration
+* `U m` - the number of shifts of the largest lattice used during integration
 
-The functor `func` must define its dimension as a public member variable `dim`.
+The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
 
 ---
+
+`template <typename I> samples<T,D> evaluate(I& func)`
+
+Evaluates the functor `func` on a lattice of size greater than or equal to `fitminn`.  The samples are returned in a `samples` struct with the following members:
+*`std::vector<U> z` - the generating vector of the lattice used to produce the samples
+*`std::vector<D> d` - the random shift vector used to produce the samples
+*`std::vector<T> r` - the values of the integrand at each randomly shifted lattice point
+*`U n` - the size of the lattice used to produce the samples
+*`D get_x(const U sample_index, const U integration_variable_index)` - a function which returns the argument (specified by `integration_variable_index`) used to evaluate the integrand for a specific sample (specified by `sample_index`).
+
+The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
+
+---
+
+`template <typename I> typename F<I,D,M>::transform_t fit(I& func)`
+
+Fits a function (specified by the type `F` of the integrator) to the inverse cumulative distribution function of the integrand dimension-by-dimension and returns a functor representing the new integrand after this variance reduction procedure.
+
+The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
 
 ### Generating Vectors
 
@@ -261,7 +326,7 @@ The following generating vectors are distributed with the qmc:
 
 The generating vectors used by the qmc can be selected by setting the integrator's `generatingvectors` member variable. Example (assuming an integrator instance named `integrator`):
 ```cpp
-integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn2_6<unsigned long long>();
+integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn2_6();
 ```
 ### Integral Transforms
 
@@ -269,15 +334,32 @@ The following integral transforms are distributed with the qmc:
 
 | Name | Description |
 | --- | --- |
+| Korobov<r_0,r_1> | A polynomial integral transform with weight ∝ x^r_0 * (1-x)^r_1   |
 | Korobov<r> | A polynomial integral transform with weight ∝ x^r * (1-x)^r   |
 | Sidi<r> | A trigonometric integral transform with weight ∝ sin^r(pi*x) | 
 | Baker | The baker's transformation, phi(x) = 1 - abs(2x-1)  |
+| None | The trivial transform, phi(x) = x  |
 
-The integral transform used by the qmc can be selected by passing the desired integral transform to the integrate function. Example (assuming a real type integrator instance named `integrator`):
+The integral transform used by the qmc can be selected when constructing the qmc.
+Example (assuming a real type integrator instance named `integrator`):
 ```cpp
-integrators::transforms::Baker<double,unsigned long long int> transform;
-integrators::result<double> result = integrator.integrate(my_functor, 3, transform);
+integrators::Qmc<double,double,10,integrators::transforms::Korobov<5,3>::type> integrator
 ```
+instantiates an integrator which applies a weight `(5,3)` Korobov transform to the integrand before integration.
+
+### Fit Functions
+
+| Name | Description |
+| --- | --- |
+| PolySingular | A 3rd order polynomial with two additional `1/(p-x)` terms, `f(x) = p_2*(x*(p_0-1))/(p_0-x) + p_3*(x*(p_1-1))/(p_1-x)  + x*(p_4+x*(p_5+x*(1-p_2-p_3-p_4-p_5)))` |
+| PolySingularOneSided | A 3rd order polynomial with one additional `1/(p-x)` terms, `f(x) = x*(p_1+x*(p_2+x*p_3)) + (1-p_1-p_2-p_3)*(x*(p_0-1))/(p_0-x)` |
+
+The fit function used by the qmc can be selected when constructing the qmc. These functions are used to approximate the inverse cumulative distribution function of the integrand dimension-by-dimension.
+Example (assuming a real type integrator instance named `integrator`):
+```cpp
+integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator
+```
+instantiates an integrator which reduces the variance of the integrand by fitting a `PolySingular` type function before integration.
 
 ## FAQ
 
@@ -297,7 +379,7 @@ Set `randomgenerator` to a pseudo-random number engine with the seed you want.
 For total reproducability you probably also want to set `cputhreads = 1`  and `devices = {-1}` which disables multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
 For example:
 ```cpp
-integrators::Qmc<double,double> integrator;
+integrators::Qmc<double,double,10> integrator;
 integrator.randomgenerator.seed(1) // seed = 1
 integrator.cputhreads = 1; // no multi-threading
 integrator.devices = {-1}; // cpu only
@@ -318,25 +400,23 @@ The following standard library functions must be compatible with your type or a 
 If you wish to use certain integal transforms, such as `Korobov` or `Sidi` then your type will also have to support being assigned to a `constexpr` (which is used internally to generate the transforms).
 If your type is not intended to represent a real or complex type number then you may also need to overload functions required for calculating the error resulting from the numerical integration, see the files `src/overloads/real.hpp` and `src/overloads/complex.hpp`. Example `9_boost_minimal_demo` demonstrates how to instantiate the qmc with a non-standard type (`boost::multiprecision::cpp_bin_float_quad`), to compile this example you will need the `boost` library available on your system.
 
-**I do not like your generating vectors and/or 100 dimensions and/or 2147483647 lattice points is not enough for me, can I still use your code?**
+**I do not like your generating vectors and/or 100 dimensions and/or 15173222401 lattice points is not enough for me, can I still use your code?**
 
-Yes, but you need to supply your own generating vectors. Compute them using another tool then put them in a map and set `generatingvectors`. For example
+Yes, but you need to supply your own generating vectors. Compute them using another tool then put them into a map and set `generatingvectors`. For example
 ```cpp
 std::map<unsigned long long int,std::vector<unsigned long long int>> my_generating_vectors = { {7, {1,3}}, {11, {1,7}} };
-integrators::Qmc<double,double> integrator;
+integrators::Qmc<double,double,10> integrator;
 integrator.generatingvectors = my_generating_vectors;
 ```
 If you think your generating vectors will be widely useful for other people then please let us know! With your permission we may include them in the code by default.
 
 **Do you apply an integral transform to make my integrand periodic on [0,1], can I use another one?**
 
-By default we use the polynomial transform of Korobov, `\int_{[0,1]^d} f(\vec{x}) \mathrm{d} \vec{x} = \int_{[0,1]^d} F(\vec{t}) \mathrm{d} \vec{t}` with `F(\vec{t}) := f(\psi(\vec{t})) w_d(\vec{t})` where `w_d(\vec{t}) = \Prod_{j=1}^d w(t_j)`. Specifically we use the `r=3` transform which sets `w(t)=140 t^3 (1-t)^3` and `\psi(t) = 35t^4 -84t^5+70t^6-20t^7` for each variable. If you prefer another integral transform then you can pass another transform to the `integrate` function. For example:
+By default we use the polynomial transform of Korobov, `\int_{[0,1]^d} f(\vec{x}) \mathrm{d} \vec{x} = \int_{[0,1]^d} F(\vec{t}) \mathrm{d} \vec{t}` with `F(\vec{t}) := f(\psi(\vec{t})) w_d(\vec{t})` where `w_d(\vec{t}) = \Prod_{j=1}^d w(t_j)`. Specifically we use the `r=3` transform which sets `w(t)=140 t^3 (1-t)^3` and `\psi(t) = 35t^4 -84t^5+70t^6-20t^7` for each variable. If you prefer another integral transform then you can instantiate the integration with another transform. For example:
 ```cpp
-integrators::transforms::Baker<double,unsigned long long int> transform;
-integrators::Qmc<double,double> integrator;
-integrators::result<double> result = integrator.integrate(my_functor, 3, transform);
+integrators::Qmc<double,double,3,integrators::transforms::Baker::type> integrator;
+integrators::result<double> result = integrator.integrate(my_functor);
 ```
-See also example `4_transform_demo`. 
 
 See also the existing transforms in `src/transforms`.
 
