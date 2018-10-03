@@ -69,7 +69,7 @@ namespace integrators
             const U dim;
             D p[maxdim][num_parameters]; // fit_parameters
 
-            PolySingularOneSidedTransform(const I& f) : f(f), dim(f.dim) {};
+            PolySingularOneSidedTransform(const I& f) : f(f), dim(f.dim) {}
 
 #ifdef __CUDACC__
             __host__ __device__

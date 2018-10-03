@@ -21,7 +21,7 @@ namespace integrators
             I f; // original function
             const U number_of_integration_variables;
 
-            KorobovImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
+            KorobovImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {}
 
 #ifdef __CUDACC__
             __host__ __device__

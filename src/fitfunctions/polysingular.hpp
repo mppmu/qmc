@@ -75,7 +75,7 @@ namespace integrators
             const U number_of_integration_variables;
             D p[M][num_parameters]; // fit_parameters
 
-            PolySingularTransform(const I& f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
+            PolySingularTransform(const I& f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {}
 
 #ifdef __CUDACC__
             __host__ __device__

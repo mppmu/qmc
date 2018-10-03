@@ -28,7 +28,7 @@ namespace integrators
             const U number_of_integration_variables;
             const D pi = acos( D(-1) );
 
-            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
+            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {}
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -64,7 +64,7 @@ namespace integrators
             const U number_of_integration_variables;
             const D pi = acos( D(-1) );
 
-            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
+            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {}
 
 #ifdef __CUDACC__
             __host__ __device__
@@ -99,7 +99,7 @@ namespace integrators
             I f; // original function
             const U number_of_integration_variables;
 
-            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {};
+            SidiImpl(I f) : f(f), number_of_integration_variables(f.number_of_integration_variables) {}
 
 #ifdef __CUDACC__
             __host__ __device__

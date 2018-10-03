@@ -75,8 +75,8 @@ namespace integrators
         U verbosity;
 
         U fitminn;
-        U fitstepsize;
-        int fitmaxiter;
+        size_t fitstepsize;
+        size_t fitmaxiter;
         double fitxtol;
         double fitgtol;
         double fitftol;

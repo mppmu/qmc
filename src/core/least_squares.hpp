@@ -10,6 +10,7 @@
 #include <iostream> // std::endl
 #include <iomanip> //  std::setw, std::setfill
 #include <vector> // std::vector
+#include <iterator> // std::distance
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
@@ -85,7 +86,7 @@ namespace integrators
 
         inline void callback(const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w)
         {
-            const U& verbosity = reinterpret_cast<callback_params_t*>(params)->verbosity;
+//            const U& verbosity = reinterpret_cast<callback_params_t*>(params)->verbosity;
             Logger& logger = reinterpret_cast<callback_params_t*>(params)->logger;
 
             gsl_vector *f = gsl_multifit_nlinear_residual(w);
@@ -150,7 +151,7 @@ namespace integrators
         }
 
         template <typename D, typename F1, typename F2, typename F3>
-        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const int maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
+        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const size_t maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
         {
             const size_t num_points = x.size();
             const size_t num_parameters = fit_function.num_parameters;
@@ -178,7 +179,7 @@ namespace integrators
             
             // compute dx/dy of input points, which should be used as an additional weight in the evaluation of chisq
             std::vector<D> dxdy(x.size());
-            D maxwgt;
+            D maxwgt = 0.;
 
             const size_t nsteps = 1; 
             for (size_t i = 0; i < x.size(); i++)
@@ -217,7 +218,7 @@ namespace integrators
             std::vector<std::vector<D>> fit_parameters;
             std::vector<double> fit_chisqs;
             fit_chisqs.reserve(fit_function.initial_parameters.size());
-            for (int i = 0; i < fit_function.initial_parameters.size(); i++)
+            for (size_t i = 0; i < fit_function.initial_parameters.size(); i++)
             {
                 std::vector<double> initial_parameters(fit_function.initial_parameters.at(i).begin(),fit_function.initial_parameters.at(i).end()); // note: cast to double
 
@@ -286,8 +287,8 @@ namespace integrators
                     logger << "initial |f(x)| = "      << sqrt(chisq0) << std::endl;;
                     logger << "final   |f(x)| = "      << sqrt(chisq) << std::endl;
                     logger << "chisq/dof = "           << chisq/dof << std::endl;
-                    for (size_t i = 0; i < num_parameters; i++)
-                        logger << "fit_parameters[" << i << "] = " << this_fit_parameters.at(i) << " +/- " << c*sqrt(gsl_matrix_get(covar,i,i)*chisq/dof) << std::endl;
+                    for (size_t j = 0; j < num_parameters; j++)
+                        logger << "fit_parameters[" << j << "] = " << this_fit_parameters.at(j) << " +/- " << c*sqrt(gsl_matrix_get(covar,j,j)*chisq/dof) << std::endl;
                     logger << "status = "              << gsl_strerror(status) << std::endl;
                     logger << "-----------" << std::endl;
                 }
@@ -301,7 +302,7 @@ namespace integrators
             gsl_matrix_free(covar);
 
             // get index of best fit (minimum chisq)
-            const int best_fit_index = std::distance(fit_chisqs.begin(), std::min_element(fit_chisqs.begin(),fit_chisqs.end()));
+            const long best_fit_index = std::distance(fit_chisqs.begin(), std::min_element(fit_chisqs.begin(),fit_chisqs.end()));
 
             if (verbosity > 0)
             {
