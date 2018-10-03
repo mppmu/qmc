@@ -32,6 +32,7 @@ namespace integrators
                 QMC_CORE_CUDA_SAFE_CALL(cudaSetDevice(device));
                 if (verbosity > 1) logger << "- (" << device << ") device set" << std::endl;
 
+                if(verbosity > 1) logger << "- (" << device << ") allocating d_func,d_z,d_d,d_r" << std::endl;
                 d_func.reset( new integrators::core::cuda::detail::cuda_memory<I>(1) );
                 d_z.reset( new integrators::core::cuda::detail::cuda_memory<U>(z.size()) );
                 d_d.reset( new integrators::core::cuda::detail::cuda_memory<D>(d.size()) );
@@ -39,19 +40,22 @@ namespace integrators
                 if(verbosity > 1) logger << "- (" << device << ") allocated d_func,d_z,d_d,d_r" << std::endl;
 
                 // copy func (initialize on new active device)
+                if(verbosity > 1) logger << "- (" << device << ") initializing function on active device" << std::endl;
                 I func_copy = func;
+                if(verbosity > 1) logger << "- (" << device << ") initialized function on active device" << std::endl;
 
+                if(verbosity > 1) logger << "- (" << device << ") copying d_func to device memory" << std::endl;
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<I>::type*>(*d_func), &func_copy, sizeof(I), cudaMemcpyHostToDevice));
                 if(verbosity > 1) logger << "- (" << device << ") copied d_func to device memory" << std::endl;
 
                 // Copy z,d,r,func to device
+                if(verbosity > 1) logger << "- (" << device << ") copying z,d,r to device memory" << std::endl;
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<U*>(*d_z), z.data(), z.size() * sizeof(U), cudaMemcpyHostToDevice));
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<D*>(*d_d), d.data(), d.size() * sizeof(D), cudaMemcpyHostToDevice));
                 for (U k = 0; k < m; k++)
                 {
                     QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(&(static_cast<T*>(*d_r)[k*d_r_size_over_m]), &r_element[k*r_size_over_m], d_r_size_over_m * sizeof(T), cudaMemcpyHostToDevice));
                 }
-
                 if(verbosity > 1) logger << "- (" << device << ") copied z,d,r to device memory" << std::endl;
 
                 //        QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // TODO - investigate if this helps
@@ -72,6 +76,7 @@ namespace integrators
                 QMC_CORE_CUDA_SAFE_CALL(cudaSetDevice(device));
                 if (verbosity > 1) logger << "- (" << device << ") device set" << std::endl;
 
+                if(verbosity > 1) logger << "- (" << device << ") allocating d_func,d_z,d_d,d_r" << std::endl;
                 d_func.reset( new integrators::core::cuda::detail::cuda_memory<I>(1) );
                 d_z.reset( new integrators::core::cuda::detail::cuda_memory<U>(z.size()) );
                 d_d.reset( new integrators::core::cuda::detail::cuda_memory<D>(d.size()) );
@@ -79,15 +84,18 @@ namespace integrators
                 if(verbosity > 1) logger << "- (" << device << ") allocated d_func,d_z,d_d,d_r" << std::endl;
 
                 // copy func (initialize on new active device)
+                if(verbosity > 1) logger << "- (" << device << ") initializing function on active device" << std::endl;
                 I func_copy = func;
+                if(verbosity > 1) logger << "- (" << device << ") initialized function on active device" << std::endl;
 
+                if(verbosity > 1) logger << "- (" << device << ") copying d_func to device memory" << std::endl;
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<typename std::remove_const<I>::type*>(*d_func), &func_copy, sizeof(I), cudaMemcpyHostToDevice));
                 if(verbosity > 1) logger << "- (" << device << ") copied d_func to device memory" << std::endl;
 
                 // Copy z,d,func to device
+                if(verbosity > 1) logger << "- (" << device << ") copying z,d,r to device memory" << std::endl;
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<U*>(*d_z), z.data(), z.size() * sizeof(U), cudaMemcpyHostToDevice));
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<D*>(*d_d), d.data(), d.size() * sizeof(D), cudaMemcpyHostToDevice));
-
                 if(verbosity > 1) logger << "- (" << device << ") copied z,d to device memory" << std::endl;
 
                 //        QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // TODO - investigate if this helps
