@@ -74,7 +74,8 @@ namespace integrators
         std::map<U,std::vector<U>> generatingvectors;
         U verbosity;
 
-        U fitminn;
+        U evaluateminn;
+
         size_t fitstepsize;
         size_t fitmaxiter;
         double fitxtol;

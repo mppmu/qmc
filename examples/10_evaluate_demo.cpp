@@ -38,7 +38,7 @@ int main() {
     integrator.devices = {-1}; // devices = cpu (Note: default is actually all devices {-1,0,1,...} detected on construction)
     integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn1_100();
     integrator.verbosity = 0;
-    integrator.fitminn = 100000;
+    integrator.evaluateminn = 100000;
 
     integrators::samples<D,D> samples = integrator.evaluate(my_functor);
 
