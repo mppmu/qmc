@@ -229,9 +229,9 @@ Default: `0`.
 
 ---
 
-`U fitminn`
+`U evaluateminn`
 
-The minimum lattice size that should be used for fitting the inverse cumulative distribution function of the integrand. If a lattice of the requested size is not available then `n` will be the size of the next available lattice with at least `fitminn` points. 
+The minimum lattice size that should be used by the `evaluate` function to evaluate the integrand (used also for fitting the inverse cumulative distribution function). If a lattice of the requested size is not available then `n` will be the size of the next available lattice with at least `evaluateminn` points. 
 
 Default: `100000`.
 
@@ -297,7 +297,7 @@ The functor `func` must define its dimension as a public member variable `number
 
 `template <typename I> samples<T,D> evaluate(I& func)`
 
-Evaluates the functor `func` on a lattice of size greater than or equal to `fitminn`.  The samples are returned in a `samples` struct with the following members:
+Evaluates the functor `func` on a lattice of size greater than or equal to `evaluateminn`.  The samples are returned in a `samples` struct with the following members:
 *`std::vector<U> z` - the generating vector of the lattice used to produce the samples
 *`std::vector<D> d` - the random shift vector used to produce the samples
 *`std::vector<T> r` - the values of the integrand at each randomly shifted lattice point
