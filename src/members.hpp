@@ -582,7 +582,7 @@ namespace integrators
     };
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
-    void Qmc<T,D,M,P,F,G,H>::update(const result<T>& res, U& n, U& m, U& function_evaluations) const
+    void Qmc<T,D,M,P,F,G,H>::update(const result<T>& res, U& n, U& m) const
     {
         using std::pow;
 
@@ -591,9 +591,6 @@ namespace integrators
         const D MAXIMUM_ERROR_RATIO = static_cast<D>(20);
         const D EXPECTED_SCALING = static_cast<D>(0.8); // assume error scales as n^(-expectedScaling)
 
-        function_evaluations += res.n*res.m; // update count of function_evaluations
-        if(verbosity > 1 ) logger << "function_evaluations " << function_evaluations << std::endl;
-
         D error_ratio = std::min(integrators::overloads::compute_error_ratio(res, epsrel, epsabs, errormode),MAXIMUM_ERROR_RATIO);
         if (error_ratio < static_cast<D>(1))
         {
@@ -601,7 +598,7 @@ namespace integrators
             return;
         }
 
-        if(function_evaluations > maxeval)
+        if(res.evaluations > maxeval)
         {
             if (verbosity > 2) logger << "maxeval reached" << std::endl;
             return;
@@ -620,19 +617,19 @@ namespace integrators
             if (verbosity > 2)
                 logger << "n did not increase, or increasing m will be faster, increasing m to " << new_m << "." << std::endl;
         }
-        if ( maxeval < function_evaluations + new_n*new_m)
+        if ( maxeval < res.evaluations + new_n*new_m)
         {
             // Decrease new_n
             if ( verbosity > 2 )
                 logger << "requested number of function evaluations greater than maxeval, reducing n." << std::endl;
-            new_n = std::max(n, get_next_n((maxeval-function_evaluations)/new_m));
+            new_n = std::max(n, get_next_n((maxeval-res.evaluations)/new_m));
         }
-        if ( n == new_n && maxeval < function_evaluations + new_n*new_m)
+        if ( n == new_n && maxeval < res.evaluations + new_n*new_m)
         {
             // Decrease new_m
             if ( verbosity > 2 )
                 logger << "requested number of function evaluations greater than maxeval, reducing m." << std::endl;
-            new_m = std::max(U(1),(maxeval-function_evaluations)/new_n);
+            new_m = std::max(U(1),(maxeval-res.evaluations)/new_n);
         }
         n = new_n;
         m = new_m;
@@ -683,7 +680,6 @@ namespace integrators
             logger << "-- qmc::integrate called --" << std::endl;
 
         std::vector<result<T>> previous_iterations; // keep track of the different interations
-        U function_evaluations = 0;
         U n = get_next_n(minn); // get next available n >= minn
         U m = minm;
         result<T> res;
@@ -694,8 +690,8 @@ namespace integrators
             res = sample(func,n,m, previous_iterations);
             if (verbosity > 1)
                 logger << "result " << res.integral << " " << res.error << std::endl;
-            update(res,n,m,function_evaluations);
-        } while  ( integrators::overloads::compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && function_evaluations < maxeval );
+            update(res,n,m);
+        } while  ( integrators::overloads::compute_error_ratio(res, epsrel, epsabs, errormode) > static_cast<D>(1) && res.evaluations < maxeval );
         if (verbosity > 0)
         {
             logger << "-- qmc::integrate returning result --" << std::endl;
@@ -703,6 +699,9 @@ namespace integrators
             logger << "error " << res.error << std::endl;
             logger << "n " << res.n << std::endl;
             logger << "m " << res.m << std::endl;
+            logger << "iterations " << res.iterations << std::endl;
+            logger << "evaluations " << res.evaluations << std::endl;
+
         }
         return res;
     };

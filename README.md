@@ -290,6 +290,8 @@ Integrates the functor `func`. The result is returned in a `result` struct with 
 * `T error` - the estimated absolute error of the result
 * `U n` - the size of the largest lattice used during integration
 * `U m` - the number of shifts of the largest lattice used during integration
+* `U iterations` - the number of iterations used during integration
+* `U evaluations` - the total number of function evaluations during integration
 
 The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
 

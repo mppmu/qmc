@@ -19,7 +19,7 @@ TEST_CASE( "Real", "[overloads]")
     T compute_error_target = 3.1622776601683793320;
     T compute_variance_from_error_target = 10.;
 
-    integrators::result<T> res = {10.,1.,7,2};
+    integrators::result<T> res = {10.,1.,7,2,1,14};
 
     SECTION("compute_variance")
     {
@@ -96,10 +96,10 @@ TEST_CASE( "std::complex", "[overloads]")
     T compute_error_target = {3.1622776601683793320,5.4772255750516611346};
     T compute_variance_from_error_target = {10.,30.};
 
-    integrators::result<T> res_large_error_real = {{10.,2.},{1.,0.05},7,2};
-    integrators::result<T> res_large_error_imag = {{10.,100.},{1.,15.},7,2};
-    integrators::result<T> res_mixed1 = {{10.,100.},{15.,1.},7,2};
-    integrators::result<T> res_mixed2 = {{100.,10.},{1.,15.},7,2};
+    integrators::result<T> res_large_error_real = {{10.,2.},{1.,0.05},7,2,1,14};
+    integrators::result<T> res_large_error_imag = {{10.,100.},{1.,15.},7,2,1,14};
+    integrators::result<T> res_mixed1 = {{10.,100.},{15.,1.},7,2,1,14};
+    integrators::result<T> res_mixed2 = {{100.,10.},{1.,15.},7,2,1,14};
 
     SECTION("compute_variance")
     {
@@ -215,10 +215,10 @@ TEST_CASE( "thrust::complex", "[overloads]")
     T compute_error_target = {3.1622776601683793320,5.4772255750516611346};
     T compute_variance_from_error_target = {10.,30.};
 
-    integrators::result<T> res_large_error_real = {{10.,2.},{1.,0.05},7,2};
-    integrators::result<T> res_large_error_imag = {{10.,100.},{1.,15.},7,2};
-    integrators::result<T> res_mixed1 = {{10.,100.},{15.,1.},7,2};
-    integrators::result<T> res_mixed2 = {{100.,10.},{1.,15.},7,2};
+    integrators::result<T> res_large_error_real = {{10.,2.},{1.,0.05},7,2,1,14};
+    integrators::result<T> res_large_error_imag = {{10.,100.},{1.,15.},7,2,1,14};
+    integrators::result<T> res_mixed1 = {{10.,100.},{15.,1.},7,2,1,14};
+    integrators::result<T> res_mixed2 = {{100.,10.},{1.,15.},7,2,1,14};
 
     SECTION("compute_variance")
     {

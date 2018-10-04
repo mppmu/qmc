@@ -22,9 +22,13 @@ namespace integrators
             T mean = {0.};
             T variance = {0.};
             U previous_m = 0;
+            U previous_num_iterations = 0;
+            U previous_num_evaluations = 0;
             if(!previous_iterations.empty())
             {
                 result<T> & previous_res = previous_iterations.back();
+                previous_num_iterations = previous_res.iterations;
+                previous_num_evaluations = previous_res.evaluations;
                 if(previous_res.n == n)
                 {
                     if (verbosity>2) logger << "using additional shifts to improve previous iteration" << std::endl;
@@ -59,10 +63,10 @@ namespace integrators
             T integral = mean/(static_cast<T>(n));
             variance = variance/( static_cast<T>(m+previous_m-1) * static_cast<T>(m+previous_m) * static_cast<T>(n) * static_cast<T>(n) ); // variance of the mean
             T error = integrators::overloads::compute_error(variance);
-            previous_iterations.push_back({integral, error, n, m+previous_m});
+            previous_iterations.push_back({integral, error, n, m+previous_m, 1+previous_num_iterations, n*m+previous_num_evaluations});
             if (verbosity > 0)
                 logger << "integral " << integral << ", error " << error << ", n " << n << ", m " << m+previous_m << std::endl;
-            return {integral, error, n, m+previous_m};
+            return {integral, error, n, m+previous_m, 1+previous_num_iterations, n*m+previous_num_evaluations};
         };
     };
 };

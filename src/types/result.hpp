@@ -10,6 +10,8 @@ namespace integrators
         T error;
         U n;
         U m;
+        U iterations;
+        U evaluations;
     };
 };
 

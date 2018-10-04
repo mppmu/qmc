@@ -52,7 +52,7 @@ namespace integrators
         template <typename I> void sample_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  I& func, const int device, D& time_in_ns, U& points_computed) const;
         template <typename I> void evaluate_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, I& func, const int device, D& time_in_ns, U& points_computed) const;
         template <typename I> result<T> sample(I& func, const U n, const U m, std::vector<result<T>> & previous_iterations);
-        void update(const result<T>& res, U& n, U& m, U& function_evaluations) const;
+        void update(const result<T>& res, U& n, U& m) const;
         template <typename I> result<T> integrate_no_fit_no_transform(I& func);
 
     public:
