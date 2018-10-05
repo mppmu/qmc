@@ -135,3 +135,12 @@ The functor's call operator decides whether to call the host or device version o
  A finite 2-loop form factor without sector decompositon, called `INT[“B2diminc4”, 6, 63, 10, 0, {2, 2, 2, 2, 1, 1, 0}]` in [arXiv:1510.06758](https://arxiv.org/abs/1510.06758) (see references therein for the much earlier original calculations). Note that although the input function is integrable it is not finite everywhere, in particular it singular when some of the parameters tend to zero.
  
  The analytic result evalutes to: `0.27621049702196548441...`
+ 
+ ## Profiling Examples
+ 
+ The following examples are used to profile the code.
+ 
+ ### 1000_genz_demo
+ 
+ Computes the test functions of Genz (A. Genz, A package for testing multiple integration subroutines, in: P. Keast, G. Fair-weather (eds.), Numerical Integration, Kluwer, Dordrecht, 1986.) using the qmc as well as the Vegas, Suave, Divonne and Cuhre algorithms as implemented in the [Cuba library](http://www.feynarts.de/cuba/).
+ 
