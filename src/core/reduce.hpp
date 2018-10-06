@@ -43,16 +43,9 @@ namespace integrators
             {
                 T sum = {0.};
                 T delta = {0.};
-                T kahan_c = {0.};
                 for (U i = 0; i<r.size()/m; i++)
                 {
-                    // Compute sum using Kahan summation
-                    // equivalent to: sum += r.at(k*r.size()/m+i);
-                    T kahan_y = r.at(k*r.size()/m+i) - kahan_c;
-                    T kahan_t = sum + kahan_y;
-                    T kahan_d = kahan_t - sum;
-                    kahan_c = kahan_d - kahan_y;
-                    sum = kahan_t;
+                    sum += r.at(k*r.size()/m+i);
                 }
                 if (verbosity > 1) logger << "shift " << k+previous_m << " result: " << sum/static_cast<T>(n) << std::endl;
                 // Compute Variance using online algorithm (Knuth, The Art of Computer Programming)

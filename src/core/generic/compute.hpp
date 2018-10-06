@@ -18,7 +18,6 @@ namespace integrators
 
                 for (U k = 0; k < m; k++)
                 {
-                    T kahan_c = {0.};
                     for( U offset = i; offset < n; offset += total_work_packages )
                     {
                         D wgt = 1.;
@@ -37,13 +36,7 @@ namespace integrators
 
                         T point = func(x.data());
 
-                        // Compute sum using Kahan summation
-                        // equivalent to: r_element[k*r_size_over_m] += wgt*point;
-                        T kahan_y = wgt*point - kahan_c;
-                        T kahan_t = r_element[k*r_size_over_m] + kahan_y;
-                        T kahan_d = kahan_t - r_element[k*r_size_over_m];
-                        kahan_c = kahan_d - kahan_y;
-                        r_element[k*r_size_over_m] = kahan_t;
+                        r_element[k*r_size_over_m] += wgt*point;
                     }
                 }
             }
