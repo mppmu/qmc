@@ -17,7 +17,21 @@
 #define HOSTDEVICE
 #endif
 
+// Integrands
 const unsigned int MAXVAR = 5;
+struct function1_t { const int number_of_integration_variables = 1; HOSTDEVICE double operator()(double x[]) const { return x[0]; }; } function1;
+struct function2_t { const int number_of_integration_variables = 2; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]; }; } function2;
+struct function3_t {
+    const int number_of_integration_variables = 3;
+    const double pi = 3.1415926535897932384626433832795028841971693993751;
+    HOSTDEVICE double operator()(double x[]) const { return sin(pi*x[0])*cos(pi/2.*x[1])*(1.-cos(pi/4.*x[2])); };
+} function3;
+struct function4_t { const int number_of_integration_variables = 4; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]*(1.-x[2]*x[2])/(3.-x[3]); }; } function4;
+struct function5_t {
+    const int number_of_integration_variables = 5;
+    const double pi = 3.1415926535897932384626433832795028841971693993751;
+    HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]*(1.-x[2]*x[2])/(3.-x[3])*cos(pi/2*x[4]); };
+} function5;
 
 template< typename I1, typename I2, typename F>
 int count_fails(I1& integrator_fit, I2& integrator_nofit, F& function, unsigned long long int iterations, double true_result)
@@ -37,25 +51,12 @@ int count_fails(I1& integrator_fit, I2& integrator_nofit, F& function, unsigned 
     return fail;
 };
 
+
+ 
 int main() {
 
     std::cout << "numeric_limits<double>::epsilon() " << std::numeric_limits<double>::epsilon() << std::endl;
 
-    // Integrands
-    struct { const int number_of_integration_variables = 1; HOSTDEVICE double operator()(double x[]) const { return x[0]; }; } function1;
-    struct { const int number_of_integration_variables = 2; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]; }; } function2;
-    struct {
-        const int number_of_integration_variables = 3;
-        const double pi = 3.1415926535897932384626433832795028841971693993751;
-        HOSTDEVICE double operator()(double x[]) const { return sin(pi*x[0])*cos(pi/2.*x[1])*(1.-cos(pi/4.*x[2])); };
-    } function3;
-    struct { const int number_of_integration_variables = 4; HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]*(1.-x[2]*x[2])/(3.-x[3]); }; } function4;
-    struct {
-        const int number_of_integration_variables = 5;
-        const double pi = 3.1415926535897932384626433832795028841971693993751;
-        HOSTDEVICE double operator()(double x[]) const { return x[0]*x[1]*(1.-x[2]*x[2])/(3.-x[3])*cos(pi/2*x[4]); };
-    } function5;
-    
     // Analytic results
     const double pi = 3.1415926535897932384626433832795028841971693993751;
     const double function1_result = 1./2.;
@@ -98,6 +99,5 @@ int main() {
     std::cout << fail3 << " " << static_cast<double>(fail3)/ static_cast<double>(iterations) << std::endl;
     std::cout << fail4 << " " << static_cast<double>(fail4)/ static_cast<double>(iterations) << std::endl;
     std::cout << fail5 << " " << static_cast<double>(fail5)/ static_cast<double>(iterations) << std::endl;
-
 
 };
