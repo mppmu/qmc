@@ -9,6 +9,9 @@
 #include <cmath> // sin, cos, exp
 #include "qmc.hpp"
 
+struct cuda_error : public std::runtime_error { using std::runtime_error::runtime_error; };
+#define CUDA_SAFE_CALL(err) { if (err != cudaSuccess) throw cuda_error(std::string(cudaGetErrorString(err)) + ": " + std::string(__FILE__) + " line " + std::to_string(__LINE__)); }
+
 // Functions to integrate
 #ifdef __CUDACC__
 #define HOSTDEVICE __host__ __device__
