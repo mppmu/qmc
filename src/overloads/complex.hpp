@@ -24,7 +24,9 @@ namespace integrators
         template <typename T>
         T compute_error_complex(const T& svariance)
         {
-            return T(std::sqrt(std::abs(svariance.real())), std::sqrt(std::abs(svariance.imag())));
+            using std::sqrt;
+            using std::abs;
+            return T(sqrt(abs(svariance.real())), sqrt(abs(svariance.imag())));
         };
 
         template <typename T>
@@ -36,18 +38,19 @@ namespace integrators
         template <typename T, typename D>
         D compute_error_ratio_complex(const result<T>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode)
         {
+            using std::abs;
             if( errormode == all )
             {
                 return std::max(
-                                std::min(res.error.real()/epsabs, res.error.real()/std::abs(res.integral.real()*epsrel)),
-                                std::min(res.error.imag()/epsabs, res.error.imag()/std::abs(res.integral.imag()*epsrel))
+                                std::min(res.error.real()/epsabs, res.error.real()/abs(res.integral.real()*epsrel)),
+                                std::min(res.error.imag()/epsabs, res.error.imag()/abs(res.integral.imag()*epsrel))
                                 );
             }
             else if ( errormode == largest )
             {
                 return std::min(
                                 std::max(res.error.real(),res.error.imag())/epsabs,
-                                std::max(res.error.real(),res.error.imag())/(std::max(std::abs(res.integral.real()),std::abs(res.integral.imag()))*epsrel)
+                                std::max(res.error.real(),res.error.imag())/(std::max(abs(res.integral.real()),abs(res.integral.imag()))*epsrel)
                                 );
             }
             else

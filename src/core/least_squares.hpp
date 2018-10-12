@@ -178,8 +178,8 @@ namespace integrators
             fdf.params = &data;
             
             // compute dx/dy of input points, which should be used as an additional weight in the evaluation of chisq
-            std::vector<D> dxdy(x.size());
-            D maxwgt = 0.;
+            std::vector<double> dxdy(x.size());
+            double maxwgt = 0.;
 
             const size_t nsteps = 1; 
             for (size_t i = 0; i < x.size(); i++)
@@ -196,7 +196,7 @@ namespace integrators
                     dy += D(1);
                     dx += D(1);
                 }
-                dxdy[i] = dx/dy;
+                dxdy[i] = double(dx/dy);
                 
                 maxwgt=std::max(maxwgt,dxdy[i]);
             }
