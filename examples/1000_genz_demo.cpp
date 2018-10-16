@@ -31,16 +31,17 @@ struct options_t {
     using D = double;
 
     // Generic options
-    D epsrel = 1e-10;
+    D epsrel = 1e-4;
     D epsabs = 0;
-    U verbosity = 0;
 
     // QMC Options
     U minn = 1;
     U maxeval = 700000000; // 700000000 // (max lattice size)
+    U verbosity = 1;
 
     // Cuba options
     // int ncomp = 1; // hardcoded to 1
+    int flags = 0;
     int nvec = 1;
     int seed = 4711;
     long long int mineval = 0;
@@ -124,7 +125,7 @@ struct family_t  {
 template<integrators::U NDIM, int FAM>
 int cuba_integrand(const int *ndim, const double xx[],const int *ncomp, double ff[], void *userdata)
 {
-    family_t<NDIM,FAM> integrand = *(family_t<NDIM,FAM> *)userdata;
+    family_t<NDIM,FAM> integrand = * static_cast<family_t<NDIM,FAM> *>(userdata);
     ff[0] = integrand(xx);
     return 0;
 }
@@ -268,7 +269,7 @@ void print_test_results(std::vector<double>& mean_correct_digits, std::vector<do
 template<integrators::U NDIM, int FAM>
 void test(options_t& integrator_options)
 {
-    size_t iterations = 20;
+    size_t iterations = 1;
 
     integrators::result<double> res;
     std::vector<double> mean_correct_digits = {0.,0.,0.,0.,0.,0.};
@@ -357,7 +358,7 @@ void test(options_t& integrator_options)
                 integrator_options.nvec,
                 integrator_options.epsrel,
                 integrator_options.epsabs,
-                integrator_options.verbosity,
+                integrator_options.flags,
                 integrator_options.seed,
                 integrator_options.mineval,
                 integrator_options.maxeval,
@@ -384,7 +385,7 @@ void test(options_t& integrator_options)
                 integrator_options.nvec,
                 integrator_options.epsrel,
                 integrator_options.epsabs,
-                integrator_options.verbosity,
+                integrator_options.flags,
                 integrator_options.seed,
                 integrator_options.mineval,
                 integrator_options.maxeval,
@@ -410,7 +411,7 @@ void test(options_t& integrator_options)
                   integrator_options.nvec,
                   integrator_options.epsrel,
                   integrator_options.epsabs,
-                  integrator_options.verbosity,
+                  integrator_options.flags,
                   integrator_options.seed,
                   integrator_options.mineval,
                   integrator_options.maxeval,
@@ -445,7 +446,7 @@ void test(options_t& integrator_options)
                 integrator_options.nvec,
                 integrator_options.epsrel,
                 integrator_options.epsabs,
-                integrator_options.verbosity,
+                integrator_options.flags,
                 integrator_options.mineval,
                 integrator_options.maxeval,
                 integrator_options.key,
@@ -468,7 +469,6 @@ void test(options_t& integrator_options)
 
 void do_test(options_t& options)
 {
-    std::pair<std::vector<double>, std::vector<double>> test_results;
 
     std::cout << "# BEGIN WARMUP " << std::endl;
     options_t options_warmup;
