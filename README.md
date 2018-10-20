@@ -11,6 +11,7 @@ The latest release of the single header can be downloaded directly using this li
 Prerequisites:
 * A C++11 compatible C++ compiler.
 * (Optional GPU support)  A CUDA compatible compiler (typically `nvcc` or `clang`).
+* (Optional GPU support) CUDA compatible hardware with Compute Capability 3.0 or greater.
 
 The qmc library is header only. Simply put the single header file somewhere reachable from your project or directly into your project tree itself then `#include "qmc.hpp"` in your project.
 
