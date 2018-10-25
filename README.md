@@ -1,8 +1,13 @@
 # qmc
 
-A Quasi-Monte-Carlo integrator library with Nvidia CUDA support.
+A Quasi-Monte-Carlo (QMC) integrator library with NVIDIA CUDA support.
 
 The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++11 threading library and multiple CUDA compatible accelerators are supported. A variance reduction procedure based on fitting a smooth function to the inverse cumulative distribution function of the integrand dimension-by-dimension is also implemented.
+
+To read more about the library see [our publication](https://arxiv.org/TODO).
+
+This work can be cited as:
+* TODO
 
 ## Installation (standalone)
 
@@ -195,7 +200,7 @@ Default: (determined at run time).
 
 `U cudathreadsperblock`
 
-The number of threads per block to be launched on each CUDA device. CUDA kernels launched by the qmc library have the execution configuration `<<< cudablocks, cudathreadsperblock >>>`. For more information on how to optimally configure these parameters for your hardware and/or integral refer to the Nvidia guidelines. 
+The number of threads per block to be launched on each CUDA device. CUDA kernels launched by the qmc library have the execution configuration `<<< cudablocks, cudathreadsperblock >>>`. For more information on how to optimally configure these parameters for your hardware and/or integral refer to the NVIDIA guidelines. 
 
 Default: (determined at run time).
 
@@ -238,7 +243,15 @@ Default: `100000`.
 
 ---
 
-`int fitmaxiter`
+`size_t fitstepsize`
+
+Controls the number of points included in the fit used for variance reduction. A step size of `x` includes (after sorting by value) every `x`th point in the fit.
+
+Default: `10`.
+
+---
+
+`size_t fitmaxiter`
 
 See `maxiter` in the nonlinear least-squares fitting GSL documentation.
 
