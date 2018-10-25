@@ -20,10 +20,6 @@ Prerequisites:
 
 The qmc library is header only. Simply put the single header file somewhere reachable from your project or directly into your project tree itself then `#include "qmc.hpp"` in your project.
 
-## Installation (with [pysecdec](https://github.com/mppmu/secdec))
-
-The qmc integrator library is redistributed by the `pysecdec` project and will be automatically installed for use within `pysecdec` by following the usual `pysecdec` installation procedure. There is no need to follow the standalone installation procedure to use the qmc with `pysecdec`.
-
 ## Usage
 
 Example: Integrate x0*x1*x2 over the unit hypercube
