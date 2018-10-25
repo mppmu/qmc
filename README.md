@@ -73,16 +73,6 @@ error    = 5.43058e-11
 
 For further examples see the [examples folder](examples).
 
-## Implementation Details
-
-TODO:
-* What is a work package, how does this play with maxnperpackage, maxmperpackage
-* How is the load balanced
-* How is the error goal acheived
-* When is memory allocated on the devices, where is the result computed?
-* How does the error estimation work, error always just 1 lattice with shifts (so iterating over many lattices is suboptimal) 
-
-
 ## API Documentation
 
 The Qmc class has 7 template parameters:
