@@ -88,6 +88,14 @@ The Qmc class has 7 template parameters:
 
 A wrapped `std::ostream` object to which log output from the library is written. 
 
+To write the text output of the library to a particular file, first `#include <fstream>`, create a `std::ofstream` instance pointing to your file then set the `logger` of the integrator to the `std::ofstream`. For example to output very detailed output to the file `myoutput.log`:
+```cpp
+std::ofstream out_file("myoutput.log");
+integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
+integrator.verbosity=3;
+integrator.logger = out_file;
+```
+
 Default: `std::cout`.
 
 ---
@@ -95,6 +103,16 @@ Default: `std::cout`.
 `G randomgenerator`
 
 A C++11 style pseudo-random number engine. 
+
+The seed of the pseudo-random number engine can be changed via the `seed` member function of the pseudo-random number engine.
+For total reproducability you may also want to set `cputhreads = 1`  and `devices = {-1}` which disables multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
+For example:
+```cpp
+integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
+integrator.randomgenerator.seed(1) // seed = 1
+integrator.cputhreads = 1; // no multi-threading
+integrator.devices = {-1}; // cpu only
+```
 
 Default: `std::mt19937_64` seeded with a call to `std::random_device`.
 
@@ -330,6 +348,17 @@ The generating vectors used by the qmc can be selected by setting the integrator
 ```cpp
 integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn2_6();
 ```
+
+If you prefer to use custom generating vectors and/or 100 dimensions and/or 15173222401 lattice points is not enough, you can supply your own generating vectors. Compute your generating vectors using another tool then put them into a map and set `generatingvectors`. 
+
+For example
+```cpp
+std::map<unsigned long long int,std::vector<unsigned long long int>> my_generating_vectors = { {7, {1,3}}, {11, {1,7}} };
+integrators::Qmc<double,double,10> integrator;
+integrator.generatingvectors = my_generating_vectors;
+```
+If you think your generating vectors will be widely useful for other people then please let us know! With your permission we may include them in the code by default.
+
 ### Integral Transforms
 
 The following integral transforms are distributed with the qmc:
@@ -365,33 +394,6 @@ instantiates an integrator which reduces the variance of the integrand by fittin
 
 ## FAQ
 
-**How do I write the text output of the library to a file?**
-
-First `#include <fstream>`, create a `std::ofstream` instance pointing to your file then set the `logger` of the integrator to the `std::ofstream`. For example to output very detailed output to the file `myoutput.log`:
-```cpp
-std::ofstream out_file("myoutput.log");
-integrators::Qmc<double,double> integrator;
-integrator.verbosity=3;
-integrator.logger = out_file;
-```
-
-**How do I set the seed of the random numbers?**
-
-Set `randomgenerator` to a pseudo-random number engine with the seed you want.
-For total reproducability you probably also want to set `cputhreads = 1`  and `devices = {-1}` which disables multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
-For example:
-```cpp
-integrators::Qmc<double,double,10> integrator;
-integrator.randomgenerator.seed(1) // seed = 1
-integrator.cputhreads = 1; // no multi-threading
-integrator.devices = {-1}; // cpu only
-```
-
-**Does this code support multi-threading?**
-
-Yes, if your compiler supports the C++11 thread library then by default the code will try to determine the number of cores or hyper-threads that your hardware supports (via a call to `std::thread::hardware_concurrency()`) and launch this many threads. 
-The precise number of threads that will be launched is equal to the `cputhreads` variable.
-
 **I want to integrate another floating point type (e.g. quadruple precision, arbitrary precision, microsoft binary format, etc) can I do that with your code?**
 
 Possibly. Try including the correct header for the type you want and create an instance of the qmc setting the template arguments `T` and `D` to your type.
@@ -399,28 +401,13 @@ The following standard library functions must be compatible with your type or a 
 * `sqrt`, `abs`, `modf`, `pow`
 * `std::max`, `std::min`
 
-If you wish to use certain integal transforms, such as `Korobov` or `Sidi` then your type will also have to support being assigned to a `constexpr` (which is used internally to generate the transforms).
-If your type is not intended to represent a real or complex type number then you may also need to overload functions required for calculating the error resulting from the numerical integration, see the files `src/overloads/real.hpp` and `src/overloads/complex.hpp`. Example `9_boost_minimal_demo` demonstrates how to instantiate the qmc with a non-standard type (`boost::multiprecision::cpp_bin_float_quad`), to compile this example you will need the `boost` library available on your system.
+If your type is not intended to represent a real or complex type number then you may also need to overload functions required for calculating the error resulting from the numerical integration, see the files `src/overloads/real.hpp` and `src/overloads/complex.hpp`. 
 
-**I do not like your generating vectors and/or 100 dimensions and/or 15173222401 lattice points is not enough for me, can I still use your code?**
-
-Yes, but you need to supply your own generating vectors. Compute them using another tool then put them into a map and set `generatingvectors`. For example
-```cpp
-std::map<unsigned long long int,std::vector<unsigned long long int>> my_generating_vectors = { {7, {1,3}}, {11, {1,7}} };
-integrators::Qmc<double,double,10> integrator;
-integrator.generatingvectors = my_generating_vectors;
-```
-If you think your generating vectors will be widely useful for other people then please let us know! With your permission we may include them in the code by default.
+Example `9_boost_minimal_demo` demonstrates how to instantiate the qmc with a non-standard type (`boost::multiprecision::cpp_bin_float_quad`), to compile this example you will need the `boost` library available on your system.
 
 **Do you apply an integral transform to make my integrand periodic on [0,1], can I use another one?**
 
-By default we use the polynomial transform of Korobov, `\int_{[0,1]^d} f(\vec{x}) \mathrm{d} \vec{x} = \int_{[0,1]^d} F(\vec{t}) \mathrm{d} \vec{t}` with `F(\vec{t}) := f(\psi(\vec{t})) w_d(\vec{t})` where `w_d(\vec{t}) = \Prod_{j=1}^d w(t_j)`. Specifically we use the `r=3` transform which sets `w(t)=140 t^3 (1-t)^3` and `\psi(t) = 35t^4 -84t^5+70t^6-20t^7` for each variable. If you prefer another integral transform then you can instantiate the integration with another transform. For example:
-```cpp
-integrators::Qmc<double,double,3,integrators::transforms::Baker::type> integrator;
-integrators::result<double> result = integrator.integrate(my_functor);
-```
-
-See also the existing transforms in `src/transforms`.
+TODO?
 
 **How does the performance of this code compare to other integration libraries (e.g. CUBA, NIntegrate)?**
 
