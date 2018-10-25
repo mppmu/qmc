@@ -9,7 +9,7 @@ To read more about the library see [our publication](https://arxiv.org/TODO).
 This work can be cited as:
 * TODO
 
-## Installation (standalone)
+## Installation
 
 The latest release of the single header can be downloaded directly using this link. - TODO - link
 
