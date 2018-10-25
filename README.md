@@ -11,7 +11,7 @@ This work can be cited as:
 
 ## Installation
 
-The latest release of the single header can be downloaded directly using this link. - TODO - link
+[The latest release of the single header can be downloaded directly using this link.](https://github.com/mppmu/qmc/releases/download/v0.0.1-alpha/qmc.hpp)
 
 Prerequisites:
 * A C++11 compatible C++ compiler.
