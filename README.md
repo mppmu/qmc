@@ -318,11 +318,11 @@ The functor `func` must define its dimension as a public member variable `number
 `template <typename I> samples<T,D> evaluate(I& func)`
 
 Evaluates the functor `func` on a lattice of size greater than or equal to `evaluateminn`.  The samples are returned in a `samples` struct with the following members:
-*`std::vector<U> z` - the generating vector of the lattice used to produce the samples
-*`std::vector<D> d` - the random shift vector used to produce the samples
-*`std::vector<T> r` - the values of the integrand at each randomly shifted lattice point
-*`U n` - the size of the lattice used to produce the samples
-*`D get_x(const U sample_index, const U integration_variable_index)` - a function which returns the argument (specified by `integration_variable_index`) used to evaluate the integrand for a specific sample (specified by `sample_index`).
+* `std::vector<U> z` - the generating vector of the lattice used to produce the samples
+* `std::vector<D> d` - the random shift vector used to produce the samples
+* `std::vector<T> r` - the values of the integrand at each randomly shifted lattice point
+* `U n` - the size of the lattice used to produce the samples
+* `D get_x(const U sample_index, const U integration_variable_index)` - a function which returns the argument (specified by `integration_variable_index`) used to evaluate the integrand for a specific sample (specified by `sample_index`).
 
 The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
 
