@@ -72,8 +72,8 @@ For further examples see the [examples folder](examples).
 ## API Documentation
 
 The Qmc class has 7 template parameters:
-* `T` the return type of the  function to be integrated (assumed to be a floating point type)
-* `D` the argument type of the function to be integrated (assumed to be a floating point type) 
+* `T` the return type of the  function to be integrated (assumed to be a real or complex floating point type)
+* `D` the argument type of the function to be integrated (assumed to be a floating point type)
 * `M` the maximum number of integration variables of any integrand that will be passed to the integrator
 * `P` an integral transform to be applied to the integrand before integration
 * `F` a function to be fitted to the inverse cumulative distribution function of the integrand in each dimension, used to reduce the variance of the integrand
