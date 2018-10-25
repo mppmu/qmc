@@ -144,7 +144,7 @@ The functor's call operator decides whether to call the host or device version o
  powerlist={0,1,0,1,1,1,2,0,1}; 
  (k4)^2 = (-k1-k2-k3)^2 = mH^2
 
- The integral is evalueated at high invariant mass m_{hj} = 8.8 m_t. 
+ The integral is evaluated at high invariant mass m_{hj} = 8.8 m_t. 
  Due to its bad convergence, a different master integral has been chosen to obtain the final results of the above publication.
  
  ## Profiling Examples

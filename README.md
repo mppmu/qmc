@@ -76,7 +76,7 @@ The Qmc class has 7 template parameters:
 * `D` the argument type of the function to be integrated (assumed to be a floating point type)
 * `M` the maximum number of integration variables of any integrand that will be passed to the integrator
 * `P` an integral transform to be applied to the integrand before integration
-* `F` a function to be fitted to the inverse cumulative distribution function of the integrand in each dimension, used to reduce the variance of the integrand
+* `F` a function to be fitted to the inverse cumulative distribution function of the integrand in each dimension, used to reduce the variance of the integrand (default: `fitfunctions::None::template type`)
 * `G` a C++11 style pseudo-random number engine (default: `std::mt19937_64`)
 * `H` a C++11 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
 
@@ -289,7 +289,7 @@ Default: `1e-8`.
 
 `gsl_multifit_nlinear_parameters fitparametersgsl`
 
-See `gsl_multifit_nlinear_parameters` nonlinear least-squares fitting GSL documentation.
+See `gsl_multifit_nlinear_parameters` in the nonlinear least-squares fitting GSL documentation.
 
 Default: `{}`.
 
