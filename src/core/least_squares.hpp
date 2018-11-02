@@ -196,7 +196,7 @@ namespace integrators
                     dy += D(1);
                     dx += D(1);
                 }
-                dxdy[i] = double(dx/dy);
+                dxdy[i] = static_cast<double>(dx/dy);
                 
                 maxwgt=std::max(maxwgt,dxdy[i]);
             }
