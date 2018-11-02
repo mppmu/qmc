@@ -18,8 +18,8 @@ namespace integrators
                 constexpr static U value = (Binomial<n-1,k-1>::value + Binomial<n-1,k>::value);
             };
 
-            // TODO - optimisation
-            // k > n -k ? bin(n,n-k) : bin(n,k)
+            // Note: potential for optimisation
+            // k > n-k ? Binomial<n,n-k> : Binomial<n,k>
 
             template<U n, U k>
             struct Binomial<n, k, typename std::enable_if<n < k>::type>
