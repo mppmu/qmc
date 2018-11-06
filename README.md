@@ -176,7 +176,7 @@ Default: `1024`.
 
 `ErrorMode errormode`
 
-Controls the error goal that the library attempts to acheive when the integrand return type is a complex type. For real types the `errormode` setting is ignored.
+Controls the error goal that the library attempts to achieve when the integrand return type is a complex type. For real types the `errormode` setting is ignored.
 
 Possible values:
 *  `all` - try to find an estimate `E` for the integral `I` which fulfills  `|E-I| <= max(epsabs, epsrel*I)` for each component (real and imaginary) separately,
