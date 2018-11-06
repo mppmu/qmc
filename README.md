@@ -180,7 +180,7 @@ Controls the error goal that the library attempts to achieve when the integrand 
 
 Possible values:
 *  `all` - try to find an estimate `E` for the integral `I` which fulfills  `|E-I| <= max(epsabs, epsrel*I)` for each component (real and imaginary) separately,
-*  `largest` - try to find an estimate `E` for the integral `I` such that `max( |Re[E]-Re[I]|, |Im[E]-Im[I]| ) <= min( epsabs, epsrel*max( |Re[I]|,|Im[I]| ) )` , i.e. to achieve either the `epsabs` error goal or that the largest error is smaller than `epsrel` times the value of the largest component (either real or imaginary).
+*  `largest` - try to find an estimate `E` for the integral `I` such that `max( |Re[E]-Re[I]|, |Im[E]-Im[I]| ) <= max( epsabs, epsrel*max( |Re[I]|,|Im[I]| ) )` , i.e. to achieve either the `epsabs` error goal or that the largest error is smaller than `epsrel` times the value of the largest component (either real or imaginary).
 
 Default: `all`.
 
@@ -388,7 +388,7 @@ instantiates an integrator which applies a weight `(5,3)` Korobov transform to t
 The fit function used by the qmc can be selected when constructing the qmc. These functions are used to approximate the inverse cumulative distribution function of the integrand dimension-by-dimension.
 Example (assuming a real type integrator instance named `integrator`):
 ```cpp
-integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator
+integrators::Qmc<double,double,10,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator
 ```
 instantiates an integrator which reduces the variance of the integrand by fitting a `PolySingular` type function before integration.
 
