@@ -31,19 +31,20 @@ struct options_t {
     using D = double;
 
     // Generic options
-    D epsrel = 1e-4;
+    D epsrel = 1e-8;
     D epsabs = 0;
 
     // QMC Options
     U minn = 1;
-    U maxeval = 700000000; // 700000000 // (max lattice size)
-    U verbosity = 1;
+    U qmcmaxeval = 700000000; // 700000000 // (max lattice size)
+    U cubamaxeval = 70000000;
+    U verbosity = 0;
 
     // Cuba options
     // int ncomp = 1; // hardcoded to 1
     int flags = 0;
     int nvec = 1;
-    int seed = 4711;
+    int seed = 0;
     long long int mineval = 0;
     // long long int maxeval; // set above
     long long int nstart = 1000;
@@ -269,7 +270,7 @@ void print_test_results(std::vector<double>& mean_correct_digits, std::vector<do
 template<integrators::U NDIM, int FAM>
 void test(options_t& integrator_options)
 {
-    size_t iterations = 1;
+    size_t iterations = 10;
 
     integrators::result<double> res;
     std::vector<double> mean_correct_digits = {0.,0.,0.,0.,0.,0.};
@@ -287,7 +288,7 @@ void test(options_t& integrator_options)
     qmc_cpu_integrator.epsabs = integrator_options.epsabs;
     qmc_cpu_integrator.minn = integrator_options.minn;
     qmc_cpu_integrator.devices = {-1};
-    qmc_cpu_integrator.maxeval = integrator_options.maxeval;
+    qmc_cpu_integrator.maxeval = integrator_options.qmcmaxeval;
     qmc_cpu_integrator.verbosity = integrator_options.verbosity;
     qmc_cpu_integrator.randomgenerator.seed(integrator_options.seed);
 
@@ -296,7 +297,7 @@ void test(options_t& integrator_options)
     qmc_integrator.epsrel = integrator_options.epsrel;
     qmc_integrator.epsabs = integrator_options.epsabs;
     qmc_integrator.minn = integrator_options.minn;
-    qmc_integrator.maxeval = integrator_options.maxeval;
+    qmc_integrator.maxeval = integrator_options.qmcmaxeval;
     qmc_integrator.verbosity = integrator_options.verbosity;
     qmc_integrator.randomgenerator.seed(integrator_options.seed);
 
@@ -361,7 +362,7 @@ void test(options_t& integrator_options)
                 integrator_options.flags,
                 integrator_options.seed,
                 integrator_options.mineval,
-                integrator_options.maxeval,
+                integrator_options.cubamaxeval,
                 integrator_options.nstart,
                 integrator_options.nincrease,
                 integrator_options.nbatch,
@@ -388,7 +389,7 @@ void test(options_t& integrator_options)
                 integrator_options.flags,
                 integrator_options.seed,
                 integrator_options.mineval,
-                integrator_options.maxeval,
+                integrator_options.cubamaxeval,
                 integrator_options.nnew,
                 integrator_options.nmin,
                 integrator_options.flatness,
@@ -414,7 +415,7 @@ void test(options_t& integrator_options)
                   integrator_options.flags,
                   integrator_options.seed,
                   integrator_options.mineval,
-                  integrator_options.maxeval,
+                  integrator_options.cubamaxeval,
                   integrator_options.key1,
                   integrator_options.key2,
                   integrator_options.key3,
@@ -448,7 +449,7 @@ void test(options_t& integrator_options)
                 integrator_options.epsabs,
                 integrator_options.flags,
                 integrator_options.mineval,
-                integrator_options.maxeval,
+                integrator_options.cubamaxeval,
                 integrator_options.key,
                 integrator_options.statefile,
                 integrator_options.spin,
@@ -472,7 +473,8 @@ void do_test(options_t& options)
 
     std::cout << "# BEGIN WARMUP " << std::endl;
     options_t options_warmup;
-    options_warmup.maxeval = 2000;
+    options_warmup.qmcmaxeval = 2000;
+    options_warmup.cubamaxeval = 2000;
     test<5,0>(options_warmup);
     std::cout << "# WARMUP FINISHED" << std::endl;
 
@@ -505,7 +507,7 @@ int main()
 {
 
     // Set up random generator
-    randomgenerator.seed(4711);
+    randomgenerator.seed(0);
 
     // Set up integrator options
     options_t options;
