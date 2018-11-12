@@ -344,6 +344,11 @@ The following generating vectors are distributed with the qmc:
 | cbcpt_dn2_6     | 6     | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 65521 - 2499623531 |
 | cbcpt_cfftw1_6 | 6     | Computed using a custom CBC tool based on FFTW | 2500000001 - 15173222401 |
 
+The above generating vectors are produced for Korobov spaces with smoothness `alpha=2`:
+* Kernel `omega(x)=2 pi^2 (x^2 - x + 1/6)`
+* Weights `gamma_i = 1/s` for `i = 1, ..., s`
+* Parameters `beta_i = 1` for `i = 1, ..., s`
+
 The generating vectors used by the qmc can be selected by setting the integrator's `generatingvectors` member variable. Example (assuming an integrator instance named `integrator`):
 ```cpp
 integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn2_6();
