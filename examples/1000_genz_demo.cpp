@@ -44,7 +44,7 @@ struct options_t {
     // Cuba options
     // int ncomp = 1; // hardcoded to 1
     int flags = 0;
-    int suaveflags = 0 + 4; // 4 - use result of last iteration only
+    int flagslast = 0 + 4; // 4 - use result of last iteration only
     int nvec = 1;
     int seed = 0;
     long long int mineval = 0;
@@ -388,7 +388,7 @@ void test(options_t& integrator_options)
                 integrator_options.nvec,
                 integrator_options.epsrel,
                 integrator_options.epsabs,
-                integrator_options.suaveflags,
+                integrator_options.flagslast,
                 integrator_options.seed,
                 integrator_options.mineval,
                 integrator_options.cubamaxeval,
@@ -449,7 +449,7 @@ void test(options_t& integrator_options)
                 integrator_options.nvec,
                 integrator_options.epsrel,
                 integrator_options.epsabs,
-                integrator_options.flags,
+                integrator_options.flagslast,
                 integrator_options.mineval,
                 integrator_options.cubamaxeval,
                 integrator_options.key,
