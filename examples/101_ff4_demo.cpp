@@ -2,7 +2,8 @@
  * Compile without GPU support:
  *   c++ -std=c++11 -pthread -I../src 101_ff4_demo.cpp -o 101_ff4_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -std=c++11 -x cu -I../src 101_ff4_demo.cpp -o 101_ff4_demo.out -lgsl -lgslcblas
+ *   nvcc -arch=<arch> -std=c++11 -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 101_ff4_demo.cpp -o 101_ff4_demo.out -lgsl -lgslcblas
+ * Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
  */
 
 #include <iostream>

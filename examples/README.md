@@ -9,8 +9,9 @@ c++ -std=c++11 -pthread -I../src <example_name>.cpp -o <example_name>.out
 
 Compile with GPU support:
 ```shell
-nvcc -std=c++11 -x cu -I../src <example_name>.cpp -o <example_name>.out
+nvcc -arch=<arch> -std=c++11 -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src <example_name>.cpp -o <example_name>.out
 ```
+Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
 
 ## Introductory Examples
 

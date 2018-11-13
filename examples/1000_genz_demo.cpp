@@ -1,8 +1,9 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -O3 -pthread -I../src -I$SECDEC_CONTRIB/include 1000_genz_demo.cpp -L$SECDEC_CONTRIB/lib -o 1000_genz_demo.out -lgsl -lgslcblas -lcuba -lm
+ *   c++ -std=c++11 -O3 -pthread -I../src 1000_genz_demo.cpp -o 1000_genz_demo.out -lgsl -lgslcblas -lcuba -lm
  * Compile with GPU support:
- *   nvcc -std=c++11 -O3 -x cu -I../src -I$SECDEC_CONTRIB/include 1000_genz_demo.cpp -L$SECDEC_CONTRIB/lib -o 1000_genz_demo.out -lgsl -lgslcblas -lcuba -lm
+ *   nvcc -arch=<arch> -std=c++11 -O3 -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 1000_genz_demo.cpp -o 1000_genz_demo.out -lgsl -lgslcblas -lcuba -lm
+ * Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
  */
 
 #include <iostream>
