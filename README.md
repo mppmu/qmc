@@ -81,6 +81,16 @@ The Qmc class has 7 template parameters:
 * `G` a C++11 style pseudo-random number engine (default: `std::mt19937_64`)
 * `H` a C++11 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
 
+Typically the return type `T` and argument type `D` are set to type `double` (for real numbers), `std::complex<double>` (for complex numbers on the CPU only) or `thrust::complex<double>`  (for complex numbers on the GPU and CPU). In principle, the qmc library supports integrating other floating point types (e.g. quadruple precision, arbitrary precision, etc), though they must be compatible with the relevant STL library functions or provide compatible overloads. 
+
+To integrate alternative floating point types, first include the header(s) defining the new type into your project and set the template arguments of the Qmc class `T` and `D` to your type. The following standard library functions must be compatible with your type or a compatible overload must be provided:
+* `sqrt`, `abs`, `modf`, `pow`
+* `std::max`, `std::min`
+
+If your type is not intended to represent a real or complex type number then you may also need to overload functions required for calculating the error resulting from the numerical integration, see the files `src/overloads/real.hpp` and `src/overloads/complex.hpp`. 
+
+Example `9_boost_minimal_demo` demonstrates how to instantiate the qmc with a non-standard type (`boost::multiprecision::cpp_bin_float_quad`), to compile this example you will need the `boost` library available on your system.
+
 ### Public fields
 
 ---
@@ -397,19 +407,6 @@ Example (assuming a real type integrator instance named `integrator`):
 integrators::Qmc<double,double,10,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator
 ```
 instantiates an integrator which reduces the variance of the integrand by fitting a `PolySingular` type function before integration.
-
-## FAQ
-
-**I want to integrate another floating point type (e.g. quadruple precision, arbitrary precision, microsoft binary format, etc) can I do that with your code?**
-
-Possibly. Try including the correct header for the type you want and create an instance of the qmc setting the template arguments `T` and `D` to your type.
-The following standard library functions must be compatible with your type or a compatible overload must be provided:
-* `sqrt`, `abs`, `modf`, `pow`
-* `std::max`, `std::min`
-
-If your type is not intended to represent a real or complex type number then you may also need to overload functions required for calculating the error resulting from the numerical integration, see the files `src/overloads/real.hpp` and `src/overloads/complex.hpp`. 
-
-Example `9_boost_minimal_demo` demonstrates how to instantiate the qmc with a non-standard type (`boost::multiprecision::cpp_bin_float_quad`), to compile this example you will need the `boost` library available on your system.
 
 ## Authors
 
