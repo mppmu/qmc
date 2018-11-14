@@ -77,6 +77,7 @@ The Qmc class has 7 template parameters:
 * `F` a function to be fitted to the inverse cumulative distribution function of the integrand in each dimension, used to reduce the variance of the integrand (default: `fitfunctions::None::template type`)
 * `G` a C++11 style pseudo-random number engine (default: `std::mt19937_64`)
 * `H` a C++11 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
+Internally, unsigned integers are assumed to be of type `U = unsigned long long int`.
 
 Typically the return type `T` and argument type `D` are set to type `double` (for real numbers), `std::complex<double>` (for complex numbers on the CPU only) or `thrust::complex<double>`  (for complex numbers on the GPU and CPU). In principle, the qmc library supports integrating other floating point types (e.g. quadruple precision, arbitrary precision, etc), though they must be compatible with the relevant STL library functions or provide compatible overloads. 
 
@@ -231,7 +232,7 @@ Default: `{-1,0,1,...,nd}` where `nd` is the number of CUDA devices detected on 
 A map of available generating vectors which can be used to generate a lattice. The implemented QMC algorithm requires that the generating vectors be generated with a prime lattice size. By default the library uses generating vectors with 100 components, thus it supports integration of functions with up to 100 dimensions.
 The default generating vectors have been generated with lattice size chosen as the next prime number above `(110/100)^i*1020` for `i` between `0` and `152`, additionally the lattice `2^31-1` (`INT_MAX` for `int32`) is included. 
 
-Default: `cbcpt_dn1_100<U>()`.
+Default: `cbcpt_dn1_100()`.
 
 ---
 
