@@ -390,7 +390,7 @@ Example (assuming a real type integrator instance named `integrator`):
 ```cpp
 integrators::Qmc<double,double,10,integrators::transforms::Korobov<5,3>::type> integrator
 ```
-instantiates an integrator which applies a weight `(5,3)` Korobov transform to the integrand before integration.
+instantiates an integrator which applies a weight `(r_0=5,r_1=3)` Korobov transform to the integrand before integration.
 
 ### Fit Functions
 
