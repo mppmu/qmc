@@ -365,7 +365,7 @@ integrator.generatingvectors = integrators::generatingvectors::cbcpt_dn2_6();
 
 If you prefer to use custom generating vectors and/or 100 dimensions and/or 15173222401 lattice points is not enough, you can supply your own generating vectors. Compute your generating vectors using another tool then put them into a map and set `generatingvectors`. 
 
-For example
+If you prefer to use custom generating vectors and/or 100 dimensions and/or 15173222401 lattice points is not enough, you can supply your own generating vectors. Compute your generating vectors using another tool then put them into a map and set `generatingvectors`. For example, to instruct the qmc to use only two generating vectors (`z = (1,3)` for `n=7` and `z = (1,7)`  for `n=11`) the `generatingvectors` map would be set as follows:
 ```cpp
 std::map<unsigned long long int,std::vector<unsigned long long int>> my_generating_vectors = { {7, {1,3}}, {11, {1,7}} };
 integrators::Qmc<double,double,10> integrator;
