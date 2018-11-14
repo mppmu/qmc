@@ -349,9 +349,9 @@ The following generating vectors are distributed with the qmc:
 
 | Name | Max. Dimension | Description | Lattice Sizes |
 | --- | --- | --- | --- |
-| cbcpt_dn1_100 | 100 | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 1021 - 2147483647 |
-| cbcpt_dn2_6     | 6     | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 65521 - 2499623531 |
-| cbcpt_cfftw1_6 | 6     | Computed using a custom CBC tool based on FFTW | 2500000001 - 15173222401 |
+| `cbcpt_dn1_100` | 100 | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 1021 - 2147483647 |
+| `cbcpt_dn2_6`     | 6     | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 65521 - 2499623531 |
+| `cbcpt_cfftw1_6` | 6     | Computed using a custom CBC tool based on FFTW | 2500000001 - 15173222401 |
 
 The above generating vectors are produced for Korobov spaces with smoothness `alpha=2` using:
 * Kernel `omega(x)=2 pi^2 (x^2 - x + 1/6)`,
@@ -379,11 +379,11 @@ The following integral transforms are distributed with the qmc:
 
 | Name | Description |
 | --- | --- |
-| Korobov<r_0,r_1> | A polynomial integral transform with weight ∝ x^r_0 * (1-x)^r_1   |
-| Korobov<r> | A polynomial integral transform with weight ∝ x^r * (1-x)^r   |
-| Sidi<r> | A trigonometric integral transform with weight ∝ sin^r(pi*x) | 
-| Baker | The baker's transformation, phi(x) = 1 - abs(2x-1)  |
-| None | The trivial transform, phi(x) = x  |
+| `Korobov<r_0,r_1>` | A polynomial integral transform with weight ∝ x^r_0 * (1-x)^r_1   |
+| `Korobov<r>` | A polynomial integral transform with weight ∝ x^r * (1-x)^r   |
+| `Sidi<r>` | A trigonometric integral transform with weight ∝ sin^r(pi*x) | 
+| `Baker` | The baker's transformation, phi(x) = 1 - abs(2x-1)  |
+| `None` | The trivial transform, phi(x) = x  |
 
 The integral transform used by the qmc can be selected when constructing the qmc.
 Example (assuming a real type integrator instance named `integrator`):
