@@ -388,7 +388,7 @@ The following integral transforms are distributed with the qmc:
 The integral transform used by the qmc can be selected when constructing the qmc.
 Example (assuming a real type integrator instance named `integrator`):
 ```cpp
-integrators::Qmc<double,double,10,integrators::transforms::Korobov<5,3>::type> integrator
+integrators::Qmc<double,double,10,integrators::transforms::Korobov<5,3>::type> integrator;
 ```
 instantiates an integrator which applies a weight `(r_0=5,r_1=3)` Korobov transform to the integrand before integration.
 
@@ -402,7 +402,7 @@ instantiates an integrator which applies a weight `(r_0=5,r_1=3)` Korobov transf
 The fit function used by the qmc can be selected when constructing the qmc. These functions are used to approximate the inverse cumulative distribution function of the integrand dimension-by-dimension.
 Example (assuming a real type integrator instance named `integrator`):
 ```cpp
-integrators::Qmc<double,double,10,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator
+integrators::Qmc<double,double,10,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator;
 ```
 instantiates an integrator which reduces the variance of the integrand by fitting a `PolySingular` type function before integration.
 
