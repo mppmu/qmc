@@ -411,22 +411,6 @@ If your type is not intended to represent a real or complex type number then you
 
 Example `9_boost_minimal_demo` demonstrates how to instantiate the qmc with a non-standard type (`boost::multiprecision::cpp_bin_float_quad`), to compile this example you will need the `boost` library available on your system.
 
-**Do you apply an integral transform to make my integrand periodic on [0,1], can I use another one?**
-
-TODO?
-
-**How does the performance of this code compare to other integration libraries (e.g. CUBA, NIntegrate)?**
-
-TODO - see our paper
-
-**Can I call your code in a similar manner to CUBA routines? Can I call your code from FORTRAN and Mathematica?**
-
-TODO
-
-**Can I call your code from python?**
-
-TODO
-
 ## Authors
 
 * Sophia Borowka (@sborowka)
