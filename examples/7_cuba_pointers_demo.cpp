@@ -224,7 +224,6 @@ int main() {
 
     integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> real_integrator;
 
-    // TODO - set parameters similar to CUBA demo?
     real_integrator.minn = 10000;
     real_integrator.maxeval = 1;
 

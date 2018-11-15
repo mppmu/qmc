@@ -111,12 +111,16 @@ The functor's call operator decides whether to call the host or device version o
  
  ### 8_accuracy_demo
  
- TODO
+Uses the qmc to integrate 5 functions 1000 times each. After each integration the uncertainty reported by the qmc is compared to the true error (which is computed by comparing the qmc result to the true result). The example prints, for each function, the number of times the true result differs from the result obtained by the qmc by less than the uncertainty reported by the qmc as well as the number of results that were accurate to machine precision. 
+
+Assuming that the uncertainty is Gaussian distributed we would expect the true result to be within one uncertainty of the reported result 68.27% of the time. If the result is accurate to machine precision the result is not Gaussian distributed and often is understimated as the qmc will return (nearly) the same machine precise result for each sample resulting in an incorrectly small variance between the samples.
  
  ### 9_boost_minimal_demo
  
- TODO
+ Demonstrates the use of higher than double precision numbers within the qmc. Here we integrate a `boost` quadruple precision float (`cpp_bin_float_quad`). The `boost` library is required to compile this example.
  
+ We integrate the function `sin(x[0]*x[1])/log(quad(1)+x[0]+x[1])` using a weight `r=10` Korobov trasnform. With a lattice size of `~10000` approximately 30 digits are obtained.
+  
  ## Loop Integral Examples
  
  The following examples are taken from high energy physics loop integals and demonstrate the usage of the integrator on examples of interest to the authors.

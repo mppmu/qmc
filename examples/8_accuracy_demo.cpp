@@ -1,14 +1,15 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
+ *   c++ -std=c++11 -O3 -pthread -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -arch=<arch> -std=c++11 -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
+ *   nvcc -arch=<arch> -std=c++11 -O3 -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
  * Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
  */
 
 #include <iostream>
 #include <limits> // numeric_limits
 #include <cmath> // sin, cos, exp
+#include <string>
 
 #include "../src/qmc.hpp"
 
@@ -35,25 +36,36 @@ struct function5_t {
 } function5;
 
 template< typename I1, typename I2, typename F>
-int count_fails(I1& integrator_fit, I2& integrator_nofit, F& function, unsigned long long int iterations, double true_result)
+void count_fails(I1& integrator_fit, I2& integrator_nofit, F& function, unsigned long long int iterations, double true_result, int& fail, int& machine_precision)
 {
-    unsigned fail = 0;
     integrators::result<double> result;
     integrators::fitfunctions::PolySingularTransform<F,double,MAXVAR> fitted_function = integrator_fit.fit(function);
     for(int i = 0; i<iterations; i++)
     {
         result = integrator_nofit.integrate(fitted_function);
-//        std::cout << (true_result-result.integral) << " " << result.error << std::endl;
+        // Check if true result is within error estimate
         if ( std::abs( (true_result-result.integral) ) > std::abs(result.error)  )
         {
             fail++;
         }
+        // Check if result reaches machine precision
+        if ( std::abs( (true_result-result.integral) ) < 2. * std::numeric_limits<double>::epsilon()  )
+        {
+            machine_precision++;
+        }
     }
-    return fail;
 };
 
+void print_table_line(std::string name, int iterations, int success, double success_percent, int machine_precision)
+{
+    const char separator = ' ';
+    const int width      = 20;
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << name;
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << std::to_string(success) + "/" + std::to_string(iterations);
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << success_percent;
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << std::to_string(machine_precision) + "/" + std::to_string(iterations) << std::endl;
+}
 
- 
 int main() {
 
     std::cout << "numeric_limits<double>::epsilon() " << std::numeric_limits<double>::epsilon() << std::endl;
@@ -66,39 +78,43 @@ int main() {
     const double function4_result = 1./6.*log(3./2.);
     const double function5_result = 1./(6.*pi)*log(9./4.);
 
-    unsigned long long int iterations = 1000;
-    unsigned long long int fail1;
-    unsigned long long int fail2;
-    unsigned long long int fail3;
-    unsigned long long int fail4;
-    unsigned long long int fail5;
+    int iterations = 1000;
+    int fail1 = 0, fail2 = 0, fail3 = 0, fail4 = 0, fail5 = 0;
+    int machine_precision1 = 0, machine_precision2 = 0, machine_precision3 = 0, machine_precision4 = 0, machine_precision5 = 0;
 
     integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type,integrators::fitfunctions::PolySingular::type> integrator_fit;
     integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator_nofit;
 
-    integrator_nofit.evaluateminn = 0;
     integrator_nofit.minn = 8191;
+    integrator_nofit.maxeval = 1;
 
-    std::cout << "-- Function 1 --" << std::endl;
-    fail1 = count_fails(integrator_fit,integrator_nofit,function1,iterations,function1_result);
+    std::cout << "- Integrating Function 1" << std::endl;
+    count_fails(integrator_fit,integrator_nofit,function1,iterations,function1_result,fail1,machine_precision1);
 
-    std::cout << "-- Function 2 --" << std::endl;
-    fail2 = count_fails(integrator_fit,integrator_nofit,function2,iterations,function2_result);
+    std::cout << "- Integrating Function 2" << std::endl;
+    count_fails(integrator_fit,integrator_nofit,function2,iterations,function2_result,fail2,machine_precision2);
 
-    std::cout << "-- Function 3 --" << std::endl;
-    fail3 = count_fails(integrator_fit,integrator_nofit,function3,iterations,function3_result);
+    std::cout << "- Integrating Function 3" << std::endl;
+    count_fails(integrator_fit,integrator_nofit,function3,iterations,function3_result,fail3,machine_precision3);
 
-    std::cout << "-- Function 4 --" << std::endl;
-    fail4 = count_fails(integrator_fit,integrator_nofit,function4,iterations,function4_result);
+    std::cout << "- Integrating Function 4" << std::endl;
+    count_fails(integrator_fit,integrator_nofit,function4,iterations,function4_result,fail4,machine_precision4);
 
-    std::cout << "-- Function 5 --" << std::endl;
-    fail5 = count_fails(integrator_fit,integrator_nofit,function5,iterations,function5_result);
+    std::cout << "- Integrating Function 5" << std::endl;
+    count_fails(integrator_fit,integrator_nofit,function5,iterations,function5_result,fail5,machine_precision5);
 
-    std::cout << "-- Summary --" << std::endl;
-    std::cout << fail1 << " " << static_cast<double>(fail1)/ static_cast<double>(iterations) << std::endl;
-    std::cout << fail2 << " " << static_cast<double>(fail2)/ static_cast<double>(iterations) << std::endl;
-    std::cout << fail3 << " " << static_cast<double>(fail3)/ static_cast<double>(iterations) << std::endl;
-    std::cout << fail4 << " " << static_cast<double>(fail4)/ static_cast<double>(iterations) << std::endl;
-    std::cout << fail5 << " " << static_cast<double>(fail5)/ static_cast<double>(iterations) << std::endl;
+    std::cout << "- Summary" << std::endl;
+    const char separator = ' ';
+    const int width      = 20;
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << "# Name";
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << "Success";
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << "Success (%)";
+    std::cout << std::left << std::setw(width) << std::setfill(separator) << "Machine Precision" << std::endl;
+
+    print_table_line("Function 1",iterations,iterations-fail1, 100. * static_cast<double>(iterations-fail1)/ static_cast<double>(iterations), machine_precision1);
+    print_table_line("Function 2",iterations,iterations-fail2, 100. * static_cast<double>(iterations-fail2)/ static_cast<double>(iterations), machine_precision2);
+    print_table_line("Function 3",iterations,iterations-fail3, 100. * static_cast<double>(iterations-fail4)/ static_cast<double>(iterations), machine_precision3);
+    print_table_line("Function 4",iterations,iterations-fail4, 100. * static_cast<double>(iterations-fail4)/ static_cast<double>(iterations), machine_precision4);
+    print_table_line("Function 5",iterations,iterations-fail5, 100. * static_cast<double>(iterations-fail5)/ static_cast<double>(iterations), machine_precision5);
 
 };
