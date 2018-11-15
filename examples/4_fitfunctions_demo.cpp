@@ -16,7 +16,7 @@ struct my_functor_t {
 #endif
     double operator()(double* x) const
     {
-        return x[0]*x[1]*x[2]; // TODO - function where fit helps?
+        return x[0]/(1.1-x[1])/(1.1-x[2]);
     }
 } my_functor;
 
