@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.org/mppmu/qmc.svg?branch=master)](https://travis-ci.org/mppmu/qmc)
+[![Coverage Status](https://coveralls.io/repos/github/mppmu/qmc/badge.svg?branch=master)](https://coveralls.io/github/mppmu/qmc?branch=master)
+
+[The latest release of the single header can be downloaded directly using this link.](https://github.com/mppmu/qmc/releases/download/v0.0.1-alpha/qmc.hpp)
+
 # qmc
 
 A Quasi-Monte-Carlo (QMC) integrator library with NVIDIA CUDA support.
@@ -7,8 +12,6 @@ The library can be used to integrate multi-dimensional real or complex functions
 To read more about the library see [our publication](https://arxiv.org/TODO).
 
 ## Installation
-
-[The latest release of the single header can be downloaded directly using this link.](https://github.com/mppmu/qmc/releases/download/v0.0.1-alpha/qmc.hpp)
 
 Prerequisites:
 * A C++11 compatible C++ compiler.

@@ -1,0 +1,289 @@
+language: cpp
+
+matrix:
+  include:
+
+    # Coverage Linux gcc
+    - os: linux
+      sudo: true
+      dist: xenial # Need default gcc/gcov with c++11 support
+      before_install:
+        - pip install --user gcovr
+        - pip install --user cpp-coveralls
+        - coveralls --help
+        - wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz
+        - tar -xzvf gsl-2.5.tar.gz
+        - cd gsl-2.5
+        - ./configure
+        - make
+        - sudo make install
+        - export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+        - cd ..
+      after_success:
+        - coveralls --exclude 'check/test_suite/' --exclude 'examples/' --exclude 'gsl-2.5/' --gcov-options '\-lp'
+
+    # Linux gcc
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+    
+    # Linux clang
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
+      env:
+        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+      env:
+        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang-3.8
+      env:
+        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
+# Gives error: /usr/bin/ld: /usr/lib/llvm-3.9/bin/../lib/clang/3.9.1/lib/linux/libclang_rt.profile-x86_64.a(GCDAProfiling.c.o): unrecognized relocation (0x2a) in section `.text.llvm_gcda_start_file'
+# Error caused by conflict between llvm and ubuntu toolchains (see https://github.com/travis-ci/travis-ci/issues/8026)
+#    - os: linux
+#      addons:
+#        apt:
+#          sources:
+#            - llvm-toolchain-trusty-3.9
+#          packages:
+#            - clang-3.9
+#      env:
+#        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+# Not yet supported by travis-ci
+#    - os: linux
+#      addons:
+#        apt:
+#          sources:
+#            - llvm-toolchain-trusty-6.0
+#          packages:
+#            - clang-6.0
+#      env:
+#        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+#    - os: linux
+#      addons:
+#        apt:
+#          sources:
+#            - llvm-toolchain-trusty-7
+#          packages:
+#            - clang-7
+#      env:
+#        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+
+    # MacOS gcc
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc@5 && CC=gcc-5 && CXX=g++-5"
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+# Fails due to timeout caused by brew compiling gcc-6 from source
+#    - os: osx
+#      osx_image: xcode8
+#      env:
+#        - MATRIX_EVAL="brew install gcc@6 && CC=gcc-6 && CXX=g++-6"
+#      before_install:
+#        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+#        - brew update
+#        - eval "${MATRIX_EVAL}"
+#        - brew install gsl
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc@8 && CC=gcc-8 && CXX=g++-8"
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+
+    # MacOS clang
+    - os: osx
+      osx_image: xcode8
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode8.3
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode9
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode9.1
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode9.2
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode9.3
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode9.4
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode10
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode10.1
+      compiler: clang
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+
+before_install:
+    - eval "${MATRIX_EVAL}"
+    - wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz
+    - tar -xzvf gsl-2.5.tar.gz
+    - cd gsl-2.5
+    - ./configure
+    - make
+    - sudo make install
+    - export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+    - cd ..
+
+script:
+    - cd check
+    - make
+    - make summarize
+    - cd ..
