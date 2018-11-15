@@ -250,7 +250,7 @@ Default: `0`.
 
 `U evaluateminn`
 
-The minimum lattice size that should be used by the `evaluate` function to evaluate the integrand (used also for fitting the inverse cumulative distribution function). If a lattice of the requested size is not available then `n` will be the size of the next available lattice with at least `evaluateminn` points. 
+The minimum lattice size that should be used by the `evaluate` function to evaluate the integrand, if variance reduction is enabled these points are used for fitting the inverse cumulative distribution function. If a lattice of the requested size is not available then `n` will be the size of the next available lattice with at least `evaluateminn` points. 
 
 Default: `100000`.
 
@@ -322,6 +322,8 @@ Integrates the functor `func`. The result is returned in a `result` struct with 
 
 The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
 
+Calls: `get_next_n`.
+
 ---
 
 `template <typename I> samples<T,D> evaluate(I& func)`
@@ -335,6 +337,8 @@ Evaluates the functor `func` on a lattice of size greater than or equal to `eval
 
 The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
 
+Calls: `get_next_n`.
+
 ---
 
 `template <typename I> typename F<I,D,M>::transform_t fit(I& func)`
@@ -342,6 +346,8 @@ The functor `func` must define its dimension as a public member variable `number
 Fits a function (specified by the type `F` of the integrator) to the inverse cumulative distribution function of the integrand dimension-by-dimension and returns a functor representing the new integrand after this variance reduction procedure.
 
 The functor `func` must define its dimension as a public member variable `number_of_integration_variables`.
+
+Calls: `get_next_n`, `evaluate`.
 
 ### Generating Vectors
 
