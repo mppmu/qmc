@@ -43,7 +43,7 @@ A translation of the CUBA demo file for input to the QMC. For each function in t
 
 ### 7_cuba_pointers_demo
 
-An alternative translation of the CUBA demo file for input to the QMC. In  `6_cuba_functors_demo` a new functor is declared for each function in the CUBA test suite, in particular, each functor has a different type which corresponds to the function it contains. However, in `c++11` it can sometimes be inconvenient to iterate over objects of different types. In this demo we show how a functor of a single type can be used to refer to each of the functions in the test suite. This is a 5 stage process:
+An alternative translation of the CUBA demo file for input to the QMC. In  `6_cuba_functors_demo` a new functor is declared for each function in the CUBA test suite, in particular, each functor has a different type which corresponds to the function it contains. However, in `c++11` it can sometimes be inconvenient to iterate over objects of different types. In this demo we show how a functor of a single type can be used to refer to each of the functions in the test suite. This is a 4 stage process:
 1. Declare the functions to be integrated, e.g.
 ```cpp
 __host__ __device__ func1(double x[]) { return sin(x[0])*cos(x[1])*exp(x[2]); }
