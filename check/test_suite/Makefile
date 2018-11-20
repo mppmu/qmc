@@ -7,6 +7,6 @@ catch.o : catch.cpp catch.hpp
 
 .PHONY : clean very-clean
 clean :
-	rm -rf *.o *.gcda *.gcno
+	rm -rf coverage.log *.o *.gcov *.dSYM *.gcda *.gcno *.html
 
 very-clean  : clean

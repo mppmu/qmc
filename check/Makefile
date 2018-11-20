@@ -82,3 +82,4 @@ clean :
 		$(MAKE) -C $$f clean ; \
 	fi \
 	done
+	$(MAKE) -C test_suite clean
