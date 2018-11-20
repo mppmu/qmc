@@ -287,7 +287,7 @@ Default: `3e-3`.
 
 See `gtol`  in the nonlinear least-squares fitting GSL documentation.
 
-Default: `1e-4`.
+Default: `1e-8`.
 
 ---
 
