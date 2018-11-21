@@ -405,7 +405,7 @@ instantiates an integrator which applies a weight `(r_0=5,r_1=3)` Korobov transf
 
 | Name | Description |
 | --- | --- |
-| `PolySingular` | A 3rd order polynomial with two additional `1/(p-x)` terms, `f(x) = |p_2|*(x*(p_0-1))/(p_0-x) + |p_3|*(x*(p_1-1))/(p_1-x)  + x*(p_4+x*(p_5+x*(1-|p_2|-|p_3|-p_4-p_5)))` |
+| `PolySingular` | A 3rd order polynomial with two additional `1/(p-x)` terms, `f(x) = \|p_2\|*(x*(p_0-1))/(p_0-x) + \|p_3\|*(x*(p_1-1))/(p_1-x)  + x*(p_4+x*(p_5+x*(1-\|p_2\|-\|p_3\|-p_4-p_5)))` |
 | `None` | No fit is performed |
 
 The fit function used by the qmc can be selected when constructing the qmc. These functions are used to approximate the inverse cumulative distribution function of the integrand dimension-by-dimension.
