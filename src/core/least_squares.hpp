@@ -40,11 +40,25 @@ namespace integrators
             const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->x;
             const std::vector<D>& y = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->y;
             const F1& fit_function = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->fit_function;
+            //const F1& regularization = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->regularization;
+
+            assert(x.size() + parameters_vector->size == f->size);
 
             // Compute deviates of fit function for input points
             for (size_t i = 0; i < x.size(); i++)
             {
-                gsl_vector_set(f, i, static_cast<double>(fit_function(x[i], gsl_vector_const_ptr(parameters_vector,0)) - y[i]) );
+                  gsl_vector_set(f, i, static_cast<double>(fit_function(x[i], gsl_vector_const_ptr(parameters_vector,0)) - y[i]) );
+            }
+
+            // regularization
+            for (size_t i = x.size(), j=0; i < f->size; i++,j++)
+            {
+//                  std::cout << j << " " << i <<std::endl;
+                  //gsl_vector_set(f, i, 0.);
+                  double temp = fitfunctions::PolySingularRegularization<double>()(gsl_vector_const_ptr(parameters_vector,0), j,false);
+                  gsl_vector_set(f, i, temp );
+//                  if(temp != 0.)
+//                    std::cout << j << " "<<temp<<std::endl;
             }
 
             return GSL_SUCCESS;
@@ -60,6 +74,8 @@ namespace integrators
             for (size_t i = 0; i < x.size(); i++)
                 for (size_t j = 0; j < fit_function_jacobian.num_parameters; j++)
                     gsl_matrix_set(J, i, j, static_cast<double>(fit_function_jacobian(x[i], gsl_vector_const_ptr(parameters_vector,0), j)) );
+            for (size_t i = x.size(), j=0; i < J->size1; i++,j++)
+                    gsl_matrix_set(J, i, j, fitfunctions::PolySingularRegularization<double>()(gsl_vector_const_ptr(parameters_vector,0), j,true));
 
             return GSL_SUCCESS;
         }
@@ -151,34 +167,15 @@ namespace integrators
         }
 
         template <typename D, typename F1, typename F2, typename F3>
-        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const size_t maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
+        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const size_t maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl, double lambda)
         {
-            const size_t num_points = x.size();
             const size_t num_parameters = fit_function.num_parameters;
-
+            const size_t num_points = x.size() + num_parameters;
             assert(x.size() == y.size());
-            assert(num_points > num_parameters + 1);
+            assert(x.size() > num_parameters + 1);
 
-            least_squares_wrapper_t<D,F1,F2,F3> data = { fit_function, fit_function_jacobian, fit_function_hessian, x, y };
-
-            const gsl_multifit_nlinear_type *method = gsl_multifit_nlinear_trust;
-            gsl_multifit_nlinear_workspace *w;
-            gsl_multifit_nlinear_fdf fdf;
-            gsl_multifit_nlinear_parameters fdf_params = fitparametersgsl;
-            gsl_vector *f;
-            gsl_matrix *J;
-            gsl_matrix *covar = gsl_matrix_alloc(num_parameters, num_parameters);
-
-            // define the function to be minimized
-            fdf.f = fit_function_wrapper<D,F1,F2,F3>;
-            fdf.df = get_fit_function_jacobian_wrapper<D,F1,F2,F3>(fit_function_jacobian, verbosity, logger);
-            fdf.fvv = get_fit_function_hessian_wrapper<D,F1,F2,F3>(fit_function_hessian, verbosity, logger);
-            fdf.n = num_points;
-            fdf.p = num_parameters;
-            fdf.params = &data;
-            
             // compute dx/dy of input points, which should be used as an additional weight in the evaluation of chisq
-            std::vector<double> dxdy(x.size());
+            std::vector<double> dxdy(num_points);
             double maxwgt = 0.;
 
             const size_t nsteps = 1; 
@@ -201,11 +198,34 @@ namespace integrators
                 maxwgt=std::max(maxwgt,dxdy[i]);
             }
             
+            for (size_t i = x.size(); i<num_points; i++)
+            {
+                dxdy[i]=lambda; //*x.size();
+            }
+
             // the gsl fit doesn't seem to work with weights>1 
-            for(size_t i=0; i< x.size(); i++)
+            for(size_t i=0; i< dxdy.size(); i++)
             {
                 dxdy[i]/=maxwgt;
             }
+
+            least_squares_wrapper_t<D,F1,F2,F3> data = { fit_function, fit_function_jacobian, fit_function_hessian, x, y};
+
+            const gsl_multifit_nlinear_type *method = gsl_multifit_nlinear_trust;
+            gsl_multifit_nlinear_workspace *w;
+            gsl_multifit_nlinear_fdf fdf;
+            gsl_multifit_nlinear_parameters fdf_params = fitparametersgsl;
+            gsl_vector *f;
+            gsl_matrix *J;
+            gsl_matrix *covar = gsl_matrix_alloc(num_parameters, num_parameters);
+
+            // define the function to be minimized
+            fdf.f = fit_function_wrapper<D,F1,F2,F3>;
+            fdf.df = get_fit_function_jacobian_wrapper<D,F1,F2,F3>(fit_function_jacobian, verbosity, logger);
+            fdf.fvv = get_fit_function_hessian_wrapper<D,F1,F2,F3>(fit_function_hessian, verbosity, logger);
+            fdf.n = num_points;
+            fdf.p = num_parameters;
+            fdf.params = &data;
             
             gsl_vector_view wgt = gsl_vector_view_array(dxdy.data(), dxdy.size());
 
