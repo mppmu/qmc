@@ -15,7 +15,7 @@ namespace integrators
         struct PolySingularFunction
         {
             static const int num_parameters = 6;
-            const std::vector<std::vector<D>> initial_parameters = { {1.1,-0.1, 0.1,0.1, 0.3,0.3} };
+            const std::vector<std::vector<D>> initial_parameters = { {1.1,-0.1, 0.1,0.1, 1.0,0.0} };
 
             D operator()(const D x, const double* p) const
             {
@@ -46,13 +46,13 @@ namespace integrators
             D operator()(const double* p, const size_t parameter, const bool jacobian) const
             {
                 if (parameter == 0) {
-                    if (p[parameter] < 1.3) return D(0);
-                    return (jacobian) ? D(1) : (p[parameter]-D(1.3));
+                    if (p[parameter] < 1.5) return D(0);
+                    return (jacobian) ? D(1) : (p[parameter]-D(1.5));
                 } else if (parameter == 1) {
-                    if (p[parameter] > -0.3) return D(0);
-                    return (jacobian) ? D(-1) : (D(-0.3)-p[parameter]);
+                    if (p[parameter] > -0.5) return D(0);
+                    return (jacobian) ? D(-1) : (D(-0.5)-p[parameter]);
                 } else if (parameter < 6) {
-                    if (abs(p[parameter]) < 2) return D(0);
+                    if (abs(p[parameter]) < 200) return D(0);
                     return (jacobian) ? copysign(1.,p[parameter]) : (abs(p[parameter])-2);
                 } else {
                     throw std::domain_error("fit_function_regularization called with invalid parameter: " + std::to_string(parameter));
