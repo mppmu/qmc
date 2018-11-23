@@ -266,11 +266,24 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         REQUIRE_THROWS_AS( real_integrator.integrate(too_many_dim_function), std::invalid_argument );
     };
 
+    SECTION ( "number_of_integration_variables > M", "[Qmc]")
+    {
+        REQUIRE_THROWS_AS( real_integrator.evaluate(too_many_dim_function), std::invalid_argument );
+    };
+
     SECTION( "Set cputhreads to zero (error)")
     {
 
         real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error );
+
+    };
+
+    SECTION( "Set cputhreads to zero (error)")
+    {
+
+        real_integrator.cputhreads = 0;
+        REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function) , std::domain_error );
 
     };
 
