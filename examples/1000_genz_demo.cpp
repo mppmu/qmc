@@ -33,12 +33,16 @@ struct options_t {
 
     // Generic options
     D epsrel = 1e-8;
+    D divonneepsrel = 1e-5;
     D epsabs = 0;
 
     // QMC Options
     U minn = 1;
-    U qmcmaxeval = 700000000; // 700000000 // (max lattice size)
-    U cubamaxeval = 70000000;
+    U qmcmaxeval     = 700000000; // 700000000 // (max lattice size)
+    U vegasmaxeval   = 700000000;
+    U divonnemaxeval = 700000000;
+    U suavemaxeval   = 80000000;
+    U cuhremaxeval   = 700000000;
     U verbosity = 0;
 
     // Cuba options
@@ -364,7 +368,7 @@ void test(options_t& integrator_options)
                 integrator_options.flags,
                 integrator_options.seed,
                 integrator_options.mineval,
-                integrator_options.cubamaxeval,
+                integrator_options.vegasmaxeval,
                 integrator_options.nstart,
                 integrator_options.nincrease,
                 integrator_options.nbatch,
@@ -391,7 +395,7 @@ void test(options_t& integrator_options)
                 integrator_options.flagslast,
                 integrator_options.seed,
                 integrator_options.mineval,
-                integrator_options.cubamaxeval,
+                integrator_options.suavemaxeval,
                 integrator_options.nnew,
                 integrator_options.nmin,
                 integrator_options.flatness,
@@ -412,12 +416,12 @@ void test(options_t& integrator_options)
                   NCOMP,
                   *cuba_integrand<NDIM,FAM>, &integrand,
                   integrator_options.nvec,
-                  integrator_options.epsrel,
+                  integrator_options.divonneepsrel,
                   integrator_options.epsabs,
                   integrator_options.flags,
                   integrator_options.seed,
                   integrator_options.mineval,
-                  integrator_options.cubamaxeval,
+                  integrator_options.divonnemaxeval,
                   integrator_options.key1,
                   integrator_options.key2,
                   integrator_options.key3,
@@ -451,7 +455,7 @@ void test(options_t& integrator_options)
                 integrator_options.epsabs,
                 integrator_options.flagslast,
                 integrator_options.mineval,
-                integrator_options.cubamaxeval,
+                integrator_options.cuhremaxeval,
                 integrator_options.key,
                 integrator_options.statefile,
                 integrator_options.spin,
@@ -476,7 +480,10 @@ void do_test(options_t& options)
     std::cout << "# BEGIN WARMUP " << std::endl;
     options_t options_warmup;
     options_warmup.qmcmaxeval = 2000;
-    options_warmup.cubamaxeval = 2000;
+    options_warmup.vegasmaxeval = 2000;
+    options_warmup.divonnemaxeval = 2000;
+    options_warmup.suavemaxeval = 2000;
+    options_warmup.cuhremaxeval = 2000;
     test<5,0>(options_warmup);
     std::cout << "# WARMUP FINISHED" << std::endl;
 
