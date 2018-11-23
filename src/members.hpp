@@ -70,9 +70,11 @@ namespace integrators
         if (device == -1) {
             work_this_iteration = 1;
         } else {
-            work_this_iteration = cudablocks*cudathreadsperblock;
 #ifdef __CUDACC__
+            work_this_iteration = cudablocks*cudathreadsperblock;
             integrators::core::cuda::setup_sample(d_z, z, d_d, d, d_r, d_r_size/m, &r[thread_id], r.size()/m, m, d_func, func, device, verbosity, logger);
+#else
+            throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
 #endif
         }
 
@@ -314,9 +316,11 @@ namespace integrators
         if (device == -1) {
             work_this_iteration = 1;
         } else {
-            work_this_iteration = cudablocks*cudathreadsperblock;
 #ifdef __CUDACC__
+            work_this_iteration = cudablocks*cudathreadsperblock;
             integrators::core::cuda::setup_evaluate(d_z, z, d_d, d, d_r, d_r_size, d_func, func, device, verbosity, logger);
+#else
+            throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
 #endif
         }
 
