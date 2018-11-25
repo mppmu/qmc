@@ -236,21 +236,21 @@ namespace integrators
                     dy += D(1);
                     dx += D(1);
                 }
-                dxdy[i] = static_cast<double>(dx/dy);
+                dxdy[i] = static_cast<double>(dx/dy/x.size());
                 
                 maxwgt=std::max(maxwgt,dxdy[i]);
             }
             
             for (size_t i = x.size(); i<num_points; i++)
             {
-                dxdy[i]=lambda; //*x.size();
+                dxdy[i]=lambda;
             }
 
-            // the gsl fit doesn't seem to work with weights>1 
-            for(size_t i=0; i< dxdy.size(); i++)
-            {
-                dxdy[i]/=maxwgt;
-            }
+//            // the gsl fit doesn't seem to work with weights>1 
+//            for(size_t i=0; i< dxdy.size(); i++)
+//            {
+//                dxdy[i]/=maxwgt;
+//            }
 
             least_squares_wrapper_t<D,F1,F2,F3,F4> data = { fit_function, fit_function_jacobian, fit_function_hessian, fit_function_regularization, x, y};
 
@@ -331,7 +331,7 @@ namespace integrators
                 if (verbosity > 1)
                 {
                     double dof = num_points - num_parameters - 1;
-                    double c = std::max(1., sqrt(chisq/dof));
+                    double c = std::max(1., sqrt(x.size()*chisq/dof));
 
                     logger << "-- fit output (run " << i << ")" << " --" << std::endl;
                     logger << "summary from method "   << gsl_multifit_nlinear_name(w) << " " << gsl_multifit_nlinear_trs_name(w) << std::endl;
@@ -349,7 +349,7 @@ namespace integrators
                         logger << "reason for stopping: " << "unknown" << std::endl;
                     logger << "initial |f(x)| = "      << sqrt(chisq0) << std::endl;;
                     logger << "final   |f(x)| = "      << sqrt(chisq) << std::endl;
-                    logger << "chisq/dof = "           << chisq/dof << std::endl;
+                    logger << "chisq/dof = "           << x.size()*chisq/dof << std::endl;
                     for (size_t j = 0; j < num_parameters; j++)
                         logger << "fit_parameters[" << j << "] = " << this_fit_parameters.at(j) << " +/- " << c*sqrt(gsl_matrix_get(covar,j,j)*chisq/dof) << std::endl;
                     logger << "status = "              << gsl_strerror(status) << std::endl;

@@ -571,7 +571,7 @@ namespace integrators
                     yy.push_back(y.at(i));
             }
 
-            double lambda=D(100);
+            double lambda=D(1e-4);
             fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian, fit_function_hessian, fit_function_regularization, yy,xx,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl, lambda) );
         }
 
