@@ -519,6 +519,7 @@ namespace integrators
         typename F<I,D,M>::function_t fit_function;
         typename F<I,D,M>::jacobian_t fit_function_jacobian;
         typename F<I,D,M>::hessian_t fit_function_hessian;
+        typename F<I,D,M>::regularization_t fit_function_regularization;
         typename F<I,D,M>::transform_t fit_function_transform(func);
 
         if (fit_function.num_parameters <= 0)
@@ -571,7 +572,7 @@ namespace integrators
             }
 
             double lambda=D(100);
-            fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian, fit_function_hessian, yy,xx,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl, lambda) );
+            fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian, fit_function_hessian, fit_function_regularization, yy,xx,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl, lambda) );
         }
 
         for (size_t d = 0; d < fit_function_transform.number_of_integration_variables; ++d)

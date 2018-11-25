@@ -24,23 +24,52 @@ namespace integrators
         using fit_function_jacobian_wrapper_ptr = int (*)(const gsl_vector * , void *, gsl_matrix *);
         using fit_function_hessian_wrapper_ptr = int (*)(const gsl_vector *, const gsl_vector *, void *, gsl_vector *);
 
-        template<typename D, typename F1, typename F2, typename F3>
+        template<typename D, typename F1, typename F2, typename F3, typename F4>
         struct least_squares_wrapper_t {
             const F1 fit_function;
             const F2 fit_function_jacobian;
             const F3 fit_function_hessian;
+            const F4 fit_function_regularization;
             const std::vector<D> x;
             const std::vector<D> y;
         };
 
+        template<typename D, typename F1, typename F2, typename F3, typename F4>
+        void fit_function_wrapper_apply_regularization(F4& fit_function_regularization, const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_vector * f)
+        {
+            // Unpack data
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->x;
+            const std::vector<D>& y = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->y;
+
+            // std::cout << "applying regularization" << std::endl;
+
+            // Apply regularization function
+            for (size_t i = x.size(), j=0; i < f->size; i++,j++)
+            {
+                //                  std::cout << j << " " << i <<std::endl;
+                //gsl_vector_set(f, i, 0.);
+                double temp = fit_function_regularization(gsl_vector_const_ptr(parameters_vector,0), j,false);
+                gsl_vector_set(f, i, temp );
+                //                  if(temp != 0.)
+                //                    std::cout << j << " "<<temp<<std::endl;
+            }
+
+        }
         template<typename D, typename F1, typename F2, typename F3>
+        void fit_function_wrapper_apply_regularization(const std::nullptr_t fit_function_regularization, const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_vector * f)
+        {
+            // std::cout << "not applying regularization" << std::endl;
+            // No regularization function, nothing to do
+        }
+
+        template<typename D, typename F1, typename F2, typename F3, typename F4>
         int fit_function_wrapper(const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_vector * f)
         {
             // Unpack data
-            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->x;
-            const std::vector<D>& y = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->y;
-            const F1& fit_function = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->fit_function;
-            //const F1& regularization = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->regularization;
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->x;
+            const std::vector<D>& y = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->y;
+            const F1& fit_function = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->fit_function;
+            const F4& fit_function_regularization = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->fit_function_regularization;
 
             assert(x.size() + parameters_vector->size == f->size);
 
@@ -50,42 +79,56 @@ namespace integrators
                   gsl_vector_set(f, i, static_cast<double>(fit_function(x[i], gsl_vector_const_ptr(parameters_vector,0)) - y[i]) );
             }
 
-            // regularization
-            for (size_t i = x.size(), j=0; i < f->size; i++,j++)
-            {
-//                  std::cout << j << " " << i <<std::endl;
-                  //gsl_vector_set(f, i, 0.);
-                  double temp = fitfunctions::PolySingularRegularization<double>()(gsl_vector_const_ptr(parameters_vector,0), j,false);
-                  gsl_vector_set(f, i, temp );
-//                  if(temp != 0.)
-//                    std::cout << j << " "<<temp<<std::endl;
-            }
+            // Regularization
+            fit_function_wrapper_apply_regularization<D,F1,F2,F3>(fit_function_regularization, parameters_vector, xyfunc_ptr, f);
 
             return GSL_SUCCESS;
         }
 
+        template<typename D, typename F1, typename F2, typename F3, typename F4>
+        void fit_function_jacobian_wrapper_apply_regularization(F4& fit_function_regularization, const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_matrix * J)
+        {
+            // Unpack data
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->x;
+            const std::vector<D>& y = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->y;
+
+            // std::cout << "applying regularization to jacobian" << std::endl;
+
+            for (size_t i = x.size(), j=0; i < J->size1; i++,j++)
+                gsl_matrix_set(J, i, j, fit_function_regularization(gsl_vector_const_ptr(parameters_vector,0), j,true));
+        }
+
         template<typename D, typename F1, typename F2, typename F3>
+        void fit_function_jacobian_wrapper_apply_regularization(const std::nullptr_t fit_function_regularization, const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_matrix * J)
+        {
+            // std::cout << "not applying regularization to jacobian" << std::endl;
+            // No regularization function, nothing to do
+        }
+
+        template<typename D, typename F1, typename F2, typename F3, typename F4>
         int fit_function_jacobian_wrapper(const gsl_vector * parameters_vector, void *xyfunc_ptr, gsl_matrix * J)
         {
             // Unpack data
-            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->x;
-            const F2& fit_function_jacobian = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->fit_function_jacobian;
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->x;
+            const F2& fit_function_jacobian = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->fit_function_jacobian;
+            const F4& fit_function_regularization = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->fit_function_regularization;
 
             for (size_t i = 0; i < x.size(); i++)
                 for (size_t j = 0; j < fit_function_jacobian.num_parameters; j++)
                     gsl_matrix_set(J, i, j, static_cast<double>(fit_function_jacobian(x[i], gsl_vector_const_ptr(parameters_vector,0), j)) );
-            for (size_t i = x.size(), j=0; i < J->size1; i++,j++)
-                    gsl_matrix_set(J, i, j, fitfunctions::PolySingularRegularization<double>()(gsl_vector_const_ptr(parameters_vector,0), j,true));
+
+            // Regularization
+            fit_function_jacobian_wrapper_apply_regularization<D,F1,F2,F3>(fit_function_regularization, parameters_vector, xyfunc_ptr, J);
 
             return GSL_SUCCESS;
         }
 
-        template<typename D, typename F1, typename F2, typename F3>
+        template<typename D, typename F1, typename F2, typename F3, typename F4>
         int fit_function_hessian_wrapper(const gsl_vector * parameters_vector, const gsl_vector * v, void *xyfunc_ptr, gsl_vector * fvv)
         {
             // Unpack data
-            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->x;
-            const F3& fit_function_hessian = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3>*>(xyfunc_ptr)->fit_function_hessian;
+            const std::vector<D>& x = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->x;
+            const F3& fit_function_hessian = reinterpret_cast<least_squares_wrapper_t<D,F1,F2,F3,F4>*>(xyfunc_ptr)->fit_function_hessian;
 
             // Compute hessian of fit function
             for (size_t i = 0; i < x.size(); i++)
@@ -136,14 +179,14 @@ namespace integrators
             logger.display_timing = display_timing;
         }
 
-        template <typename D, typename F1, typename F2, typename F3>
+        template <typename D, typename F1, typename F2, typename F3, typename F4>
         fit_function_jacobian_wrapper_ptr get_fit_function_jacobian_wrapper(const F2& fit_function_jacobian, const U& verbosity, Logger& logger)
         {
             if (verbosity > 1)
                 logger << "using analytic jacobian" << std::endl;
-            return fit_function_jacobian_wrapper<D,F1,F2,F3>;
+            return fit_function_jacobian_wrapper<D,F1,F2,F3,F4>;
         }
-        template <typename D, typename F1, typename F2, typename F3>
+        template <typename D, typename F1, typename F2, typename F3, typename F4>
         std::nullptr_t get_fit_function_jacobian_wrapper(const std::nullptr_t& fit_function_jacobian, const U& verbosity, Logger& logger)
         {
             if (verbosity > 1)
@@ -151,14 +194,14 @@ namespace integrators
             return nullptr;
         }
 
-        template <typename D, typename F1, typename F2, typename F3>
+        template <typename D, typename F1, typename F2, typename F3, typename F4>
         fit_function_hessian_wrapper_ptr get_fit_function_hessian_wrapper(const F3& fit_function_hessian, const U& verbosity, Logger& logger)
         {
             if (verbosity > 1)
                 logger << "using analytic hessian" << std::endl;
-            return fit_function_hessian_wrapper<D,F1,F2,F3>;
+            return fit_function_hessian_wrapper<D,F1,F2,F3,F4>;
         }
-        template <typename D, typename F1, typename F2, typename F3>
+        template <typename D, typename F1, typename F2, typename F3, typename F4>
         std::nullptr_t get_fit_function_hessian_wrapper(const std::nullptr_t& fit_function_hessian, const U& verbosity, Logger& logger)
         {
             if (verbosity > 1)
@@ -166,8 +209,8 @@ namespace integrators
             return nullptr;
         }
 
-        template <typename D, typename F1, typename F2, typename F3>
-        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const size_t maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl, double lambda)
+        template <typename D, typename F1, typename F2, typename F3, typename F4>
+        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, F4& fit_function_regularization, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const size_t maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl, double lambda)
         {
             const size_t num_parameters = fit_function.num_parameters;
             const size_t num_points = x.size() + num_parameters;
@@ -209,7 +252,7 @@ namespace integrators
                 dxdy[i]/=maxwgt;
             }
 
-            least_squares_wrapper_t<D,F1,F2,F3> data = { fit_function, fit_function_jacobian, fit_function_hessian, x, y};
+            least_squares_wrapper_t<D,F1,F2,F3,F4> data = { fit_function, fit_function_jacobian, fit_function_hessian, fit_function_regularization, x, y};
 
             const gsl_multifit_nlinear_type *method = gsl_multifit_nlinear_trust;
             gsl_multifit_nlinear_workspace *w;
@@ -220,9 +263,9 @@ namespace integrators
             gsl_matrix *covar = gsl_matrix_alloc(num_parameters, num_parameters);
 
             // define the function to be minimized
-            fdf.f = fit_function_wrapper<D,F1,F2,F3>;
-            fdf.df = get_fit_function_jacobian_wrapper<D,F1,F2,F3>(fit_function_jacobian, verbosity, logger);
-            fdf.fvv = get_fit_function_hessian_wrapper<D,F1,F2,F3>(fit_function_hessian, verbosity, logger);
+            fdf.f = fit_function_wrapper<D,F1,F2,F3,F4>;
+            fdf.df = get_fit_function_jacobian_wrapper<D,F1,F2,F3,F4>(fit_function_jacobian, verbosity, logger);
+            fdf.fvv = get_fit_function_hessian_wrapper<D,F1,F2,F3,F4>(fit_function_hessian, verbosity, logger);
             fdf.n = num_points;
             fdf.p = num_parameters;
             fdf.params = &data;

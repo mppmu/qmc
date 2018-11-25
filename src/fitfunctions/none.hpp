@@ -48,6 +48,7 @@ namespace integrators
             using jacobian_t = std::nullptr_t;
             using hessian_t = std::nullptr_t;
             using transform_t = NoneTransform<I,D,M>;
+            using regularization_t = std::nullptr_t;
         };
 
         struct None
