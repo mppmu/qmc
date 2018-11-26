@@ -388,6 +388,10 @@ namespace integrators
             throw std::invalid_argument("qmc::evaluate called with func.number_of_integration_variables > M. Please increase M (maximal number of integration variables).");
         if ( cputhreads < 1 )
             throw std::domain_error("qmc::evaluate called with cputhreads < 1. Please set cputhreads to a positive integer.");
+#ifndef __CUDACC__
+        if ( devices.size() != 1 || devices.count(-1) != 1)
+            throw std::invalid_argument("qmc::evaluate called with devices != {-1} (CPU) but CUDA not supported by compiler.");
+#endif
 
         // allocate memory
         samples<T,D> res;
@@ -679,6 +683,10 @@ namespace integrators
             throw std::domain_error("qmc::integrate called with maxnperpackage = 0. Please set maxnperpackage to a positive integer.");
         if ( cputhreads < 1 )
             throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
+#ifndef __CUDACC__
+        if ( devices.size() != 1 || devices.count(-1) != 1)
+            throw std::invalid_argument("qmc::integrate called with devices != {-1} (CPU) but CUDA not supported by compiler.");
+#endif
 
         if (verbosity > 2)
             logger << "-- qmc::integrate called --" << std::endl;
