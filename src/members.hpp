@@ -428,7 +428,7 @@ namespace integrators
 
         std::chrono::steady_clock::time_point time_before_compute = std::chrono::steady_clock::now();
 
-        if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1) // TODO - test case
+        if ( cputhreads == 1 && devices.size() == 1 && devices.count(-1) == 1)
         {
             // Compute serially on cpu
             if (verbosity > 2) logger << "computing serially" << std::endl;
@@ -437,7 +437,7 @@ namespace integrators
                 integrators::core::generic::generate_samples(i, z, d, &r[i], n, func);
             }
         }
-        else // TODO: check this case
+        else
         {
             // Create threadpool
             if (verbosity > 2)

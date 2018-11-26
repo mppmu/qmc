@@ -8,6 +8,9 @@
 #include <sstream> // ostringstream
 #include <string> // to_string
 #include <random> // mt19937_64
+#include <utility> // pair
+#include <vector>
+#include <map>
 
 #ifdef __CUDACC__
 #include <thrust/complex.h>
@@ -242,6 +245,12 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         REQUIRE_THROWS_AS( real_integrator.integrate(zero_dim_function) , std::invalid_argument);
         
     };
+    
+    SECTION( "Invalid Dimension", "[Qmc]" ) {
+        
+        REQUIRE_THROWS_AS( real_integrator.evaluate(zero_dim_function) , std::invalid_argument);
+        
+    };
 
     SECTION( "Invalid Number of Random Shifts", "[Qmc]" ) {
 
@@ -260,13 +269,6 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
     SECTION( "Invalid Number of Points Per Package", "[Qmc]" ) {
 
         real_integrator.maxnperpackage = 0;
-        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
-
-    };
-
-    SECTION( "Invalid Number of CPU Threads", "[Qmc]" ) {
-
-        real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
 
     };
@@ -297,7 +299,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         REQUIRE_THROWS_AS( real_integrator.evaluate(too_many_dim_function), std::invalid_argument );
     };
 
-    SECTION( "Set cputhreads to zero (error)")
+    SECTION( "Invalid Number of CPU Threads", "[Qmc]")
     {
 
         real_integrator.cputhreads = 0;
@@ -305,7 +307,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
     };
 
-    SECTION( "Set cputhreads to zero (error)")
+    SECTION( "Invalid Number of CPU Threads", "[Qmc]")
     {
 
         real_integrator.cputhreads = 0;
@@ -361,7 +363,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
     real_integrator.verbosity = 3;
 
     integrators::Qmc<complex<double>,double,3,integrators::transforms::Korobov<3>::type> complex_integrator;
-    std::ostringstream complex_stream; real_integrator.logger = integrators::Logger(complex_stream);
+    std::ostringstream complex_stream; complex_integrator.logger = integrators::Logger(complex_stream);
     complex_integrator.minn = 10000;
     complex_integrator.verbosity = 3;
 
@@ -547,8 +549,7 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
 };
 
-TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" )
-{
+TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" ) {
     double eps = 1e-6; // approximate upper bound on integration error we would expect
 
     integrators::result<double> real_result;
@@ -596,6 +597,96 @@ TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" )
         REQUIRE( real_result.error < eps );
 
     };
+};
+
+TEST_CASE( "Evaluate", "[qmc]") {
+    
+    using U = unsigned long long int;
+    
+    integrators::samples<double,double> real_samples;
+    integrators::samples<complex<double>,double> complex_samples;
+
+    U dim = 2;
+    U n = 5;
+    std::vector<U> z = {1,2};
+    std::map<U,std::vector<U>> test_generating_vectors;
+    test_generating_vectors.insert(std::pair<U,std::vector<U>>(n,z));
+    
+    integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
+    std::ostringstream real_stream; real_integrator.logger = integrators::Logger(real_stream);
+    real_integrator.evaluateminn = 100;
+    real_integrator.verbosity = 3;
+    real_integrator.generatingvectors = test_generating_vectors;
+    
+    integrators::Qmc<complex<double>,double,3,integrators::transforms::Korobov<3>::type> complex_integrator;
+    std::ostringstream complex_stream; complex_integrator.logger = integrators::Logger(complex_stream);
+    real_integrator.evaluateminn = 100;
+    complex_integrator.verbosity = 3;
+    complex_integrator.generatingvectors = test_generating_vectors;
+    
+    SECTION( "Real Function (Serial)" )
+    {
+        real_integrator.cputhreads = 1;
+        
+        real_samples = real_integrator.evaluate(real_function);
+        
+        for(U i = 0; i < dim; i++)
+        {
+            REQUIRE( real_samples.z.at(i) == z.at(i) );
+        }
+        REQUIRE( real_samples.d.size() == dim);
+        REQUIRE( real_samples.r.size() == n);
+        REQUIRE( real_samples.n == n );
+    };
+    
+    SECTION( "Real Function (Parallel)" )
+    {
+        real_integrator.cputhreads = 2;
+        
+        real_samples = real_integrator.evaluate(real_function);
+        
+        for(U i = 0; i < dim; i++)
+        {
+            REQUIRE( real_samples.z.at(i) == z.at(i) );
+        }
+        REQUIRE( real_samples.d.size() == dim);
+        REQUIRE( real_samples.r.size() == n);
+        REQUIRE( real_samples.n == n );
+        
+    };
+    
+    SECTION( "Complex Function (Serial)" )
+    {
+        complex_integrator.cputhreads = 1;
+        
+        complex_samples = complex_integrator.evaluate(complex_function);
+        
+        for(U i = 0; i < dim; i++)
+        {
+            REQUIRE( complex_samples.z.at(i) == z.at(i) );
+        }
+        REQUIRE( complex_samples.d.size() == dim);
+        REQUIRE( complex_samples.r.size() == n);
+        REQUIRE( complex_samples.n == n );
+        
+    };
+    
+    SECTION( "Complex Function (Parallel)" )
+    {
+        complex_integrator.cputhreads = 2;
+        
+        complex_samples = complex_integrator.evaluate(complex_function);
+        
+        for(U i = 0; i < dim; i++)
+        {
+            REQUIRE( complex_samples.z.at(i) == z.at(i) );
+        }
+        REQUIRE( complex_samples.d.size() == dim);
+        REQUIRE( complex_samples.r.size() == n);
+        REQUIRE( complex_samples.n == n );
+        
+    };
+    
 };
 
 TEST_CASE( "Fitting (Chi-sq)" , "[fit]" )
@@ -650,6 +741,7 @@ TEST_CASE( "Fitting (Chi-sq)" , "[fit]" )
     {
         using fitfun = integrators::fitfunctions::PolySingular::type<I,D,2>;
         integrators::Qmc<double,double,2,integrators::transforms::None::type,integrators::fitfunctions::PolySingular::type> qmc;
+        std::ostringstream qmc_stream; qmc.logger = integrators::Logger(qmc_stream);
         qmc.randomgenerator.seed(1);
         qmc.verbosity=3;
         auto fitted_function = qmc.fit(test_function2);
