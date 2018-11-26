@@ -70,6 +70,32 @@ struct complex_function_t {
 
 } complex_function;
 
+struct poly_function_t {
+    const unsigned long long int number_of_integration_variables = 1;
+    const double a=0.6;
+    // expexted fit parameters x0: {arbitrary, arbitrary, 0, 0 a, 1-a}
+    HOSTDEVICE double operator()(double* x) { return  1./sqrt(a*a+4.*x[0]*(1.-a));}
+} poly_function;
+
+struct const_function_t {
+    const unsigned long long int number_of_integration_variables = 1;
+    HOSTDEVICE double operator()(double* x) { return 2. ; }
+} const_function;
+
+struct test_function_t {
+    const unsigned long long int number_of_integration_variables = 2;
+    const double a=0.2;
+    // expexted fit parameters x0: {1.07, arbitrary, 0.3, 0, 0.7, 0}
+    // expexted fit parameters x1: {arbitrary, arbitrary, 0, 0, a, 1-a }
+    HOSTDEVICE double operator()(double* x) { return  (0.7142857142857143*(1.+(0.728-x[0])/sqrt(-2.996*x[0]+(0.77+x[0])*(0.77+x[0]))))/sqrt(a*a+4.*x[1]*(1.-a)); }
+} test_function;
+
+struct test_function2_t {
+    const unsigned long long int number_of_integration_variables = 1;
+    // inverse CDF: (x + 1/3 x Cos[3 x] - 1/9 Sin[3 x])
+    HOSTDEVICE double operator()(double* x) { return  1./(1-x[0]*std::sin(3.*x[0])); }
+} test_function2;
+
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
     integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
@@ -569,5 +595,69 @@ TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" )
         REQUIRE( real_result.integral == Approx(0.125).epsilon(eps) );
         REQUIRE( real_result.error < eps );
 
+    };
+};
+
+TEST_CASE( "Fitting (Chi-sq)" , "[fit]" )
+{
+    using I = test_function_t;
+    using D = double;
+    using U = unsigned long long;
+    
+    SECTION( "constant integrand" )
+    {
+        using fitfun = integrators::fitfunctions::PolySingular::type<I,D,2>;
+        integrators::Qmc<double,double,2,integrators::transforms::None::type,integrators::fitfunctions::PolySingular::type> qmc;
+        qmc.randomgenerator.seed(1);
+        auto fitted_function = qmc.fit(const_function);
+        REQUIRE(fitted_function.p[0][2] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[0][3] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[0][4] == Approx(1.).margin(5e-3));
+        REQUIRE(fitted_function.p[0][5] == Approx(0.).margin(5e-3));
+    };
+    
+    SECTION( "polynomial inv. CDF" )
+    {
+        using fitfun = integrators::fitfunctions::PolySingular::type<I,D,2>;
+        integrators::Qmc<double,double,2,integrators::transforms::None::type,integrators::fitfunctions::PolySingular::type> qmc;
+        qmc.randomgenerator.seed(1);
+        auto fitted_function = qmc.fit(poly_function);
+        REQUIRE(fitted_function.p[0][2] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[0][3] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[0][4] == Approx(0.6).margin(5e-3));
+        REQUIRE(fitted_function.p[0][5] == Approx(0.4).margin(5e-3));
+    };
+    
+    SECTION( "integrand matching fit function" )
+    {
+        using fitfun = integrators::fitfunctions::PolySingular::type<I,D,2>;
+        integrators::Qmc<double,double,2,integrators::transforms::None::type,integrators::fitfunctions::PolySingular::type> qmc;
+        qmc.randomgenerator.seed(1);
+        auto fitted_function = qmc.fit(test_function);
+        REQUIRE(fitted_function.p[0][0] == Approx(1.07).margin(5e-3));
+        REQUIRE(fitted_function.p[0][2] == Approx(0.3).margin(5e-3));
+        REQUIRE(fitted_function.p[0][3] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[0][4] == Approx(0.7).margin(5e-3));
+        REQUIRE(fitted_function.p[0][5] == Approx(0.).margin(5e-3));
+        
+        REQUIRE(fitted_function.p[1][2] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[1][3] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[1][4] == Approx(0.2).margin(5e-3));
+        REQUIRE(fitted_function.p[1][5] == Approx(0.8).margin(5e-3));
+    };
+    
+    SECTION( "integrand not matching fit function" )
+    {
+        using fitfun = integrators::fitfunctions::PolySingular::type<I,D,2>;
+        integrators::Qmc<double,double,2,integrators::transforms::None::type,integrators::fitfunctions::PolySingular::type> qmc;
+        qmc.randomgenerator.seed(1);
+        qmc.verbosity=3;
+        auto fitted_function = qmc.fit(test_function2);
+        // reasonable results of fit, but values might change when modifying fit procedure
+        REQUIRE(fitted_function.p[0][0] == Approx(1.98118).margin(5e-3));
+        REQUIRE(fitted_function.p[0][2] == Approx(1.58157).margin(5e-3));
+        REQUIRE(fitted_function.p[0][3] == Approx(0.).margin(5e-3));
+        REQUIRE(fitted_function.p[0][4] == Approx(1.04626).margin(5e-3));
+        REQUIRE(fitted_function.p[0][5] == Approx(-2.0317).margin(5e-3));
     };
 };
