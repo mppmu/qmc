@@ -9,7 +9,7 @@ namespace integrators
     {
         namespace cuda
         {
-            // TODO - make use of restricted pointers?
+            // TODO (V2) - investigate if using restricted pointers improves performance
             template <U M, typename T, typename D, typename I>
             __global__
             void compute_kernel(const U work_offset, const U work_this_iteration, const U total_work_packages, const U* z, const D* d, T* r, const U d_r_size_over_m, const U n, const U m, I* func)

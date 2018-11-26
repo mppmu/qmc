@@ -520,7 +520,7 @@ namespace integrators
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     template <typename I>
-    typename F<I,D,M>::transform_t Qmc<T,D,M,P,F,G,H>::fit(I& func) // TODO - test case
+    typename F<I,D,M>::transform_t Qmc<T,D,M,P,F,G,H>::fit(I& func)
     {
         using std::abs;
 

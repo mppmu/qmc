@@ -87,7 +87,7 @@ namespace integrators
 
         template <typename I> result<T> integrate(I& func);
         template <typename I> samples<T,D> evaluate(I& func); // TODO: explicit test cases for this function
-        template <typename I> typename F<I,D,M>::transform_t fit(I& func); // TODO: explicit test cases for this function
+        template <typename I> typename F<I,D,M>::transform_t fit(I& func);
         Qmc();
         virtual ~Qmc() {}
     };
