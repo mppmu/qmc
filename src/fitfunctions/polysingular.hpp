@@ -12,16 +12,18 @@ namespace integrators
         struct PolySingularFunction
         {
             static const int num_parameters = 6;
-            const std::vector<std::vector<D>> initial_parameters = { {1.1,-0.1, 0.1,0.1, 0.3,0.3} };
+            const std::vector<std::vector<D>> initial_parameters = { {1.1,-0.1, 0.1,0.1, 0.9,-0.1} };
 
             D operator()(const D x, const double* p) const
             {
                 // constraint: no singularity and singular terms have positive coefficients
-                if (p[0]<=static_cast<D>(1.001) or p[0]>=static_cast<D>(5) or p[1]>=static_cast<D>(-0.001) or p[1]<=static_cast<D>(-4) )
+                if (p[0]<=static_cast<D>(1.001) or p[1]>=static_cast<D>(-0.001))
                     return D(10.); // std::numeric_limits<D>::max() will sometimes result in fit parameters being NaN
                 
                 D p2 = abs(p[2]);
                 D p3 = abs(p[3]);
+                if(p2<1e-4) p2=0.;
+                if(p3<1e-4) p3=0.;
                 D y = p2*(x*(p[0]-D(1)))/(p[0]-x) + p3*(x*(p[1]-D(1)))/(p[1]-x)  + x*(p[4]+x*(p[5]+x*(D(1)-p2-p3-p[4]-p[5])));
 
                 // constraint: transformed variable within unit hypercube
@@ -41,12 +43,16 @@ namespace integrators
             {
 
                 if (parameter == 0) {
+                    if(abs(p[2])<1e-4) return D(0);
                     return abs(p[2])*((D(1) - x)*x)/(x - p[0])/(x - p[0]);
                 } else if (parameter == 1) {
+                    if(abs(p[3])<1e-4) return D(0);
                     return abs(p[3])*((D(1) - x)*x)/(x - p[1])/(x - p[1]);
                 } else if (parameter == 2) {
+                    if(abs(p[2])<1e-4) return D(0);
                     return ((x*(p[0]-D(1)))/(p[0]-x) -x*x*x) * ((p[2] < 0) ? D(-1) : D(1));
                 } else if (parameter == 3) {
+                    if(abs(p[3])<1e-4) return D(0);
                     return ((x*(p[1]-D(1)))/(p[1]-x) -x*x*x) * ((p[3] < 0) ? D(-1) : D(1));
                 } else if (parameter == 4) {
                     return  x*(D(1)-x*x);

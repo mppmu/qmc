@@ -41,6 +41,7 @@ struct test_function_t {
 
 struct test_function2_t {
     const unsigned long long int number_of_integration_variables = 1;
+    // inverse CDF: (x + 1/3 x Cos[3 x] - 1/9 Sin[3 x])
     HOSTDEVICE double operator()(double* x) { return  1./(1-x[0]*std::sin(3.*x[0])); }
 } test_function2;
 
@@ -212,14 +213,13 @@ TEST_CASE( "chisq fit" , "[fit]" )
         integrators::Qmc<double,double,2,integrators::transforms::None::type,integrators::fitfunctions::PolySingular::type> qmc;
         qmc.randomgenerator.seed(1);
         qmc.verbosity=3;
-        //qmc.fitmaxiter=400;
-        //qmc.fitxtol=1e-6;
         auto fitted_function = qmc.fit(test_function2);
-        REQUIRE(fitted_function.p[0][0] == Approx(2.12682).margin(5e-3));
-        REQUIRE(fitted_function.p[0][2] == Approx(2.12684).margin(5e-3));
+        // reasonable results of fit, but values might change when modifying fit procedure 
+        REQUIRE(fitted_function.p[0][0] == Approx(1.98118).margin(5e-3));
+        REQUIRE(fitted_function.p[0][2] == Approx(1.58157).margin(5e-3));
         REQUIRE(fitted_function.p[0][3] == Approx(0.).margin(5e-3));
-        REQUIRE(fitted_function.p[0][4] == Approx(0.700739).margin(5e-3));
-        REQUIRE(fitted_function.p[0][5] == Approx(-2.15106).margin(5e-3));
+        REQUIRE(fitted_function.p[0][4] == Approx(1.04626).margin(5e-3));
+        REQUIRE(fitted_function.p[0][5] == Approx(-2.0317).margin(5e-3));
     }
 }
 
