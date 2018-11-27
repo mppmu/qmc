@@ -380,7 +380,7 @@ namespace integrators
     
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     template <typename I>
-    samples<T,D> Qmc<T,D,M,P,F,G,H>::evaluate(I& func) // TODO - test case
+    samples<T,D> Qmc<T,D,M,P,F,G,H>::evaluate(I& func)
     {
         if ( func.number_of_integration_variables < 1 )
             throw std::invalid_argument("qmc::evaluate called with func.number_of_integration_variables < 1. Check that your integrand depends on at least one variable of integration.");

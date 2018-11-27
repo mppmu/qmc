@@ -86,7 +86,7 @@ namespace integrators
         U get_next_n(U preferred_n) const;
 
         template <typename I> result<T> integrate(I& func);
-        template <typename I> samples<T,D> evaluate(I& func); // TODO: explicit test cases for this function
+        template <typename I> samples<T,D> evaluate(I& func);
         template <typename I> typename F<I,D,M>::transform_t fit(I& func);
         Qmc();
         virtual ~Qmc() {}
