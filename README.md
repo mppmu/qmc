@@ -269,7 +269,7 @@ Default: `10`.
 
 `size_t fitmaxiter`
 
-See `maxiter` in the nonlinear least-squares fitting GSL documentation.
+See `maxiter` in the non-linear least-squares fitting GSL documentation.
 
 Default: `40`.
 
@@ -277,7 +277,7 @@ Default: `40`.
 
 `double fitxtol`
 
-See `xtol` in the nonlinear least-squares fitting GSL documentation.
+See `xtol` in the non-linear least-squares fitting GSL documentation.
 
 Default: `3e-3`.
 
@@ -285,7 +285,7 @@ Default: `3e-3`.
 
 `double fitgtol`
 
-See `gtol`  in the nonlinear least-squares fitting GSL documentation.
+See `gtol`  in the non-linear least-squares fitting GSL documentation.
 
 Default: `1e-8`.
 
@@ -293,7 +293,7 @@ Default: `1e-8`.
 
 `double fitftol`
 
-See `ftol`  in the nonlinear least-squares fitting GSL documentation.
+See `ftol`  in the non-linear least-squares fitting GSL documentation.
 
 Default: `1e-8`.
 
@@ -301,7 +301,7 @@ Default: `1e-8`.
 
 `gsl_multifit_nlinear_parameters fitparametersgsl`
 
-See `gsl_multifit_nlinear_parameters` in the nonlinear least-squares fitting GSL documentation.
+See `gsl_multifit_nlinear_parameters` in the non-linear least-squares fitting GSL documentation.
 
 Default: `{}`.
 
