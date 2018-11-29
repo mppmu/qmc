@@ -93,10 +93,10 @@ namespace integrators
 #endif
             auto operator()(D* x) -> decltype(f(x)) const
             {
+                using std::abs;
                 D wgt = 1;
                 for (U d = 0; d < number_of_integration_variables ; ++d)
                 {
-                    using std::abs;
                     D p2 = abs(p[d][2]);
                     D p3 = abs(p[d][3]);
                     wgt *= p2*p[d][0]*(p[d][0]-D(1))/(p[d][0]-x[d])/(p[d][0]-x[d]) + p3*p[d][1]*(p[d][1]-D(1))/(p[d][1]-x[d])/(p[d][1]-x[d]) + p[d][4] + x[d]*(D(2)*p[d][5]+x[d]*D(3)*(D(1)-p2-p3-p[d][4]-p[d][5]));
