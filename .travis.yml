@@ -20,7 +20,7 @@ matrix:
         - export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
         - cd ..
       after_success:
-        - coveralls --exclude 'check/' --exclude 'examples/' --exclude 'gsl-2.5/' --gcov-options '\-lp'
+        - coveralls --exclude 'check/test_suite/' --exclude 'examples/' --exclude 'gsl-2.5/' --gcov-options '\-lp'
 
     # Linux gcc
     - os: linux
