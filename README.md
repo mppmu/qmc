@@ -9,7 +9,7 @@ A Quasi-Monte-Carlo (QMC) integrator library with NVIDIA CUDA support.
 
 The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++11 threading library and multiple CUDA compatible accelerators are supported. A variance reduction procedure based on fitting a smooth function to the inverse cumulative distribution function of the integrand dimension-by-dimension is also implemented.
 
-To read more about the library see [our publication](https://arxiv.org/TODO).
+To read more about the library see [our publication](https://arxiv.org/abs/1811.11720).
 
 ## Installation
 
