@@ -2,6 +2,7 @@
 #define QMC_FITFUNCTIONS_POLYSINGULAR_H
 
 #include <stdexcept> // std::domain_error
+#include <cmath> // abs
 #include <vector>
 
 namespace integrators
@@ -16,6 +17,7 @@ namespace integrators
 
             D operator()(const D x, const double* p) const
             {
+                using std::abs;
                 // constraint: no singularity and singular terms have positive coefficients
                 if (p[0]<=static_cast<D>(1.001) or p[1]>=static_cast<D>(-0.001))
                     return D(10.); // std::numeric_limits<D>::max() will sometimes result in fit parameters being NaN
@@ -41,7 +43,7 @@ namespace integrators
 
             D operator()(const D x, const double* p, const size_t parameter) const
             {
-
+                using std::abs;
                 if (parameter == 0) {
                     if(abs(p[2])<1e-4) return D(0);
                     return abs(p[2])*((D(1) - x)*x)/(x - p[0])/(x - p[0]);
@@ -68,6 +70,7 @@ namespace integrators
         {
             D operator()(const D x, const double* v, const double* p) const
             {
+                using std::abs;
                 D xmp0 = x-p[0];
                 D xmp1 = x-p[1];
                 return x*(D(1)-x)*D(2)*(v[0]*(abs(p[2])*v[0]+(x - p[0])*v[2])/xmp0/xmp0/xmp0 + v[1]*(abs(p[3])*v[1]+(x - p[1])*v[3])/xmp1/xmp1/xmp1);
@@ -93,6 +96,7 @@ namespace integrators
                 D wgt = 1;
                 for (U d = 0; d < number_of_integration_variables ; ++d)
                 {
+                    using std::abs;
                     D p2 = abs(p[d][2]);
                     D p3 = abs(p[d][3]);
                     wgt *= p2*p[d][0]*(p[d][0]-D(1))/(p[d][0]-x[d])/(p[d][0]-x[d]) + p3*p[d][1]*(p[d][1]-D(1))/(p[d][1]-x[d])/(p[d][1]-x[d]) + p[d][4] + x[d]*(D(2)*p[d][5]+x[d]*D(3)*(D(1)-p2-p3-p[d][4]-p[d][5]));
