@@ -151,7 +151,7 @@ matrix:
 
     # MacOS gcc
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode10.1
       env:
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
       before_install:
@@ -160,7 +160,7 @@ matrix:
         - eval "${MATRIX_EVAL}"
         - brew install gsl
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode10.1
       env:
         - MATRIX_EVAL="travis_wait 120 brew install gcc@5 && CC=gcc-5 && CXX=g++-5"
       before_install:
@@ -168,30 +168,26 @@ matrix:
         - brew update
         - eval "${MATRIX_EVAL}"
         - brew install gsl
-# Build time out (>50min) when building gcc@6 from source
-# El Capitan bottle removed from brew in commit https://github.com/Homebrew/homebrew-core/commit/3e94ae4217a805642e1de7583cbc300d3a7f5612
-#    - os: osx
-#      osx_image: xcode8
-#      env:
-#        - MATRIX_EVAL="travis_wait 120 brew install gcc@6 && CC=gcc-6 && CXX=g++-6"
-#      before_install:
-#        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-#        - brew update
-#        - eval "${MATRIX_EVAL}"
-#        - brew install gsl
-# Build time out (>50min) when building gcc@7 from source
-# El Capitan bottle removed from brew in commit https://github.com/Homebrew/homebrew-core/commit/e04b6ba4ae1619f5a51259bb53b254a85c62392c
-#    - os: osx
-#      osx_image: xcode8
-#      env:
-#        - MATRIX_EVAL="travis_wait 120 brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
-#      before_install:
-#        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-#        - brew update
-#        - eval "${MATRIX_EVAL}"
-#        - brew install gsl
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode10.1
+      env:
+        - MATRIX_EVAL="travis_wait 120 brew install gcc@6 && CC=gcc-6 && CXX=g++-6"
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode10.1
+      env:
+        - MATRIX_EVAL="travis_wait 120 brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
+      before_install:
+        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - eval "${MATRIX_EVAL}"
+        - brew install gsl
+    - os: osx
+      osx_image: xcode10.1
       env:
         - MATRIX_EVAL="travis_wait 120 brew install gcc@8 && CC=gcc-8 && CXX=g++-8"
       before_install:
