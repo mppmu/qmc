@@ -23,6 +23,8 @@ TEST_CASE( "Samples", "[samples]") {
     test_samples.r = r;
     test_samples.n = n;
 
+    const integrators::samples<double,double> const_samples = test_samples;
+
     SECTION( "Access Fields", "[samples]" )
     {
 
@@ -44,7 +46,8 @@ TEST_CASE( "Samples", "[samples]") {
         {
             for(unsigned long long int j = 0; j < dim; j++)
             {
-                REQUIRE( test_samples.get_x(i,j) == Approx(expected_x.at(i).at(j)) );
+                REQUIRE(  test_samples.get_x(i,j) == Approx(expected_x.at(i).at(j)) );
+                REQUIRE( const_samples.get_x(i,j) == Approx(expected_x.at(i).at(j)) );
             }
         }
 

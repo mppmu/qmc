@@ -14,8 +14,10 @@ namespace integrators
         std::vector<T> r;
         U n;
 
-        D get_x(const U sample_index, const U integration_variable_index)
+        D get_x(const U sample_index, const U integration_variable_index) const
         {
+            using std::modf;
+
             D mynull;
             return modf( integrators::math::mul_mod<D,D>(sample_index,z.at(integration_variable_index),n)/(static_cast<D>(n)) + d.at(integration_variable_index), &mynull);
         }
