@@ -39,6 +39,7 @@ namespace integrators
                                                                                                        d_r_size_over_m, n, m,
                                                                                                        static_cast<I*>(*d_func)
                                                                                                        );
+                QMC_CORE_CUDA_SAFE_CALL(cudaPeekAtLastError());
                 QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
             };
@@ -66,6 +67,7 @@ namespace integrators
                                                                                                                 n,
                                                                                                                 static_cast<I*>(*d_func)
                                                                                                                 );
+                QMC_CORE_CUDA_SAFE_CALL(cudaPeekAtLastError());
                 QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
             };
