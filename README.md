@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/mppmu/qmc.svg?branch=master)](https://travis-ci.org/mppmu/qmc)
 [![Coverage Status](https://coveralls.io/repos/github/mppmu/qmc/badge.svg?branch=master)](https://coveralls.io/github/mppmu/qmc?branch=master)
 
-[The latest release of the single header can be downloaded directly using this link.](https://github.com/mppmu/qmc/releases/download/v1.0.2/qmc.hpp)
+[The latest release of the single header can be downloaded directly using this link.](https://github.com/mppmu/qmc/releases/download/v1.0.3/qmc.hpp)
 
 # qmc
 
