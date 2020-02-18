@@ -22,6 +22,9 @@ namespace integrators
             template<typename D, U k, U r>
             struct SidiCoefficient<D, k, r, typename std::enable_if<(r % 2) != 0>::type>
             {
+#ifdef __CUDACC__
+                __host__ __device__
+#endif
                 const static D value()
                 {
                     return IPow<D,(r-U(1))/U(2)-k>::value(D(-1))*D(Binomial<r,k>::value)/(D(2)*k-r);
@@ -32,6 +35,9 @@ namespace integrators
             template<typename D, U k, U r>
             struct SidiCoefficient<D, k, r, typename std::enable_if<(r % 2) == 0>::type>
             {
+#ifdef __CUDACC__
+                __host__ __device__
+#endif
                 const static D value()
                 {
                     return IPow<D,r/U(2)-k>::value(D(-1))*D(Binomial<r,k>::value)/(D(2)*k-r);
