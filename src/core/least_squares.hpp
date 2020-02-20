@@ -303,18 +303,19 @@ namespace integrators
 
             // get index of best fit (minimum chisq)
             const long best_fit_index = std::distance(fit_chisqs.begin(), std::min_element(fit_chisqs.begin(),fit_chisqs.end()));
+            assert(best_fit_index >= 0);
 
             if (verbosity > 0)
             {
                 if (verbosity>2) logger << "choosing fit run " << best_fit_index << std::endl;
                 std::ostringstream final_parameters_stream;
-                for(const auto& elem: fit_parameters.at(best_fit_index))
+                for(const auto& elem: fit_parameters.at(static_cast<size_t>(best_fit_index)))
                     final_parameters_stream << elem << " ";
                 logger << "fit final_parameters " << final_parameters_stream.str() << std::endl;
                 logger << "-----------" << std::endl;
             }
 
-            return fit_parameters.at(best_fit_index);
+            return fit_parameters.at(static_cast<size_t>(best_fit_index));
         }
     };
 };
