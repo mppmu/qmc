@@ -1,26 +1,25 @@
 language: cpp
 
-matrix:
+jobs:
   include:
 
     # Coverage Linux gcc
     - os: linux
-      sudo: true
       dist: xenial # Need default gcc/gcov with c++11 support
       before_install:
         - pip install --user gcovr
         - pip install --user cpp-coveralls
         - coveralls --help
-        - wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz
-        - tar -xzvf gsl-2.5.tar.gz
-        - cd gsl-2.5
+        - wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.6.tar.gz
+        - tar -xzvf gsl-2.6.tar.gz
+        - cd gsl-2.6
         - ./configure
         - make
         - sudo make install
         - export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
         - cd ..
       after_success:
-        - coveralls --exclude 'check/test_suite/' --exclude 'examples/' --exclude 'gsl-2.5/' --gcov-options '\-lp'
+        - coveralls --exclude 'check/test_suite/' --exclude 'examples/' --exclude 'gsl-2.6/' --gcov-options '\-lp'
 
     # Linux gcc
     - os: linux
@@ -68,6 +67,15 @@ matrix:
             - g++-8
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
     
     # Linux clang
     - os: linux
@@ -151,157 +159,218 @@ matrix:
             - clang-7
       env:
         - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-8
+          packages:
+            - clang-8
+      env:
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
 
     # MacOS gcc
     - os: osx
-      osx_image: xcode9.2
+      osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - gcc@4.9
+            - gsl
+          update: true
       env:
-        - MATRIX_EVAL="travis_wait 120 brew install gcc@4.9 && CC=gcc-4.9 && CXX=g++-4.9"
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
       before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
         - eval "${MATRIX_EVAL}"
-        - brew install gsl
     - os: osx
       osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - gcc@5
+            - gsl
+          update: true
       env:
-        - MATRIX_EVAL="travis_wait 120 brew install gcc@5 && CC=gcc-5 && CXX=g++-5"
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
       before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
         - eval "${MATRIX_EVAL}"
-        - brew install gsl
     - os: osx
       osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - gcc@6
+            - gsl
+          update: true
       env:
-        - MATRIX_EVAL="travis_wait 120 brew install gcc@6 && CC=gcc-6 && CXX=g++-6"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
       before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
         - eval "${MATRIX_EVAL}"
-        - brew install gsl
     - os: osx
       osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - gcc@7
+            - gsl
+          update: true
       env:
-        - MATRIX_EVAL="travis_wait 120 brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
       before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
         - eval "${MATRIX_EVAL}"
-        - brew install gsl
     - os: osx
       osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - gcc@8
+            - gsl
+          update: true
       env:
-        - MATRIX_EVAL="travis_wait 120 brew install gcc@8 && CC=gcc-8 && CXX=g++-8"
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
       before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
         - eval "${MATRIX_EVAL}"
-        - brew install gsl
+    - os: osx
+      osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - gcc@9
+            - gsl
+          update: true
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+      before_install:
+        - eval "${MATRIX_EVAL}"
 
     # MacOS clang
     - os: osx
       osx_image: xcode8
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode8.3
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode9
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode9.1
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode9.2
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode9.3
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode9.4
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode10
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode10.1
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode10.2
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode10.3
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
     - os: osx
       osx_image: xcode11
       compiler: clang
-      before_install:
-        # update brew first, work around https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - eval "${MATRIX_EVAL}"
-        - brew install gsl
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
+    - os: osx
+      osx_image: xcode11.1
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
+    - os: osx
+      osx_image: xcode11.2
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
+    - os: osx
+      osx_image: xcode11.3
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
 
 before_install:
     - eval "${MATRIX_EVAL}"
-    - wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz
-    - tar -xzvf gsl-2.5.tar.gz
-    - cd gsl-2.5
+    - wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.6.tar.gz
+    - tar -xzvf gsl-2.6.tar.gz
+    - cd gsl-2.6
     - ./configure
     - make
     - sudo make install
