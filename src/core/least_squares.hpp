@@ -11,6 +11,7 @@
 #include <iomanip> //  std::setw, std::setfill
 #include <vector> // std::vector
 #include <iterator> // std::distance
+#include <stdexcept> // std::logic_error
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
@@ -150,7 +151,7 @@ namespace integrators
             return nullptr;
         }
 
-        template <typename D, typename F1, typename F2, typename F3>
+        template <typename D, typename F1, typename F2, typename F3, typename std::enable_if< F1::num_parameters != 0, int>::type = 0>
         std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const size_t maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
         {
             const size_t num_points = x.size();
@@ -317,6 +318,13 @@ namespace integrators
 
             return fit_parameters.at(static_cast<size_t>(best_fit_index));
         }
+    
+        template <typename D, typename F1, typename F2, typename F3, typename std::enable_if< F1::num_parameters == 0, int >::type = 0>
+        std::vector<D> least_squares(F1& fit_function, F2& fit_function_jacobian, F3& fit_function_hessian, const std::vector<D>& x, const std::vector<D>& y, const U& verbosity, Logger& logger, const size_t maxiter, const double xtol, const double gtol, const double ftol, gsl_multifit_nlinear_parameters fitparametersgsl)
+        {
+            throw std::logic_error("least_squares called on function with no parameters to be fitted");
+        }
+    
     };
 };
 

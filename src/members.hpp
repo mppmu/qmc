@@ -529,64 +529,65 @@ namespace integrators
         typename F<I,D,M>::hessian_t fit_function_hessian;
         typename F<I,D,M>::transform_t fit_function_transform(func);
 
-        if (fit_function.num_parameters <= 0)
+        if (fit_function.num_parameters <= 0) {
             return fit_function_transform;
+        } else {
+            std::vector<D> x,y;
+            std::vector<std::vector<D>> fit_parameters;
+            fit_parameters.reserve(func.number_of_integration_variables);
 
-        std::vector<D> x,y;
-        std::vector<std::vector<D>> fit_parameters;
-        fit_parameters.reserve(func.number_of_integration_variables);
+            // Generate data to be fitted
+            integrators::samples<T,D> result = evaluate(func);
 
-        // Generate data to be fitted
-        integrators::samples<T,D> result = evaluate(func);
-
-        // fit fit_function
-        for (U sdim = 0; sdim < func.number_of_integration_variables; ++sdim)
-        {
-            // compute the x values
-            std::vector<D> unordered_x;
-            unordered_x.reserve(result.n);
-            for (size_t i = 0; i < result.n; ++i)
+            // fit fit_function
+            for (U sdim = 0; sdim < func.number_of_integration_variables; ++sdim)
             {
-                unordered_x.push_back( result.get_x(i, sdim) );
+                // compute the x values
+                std::vector<D> unordered_x;
+                unordered_x.reserve(result.n);
+                for (size_t i = 0; i < result.n; ++i)
+                {
+                    unordered_x.push_back( result.get_x(i, sdim) );
+                }
+
+                // sort by x value
+                std::vector<size_t> sort_key = math::argsort(unordered_x);
+                x.clear();
+                y.clear();
+                x.reserve( sort_key.size() );
+                y.reserve( sort_key.size() );
+                for (const auto& idx : sort_key)
+                {
+                    x.push_back( unordered_x.at(idx) );
+                    y.push_back( abs(result.r.at(idx)) );
+                }
+
+                // compute cumulative sum
+                std::partial_sum(y.begin(), y.end(), y.begin());
+                for (auto& element : y)
+                {
+                    element /= y.back();
+                }
+
+                // reduce number of sampling points for fit
+                std::vector<D> xx;
+                std::vector<D> yy;
+                for ( size_t i = fitstepsize/2; i<x.size(); i+=fitstepsize)
+                {
+                        xx.push_back(x.at(i));
+                        yy.push_back(y.at(i));
+                }
+
+                // run a least squares fit
+                fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian, fit_function_hessian, yy,xx,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl) );
             }
 
-            // sort by x value
-            std::vector<size_t> sort_key = math::argsort(unordered_x);
-            x.clear();
-            y.clear();
-            x.reserve( sort_key.size() );
-            y.reserve( sort_key.size() );
-            for (const auto& idx : sort_key)
-            {
-                x.push_back( unordered_x.at(idx) );
-                y.push_back( abs(result.r.at(idx)) );
-            }
+            for (size_t d = 0; d < fit_function_transform.number_of_integration_variables; ++d)
+                for (size_t i = 0; i < fit_parameters.at(d).size(); ++i)
+                    fit_function_transform.p[d][i] = fit_parameters.at(d).at(i);
 
-            // compute cumulative sum
-            std::partial_sum(y.begin(), y.end(), y.begin());
-            for (auto& element : y)
-            {
-                element /= y.back();
-            }
-
-            // reduce number of sampling points for fit
-            std::vector<D> xx;
-            std::vector<D> yy;
-            for ( size_t i = fitstepsize/2; i<x.size(); i+=fitstepsize)
-            {
-                    xx.push_back(x.at(i));
-                    yy.push_back(y.at(i));
-            }
-
-            // run a least squares fit
-            fit_parameters.push_back( core::least_squares(fit_function,fit_function_jacobian, fit_function_hessian, yy,xx,verbosity,logger, fitmaxiter, fitxtol, fitgtol, fitftol, fitparametersgsl) );
+            return fit_function_transform;
         }
-
-        for (size_t d = 0; d < fit_function_transform.number_of_integration_variables; ++d)
-            for (size_t i = 0; i < fit_parameters.at(d).size(); ++i)
-                fit_function_transform.p[d][i] = fit_parameters.at(d).at(i);
-
-        return fit_function_transform;
     };
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
