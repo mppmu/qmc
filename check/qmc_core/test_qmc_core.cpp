@@ -45,7 +45,7 @@ struct multivariate_linear_function_t {
 struct nan_function_t {
     const unsigned long long int number_of_integration_variables = 1;
     HOSTDEVICE double operator()(double x[]) {
-        if ( x[0] < 0. && x[0] > 1. )
+        if ( x[0] < 0. || x[0] > 1. )
             return std::nan("");
         else
             return x[0];
