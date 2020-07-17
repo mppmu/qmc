@@ -70,11 +70,15 @@ summarize :
 coverage :
 	$(GCOVR) */ $(GCOVRFLAGS) -o coverage.html
 
+.PHONY: cppcheck
+cppcheck:
+	cppcheck ${CPPCHECKFLAGS} --suppress=syntaxError:../src/transforms/detail/binomial.hpp --suppress=*:test_suite/catch.hpp . -itest_suite -I../src -Itest_suite 2> cppcheck-src.xml; cppcheck-htmlreport --file=cppcheck-src.xml --title=src --report-dir=cppcheck-src;
+
 # Cleaning up
 # ===========
 .PHONY : clean
 clean :
-	rm -f *.html
+	rm -rf *.html *.xml cppcheck-src
 	for f in * ; \
 	do \
 	if test -d "$$f" -a -f "$$f/Makefile" ; \
