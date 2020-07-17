@@ -76,6 +76,16 @@ jobs:
             - g++-9
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+    - os: linux
+      dist: bionic # Required for gcc-10
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-10
+      env:
+        - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
     
     # Linux clang
     - os: linux
@@ -169,6 +179,17 @@ jobs:
             - clang-8
       env:
         - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+    - os: linux
+      dist: bionic # Required for clang-9
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-bionic-9
+          packages:
+            - clang-9
+      env:
+        - MATRIX_EVAL="CC=clang-9 && CXX=clang++-9"
 
     # MacOS gcc
     - os: osx
@@ -241,6 +262,20 @@ jobs:
           update: true
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+      before_install:
+        - eval "${MATRIX_EVAL}"
+        - brew link --overwrite gcc@9 # Workaround for osx_image: xcode10.1, which has an old version of gcc-9 preinstalled
+
+    - os: osx
+      osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+            - gcc@10
+            - gsl
+          update: true
+      env:
+        - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
       before_install:
         - eval "${MATRIX_EVAL}"
 
@@ -359,6 +394,38 @@ jobs:
           update: true
     - os: osx
       osx_image: xcode11.3
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
+    - os: osx
+      osx_image: xcode11.4
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
+    - os: osx
+      osx_image: xcode11.5
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
+    - os: osx
+      osx_image: xcode11.6
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl
+          update: true
+    - os: osx
+      osx_image: xcode12
       compiler: clang
       addons:
         homebrew:
