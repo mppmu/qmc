@@ -39,6 +39,12 @@ namespace integrators
             {
                 return f(x);
             }
+            void evaluate(D* x, decltype(f(x))* res, U count)
+            {
+                for (U i = 0; i!= count; ++i) {
+                    res[i] = f(x + i);
+                }
+            }
         };
 
         template<typename I, typename D, U M>

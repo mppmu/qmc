@@ -40,6 +40,14 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
+            void evaluate(D* x, decltype(f(x))* res, U count)
+            {
+                auto xx = x;
+                for (U i = 0; i!= count; ++i,xx+=number_of_integration_variables) {
+                    res[i] = (*this)(xx);
+                }
+            }
+
         };
         template<U r0, U r1 = r0>
         struct Korobov
