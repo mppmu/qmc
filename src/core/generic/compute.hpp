@@ -50,7 +50,7 @@ namespace integrators
                         r_element[k*r_size_over_m] += wgt*points[i];
                     }
 
-                    delete points;
+                    delete[] points;
                 }
             }
 

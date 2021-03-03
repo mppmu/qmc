@@ -41,9 +41,7 @@ namespace integrators
             }
             void evaluate(D* x, decltype(f(x))* res, U count)
             {
-                for (U i = 0; i!= count; ++i) {
-                    res[i] = f(x + i);
-                }
+                f.evaluate(x, res, count);
             }
         };
 
