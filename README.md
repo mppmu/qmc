@@ -252,6 +252,20 @@ Default: `0`.
 
 ---
 
+`bool batching`
+
+If set to true, makes the integrator use the function member function
+void Evaluate(double * x, double * res, U count) instead of the () operator.
+Here x is the one-dimensional array first containing coordinates of point number 0, then point number 1 and so on.
+res is the array of results.
+U is the number of points passed to the Evaluate function.
+The Evaluate function should be ready to accept up to maxnperpackage points.
+
+Dafault: `false`.
+
+---
+
+
 `U evaluateminn`
 
 The minimum lattice size that should be used by the `evaluate` function to evaluate the integrand, if variance reduction is enabled these points are used for fitting the inverse cumulative distribution function. If a lattice of the requested size is not available then `n` will be the size of the next available lattice with at least `evaluateminn` points. 
