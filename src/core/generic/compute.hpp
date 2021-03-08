@@ -12,15 +12,17 @@ namespace integrators
         namespace generic
         {
             template <typename T, typename D, typename I>
-            void compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, I& func)
+            void compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, const bool batching, I& func)
             {
                 using std::modf;
 
                 for (U k = 0; k < m; k++)
                 {
-                    U batch_count = (n / total_work_packages) + ((n % total_work_packages) ? 1 : 0);
-
-                    //printf("%llu %llu %llu\n", n, total_work_packages, batch_count);
+                    U batch_count;
+                    if (batching)
+                        batch_count = (n / total_work_packages) + ((n % total_work_packages) ? 1 : 0);
+                    else
+                        batch_count = 1;
 
                     std::vector<D> x(func.number_of_integration_variables * batch_count, 0);
 
@@ -33,24 +35,26 @@ namespace integrators
                             #define QMC_MODF_CALL modf( integrators::math::mul_mod<D,D>(offset,z.at(sDim),n)/(static_cast<D>(n)) + d.at(k*func.number_of_integration_variables+sDim), &mynull)
 
                             static_assert(std::is_same<decltype(QMC_MODF_CALL),D>::value, "Downcast detected in integrators::core::generic::compute. Please implement \"D modf(D)\".");
-                            x[sDim + (func.number_of_integration_variables * (offset / total_work_packages))] = QMC_MODF_CALL;
+                            x[sDim + (batching ? (func.number_of_integration_variables * (offset / total_work_packages)) : 0)] = QMC_MODF_CALL;
 
                             #undef QMC_MODF_CALL
                         }
-
+                        if (!batching) {
+                            D wgt = 1.;
+                            T point = func(x.data());
+                            r_element[k*r_size_over_m] += wgt*point;
+                        }
                     }
 
-                    T* points = new T[batch_count];
-
-                    func.evaluate(x.data(), points, batch_count);
-
-                    D wgt = 1.;
-
-                    for ( U i = 0; i != batch_count; ++i) {
-                        r_element[k*r_size_over_m] += wgt*points[i];
+                    if (batching) {
+                        T* points = new T[batch_count];
+                        func.evaluate(x.data(), points, batch_count);
+                        D wgt = 1.;
+                        for ( U i = 0; i != batch_count; ++i) {
+                            r_element[k*r_size_over_m] += wgt*points[i];
+                        }
+                        delete[] points;
                     }
-
-                    delete[] points;
                 }
             }
 
