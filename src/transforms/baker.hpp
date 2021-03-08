@@ -28,6 +28,24 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
+            void evaluate(D* x, decltype(f(x))* res, U count)
+            {
+                auto xx = x;
+                D wgt = 1;
+                for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                    for(U s = 0; s<number_of_integration_variables; s++)
+                    {
+                        xx[s] = D(1) - fabs(D(2)*xx[s]-D(1)) ;
+                        // loss of precision can cause x < 0 or x > 1 must keep in x \elem [0,1]
+                        if (xx[s] > D(1)) xx[s] = D(1);
+                        if (xx[s] < D(0)) xx[s] = D(0);
+                    }
+                }
+                f.evaluate(x, res, count);
+                for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                    res[i] = wgt * res[i];
+                }
+            }
         };
         struct Baker
         {

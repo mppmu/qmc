@@ -105,6 +105,27 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
+            void evaluate(D* x, decltype(f(x))* res, U count)
+            {
+                auto xx = x;
+                D* wgts = new D[count];
+                for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                    wgts[i] = 1;
+                    for (U d = 0; d < number_of_integration_variables ; ++d)
+                    {
+                        D p2 = abs(p[d][2]);
+                        D p3 = abs(p[d][3]);
+                        wgts[i] *= p2*p[d][0]*(p[d][0]-D(1))/(p[d][0]-xx[d])/(p[d][0]-xx[d]) + p3*p[d][1]*(p[d][1]-D(1))/(p[d][1]-xx[d])/(p[d][1]-xx[d]) + p[d][4] + xx[d]*(D(2)*p[d][5]+xx[d]*D(3)*(D(1)-p2-p3-p[d][4]-p[d][5]));
+                        xx[d] = p2*(xx[d]*(p[d][0]-D(1)))/(p[d][0]-xx[d]) + p3*(xx[d]*(p[d][1]-D(1)))/(p[d][1]-xx[d])  + xx[d]*(p[d][4]+xx[d]*(p[d][5]+xx[d]*(D(1)-p2-p3-p[d][4]-p[d][5])));
+                        if ( xx[d] > D(1) || xx[d] < D(0) ) wgts[i] = D(0);
+                    }
+                }    
+                f.evaluate(x, res, count);
+                for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                    res[i] = wgts[i] * res[i];
+                }
+                delete[] wgts;
+            }
         };
 
         template<typename I, typename D, U M>
