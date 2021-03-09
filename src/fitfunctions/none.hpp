@@ -35,7 +35,7 @@ namespace integrators
 #ifdef __CUDACC__
             __host__ __device__
 #endif
-            auto operator()(D* x) -> decltype(f(x)) const
+            auto operator()(D* x) -> decltype(f(x))
             {
                 return f(x);
             }
