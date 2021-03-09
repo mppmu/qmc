@@ -22,35 +22,35 @@ using std::complex;
 #define HOSTDEVICE
 #endif
 
-template <typename D> struct integration_functor {
+template <typename T, typename D> struct integration_functor {
     const unsigned long long int number_of_integration_variables = 0;
-    virtual HOSTDEVICE D operator()(D x[]) const;
-    void evaluate(D* x, D* res, unsigned long long count) {for (unsigned long long i = 0; i != count; ++i) res[i] = this->operator()(x + i*number_of_integration_variables);}
+    virtual HOSTDEVICE T operator()(D x[]) = 0;
+    void evaluate(D* x, T* res, unsigned long long count) {for (unsigned long long i = 0; i != count; ++i) res[i] = this->operator()(x + i*number_of_integration_variables);}
 };
 
-struct zero_dim_function_t : integration_functor<double> {
+struct zero_dim_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 0;
-    HOSTDEVICE double operator()(double x[]) { return 1; }
+    HOSTDEVICE double operator()(double x[]) override { return 1; }
 } zero_dim_function;
 
-struct too_many_dim_function_t : integration_functor<double> {
+struct too_many_dim_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 4;
-    HOSTDEVICE double operator()(double x[]) { return 1; }
+    HOSTDEVICE double operator()(double x[]) override { return 1; }
 } too_many_dim_function;
 
-struct constant_function_t : integration_functor<double> {
+struct constant_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double x[]) { return 1; }
+    HOSTDEVICE double operator()(double x[]) override { return 1; }
 } constant_function;
 
-struct multivariate_linear_function_t : integration_functor<double> {
+struct multivariate_linear_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 3;
-    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]*x[2]; }
+    HOSTDEVICE double operator()(double x[]) override { return x[0]*x[1]*x[2]; }
 } multivariate_linear_function;
 
-struct nan_function_t : integration_functor<double> {
+struct nan_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double x[]) {
+    HOSTDEVICE double operator()(double x[]) override {
         if ( x[0] < 0. || x[0] > 1. )
             return std::nan("");
         else
@@ -58,50 +58,50 @@ struct nan_function_t : integration_functor<double> {
     };
 } nan_function;
 
-struct univariate_real_function_t : integration_functor<double> {
+struct univariate_real_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double x[]) { return x[0]; }
+    HOSTDEVICE double operator()(double x[]) override { return x[0]; }
 } univariate_real_function;
 
-struct univariate_complex_function_t : integration_functor<complex<double>> {
+struct univariate_complex_function_t : integration_functor<complex<double>, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]); }
+    HOSTDEVICE complex<double> operator()(double x[]) override { return complex<double>(x[0],x[0]); }
 } univariate_complex_function;
 
-struct real_function_t : integration_functor<double> {
+struct real_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 2;
-    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]; }
+    HOSTDEVICE double operator()(double x[]) override { return x[0]*x[1]; }
 } real_function;
 
-struct complex_function_t : integration_functor<complex<double>> {
+struct complex_function_t : integration_functor<complex<double>, double> {
     const unsigned long long int number_of_integration_variables = 2;
-    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]*x[1]); };
+    HOSTDEVICE complex<double> operator()(double x[]) override { return complex<double>(x[0],x[0]*x[1]); };
 } complex_function;
 
-struct poly_function_t : integration_functor<double> {
+struct poly_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
     const double a=0.6;
     // expexted fit parameters x0: {arbitrary, arbitrary, 0, 0 a, 1-a}
-    HOSTDEVICE double operator()(double* x) { return  1./sqrt(a*a+4.*x[0]*(1.-a));}
+    HOSTDEVICE double operator()(double* x) override { return  1./sqrt(a*a+4.*x[0]*(1.-a));}
 } poly_function;
 
-struct const_function_t : integration_functor<double> {
+struct const_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double* x) { return 2. ; }
+    HOSTDEVICE double operator()(double* x) override { return 2. ; }
 } const_function;
 
-struct test_function_t : integration_functor<double> {
+struct test_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 2;
     const double a=0.2;
     // expexted fit parameters x0: {1.07, arbitrary, 0.3, 0, 0.7, 0}
     // expexted fit parameters x1: {arbitrary, arbitrary, 0, 0, a, 1-a }
-    HOSTDEVICE double operator()(double* x) { return  (0.7142857142857143*(1.+(0.728-x[0])/sqrt(-2.996*x[0]+(0.77+x[0])*(0.77+x[0]))))/sqrt(a*a+4.*x[1]*(1.-a)); }
+    HOSTDEVICE double operator()(double* x) override { return  (0.7142857142857143*(1.+(0.728-x[0])/sqrt(-2.996*x[0]+(0.77+x[0])*(0.77+x[0]))))/sqrt(a*a+4.*x[1]*(1.-a)); }
 } test_function;
 
-struct test_function2_t : integration_functor<double> {
+struct test_function2_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
     // inverse CDF: (x + 1/3 x Cos[3 x] - 1/9 Sin[3 x])
-    HOSTDEVICE double operator()(double* x) { return  1./(1-x[0]*std::sin(3.*x[0])); }
+    HOSTDEVICE double operator()(double* x) override { return  1./(1-x[0]*std::sin(3.*x[0])); }
 } test_function2;
 
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
