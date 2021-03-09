@@ -25,7 +25,7 @@ using std::complex;
 template <typename D> struct integration_functor {
     const unsigned long long int number_of_integration_variables = 0;
     virtual HOSTDEVICE D operator()(D x[]) const;
-    void evaluate(D* x, D* res, unsigned long long count) {for (unsigned long long i = 0; i != count; ++i) res[i] = (*this)(x + i*number_of_integration_variables);}
+    void evaluate(D* x, D* res, unsigned long long count) {for (unsigned long long i = 0; i != count; ++i) res[i] = this->operator()(x + i*number_of_integration_variables);}
 };
 
 struct zero_dim_function_t : integration_functor<double> {
