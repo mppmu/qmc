@@ -13,7 +13,7 @@ namespace integrators
         struct NoneFunction
         {
             static const int num_parameters = 0;
-            const std::vector<std::vector<D>> initial_parameters;
+            const std::vector<std::vector<D>> initial_parameters = {};
 
             D operator()(const D x, const double* p) const
             {
