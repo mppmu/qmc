@@ -362,6 +362,7 @@ The following generating vectors are distributed with the qmc:
 | `cbcpt_dn1_100` | 100 | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 1021 - 2147483647 |
 | `cbcpt_dn2_6`     | 6     | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 65521 - 2499623531 |
 | `cbcpt_cfftw1_6` | 6     | Computed using a custom CBC tool based on FFTW | 2500000001 - 15173222401 |
+| `cbcpt_cfftw2_10` | 10     | Computed using a custom CBC tool based on FFTW | 2147483659 - 24296004011 |
 
 The above generating vectors are produced for Korobov spaces with smoothness `alpha=2` using:
 * Kernel `omega(x)=2 pi^2 (x^2 - x + 1/6)`,
