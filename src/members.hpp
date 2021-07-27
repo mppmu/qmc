@@ -150,7 +150,7 @@ namespace integrators
         
         // Memory required for result vector
         U r_size_over_m = extra_threads*cudablocks*cudathreadsperblock; // non-cpu workers
-        if (devices.count(-1) != 0)
+        if (devices.count(-1) != 0 && cputhreads > 0)
         {
             r_size_over_m += cputhreads; // cpu-workers
         }
@@ -248,7 +248,7 @@ namespace integrators
 #endif
                     }
                 }
-                if( devices.count(-1) != 0)
+                if( devices.count(-1) != 0 && cputhreads > 0)
                 {
                     for ( U i=0; i < cputhreads; i++)
                     {
@@ -268,7 +268,7 @@ namespace integrators
                     {
                         logger << "(" << i << ") Million Function Evaluations/s: " << D(1000)*D(points_computed_per_thread[i])/D(time_in_ns_per_thread[i]) << " Mfeps (Approx)" << std::endl;
                     }
-                    if( devices.count(-1) != 0)
+                    if( devices.count(-1) != 0 && cputhreads > 0)
                     {
                         D time_in_ns_on_cpu = 0;
                         U points_computed_on_cpu = 0;
@@ -386,8 +386,8 @@ namespace integrators
             throw std::invalid_argument("qmc::evaluate called with func.number_of_integration_variables < 1. Check that your integrand depends on at least one variable of integration.");
         if ( func.number_of_integration_variables > M )
             throw std::invalid_argument("qmc::evaluate called with func.number_of_integration_variables > M. Please increase M (maximal number of integration variables).");
-        if ( cputhreads < 1 )
-            throw std::domain_error("qmc::evaluate called with cputhreads < 1. Please set cputhreads to a positive integer.");
+        if ( devices.size() == 1 && devices.count(-1) == 1 && cputhreads == 0 )
+            throw std::domain_error("qmc::evaluate called with cputhreads = 0 and devices = {-1} (CPU). Please set cputhreads to a positive integer or specify at least one non-CPU device.");
 #ifndef __CUDACC__
         if ( devices.size() != 1 || devices.count(-1) != 1)
             throw std::invalid_argument("qmc::evaluate called with devices != {-1} (CPU) but CUDA not supported by compiler.");
@@ -473,7 +473,7 @@ namespace integrators
 #endif
                 }
             }
-            if( devices.count(-1) != 0)
+            if( devices.count(-1) != 0 && cputhreads > 0)
             {
                 for ( U i=0; i < cputhreads; i++)
                 {
@@ -493,7 +493,7 @@ namespace integrators
                 {
                     logger << "(" << i << ") Million Function Evaluations/s: " << D(1000)*D(points_computed_per_thread[i])/D(time_in_ns_per_thread[i]) << " Mfeps (Approx)" << std::endl;
                 }
-                if( devices.count(-1) != 0)
+                if( devices.count(-1) != 0 && cputhreads > 0)
                 {
                     D time_in_ns_on_cpu = 0;
                     U points_computed_on_cpu = 0;
@@ -682,8 +682,8 @@ namespace integrators
             throw std::domain_error("qmc::integrate called with maxmperpackage < 2. This algorithm can not be used with less than 2 concurrent random shifts. Please increase maxmperpackage.");
         if ( maxnperpackage == 0 )
             throw std::domain_error("qmc::integrate called with maxnperpackage = 0. Please set maxnperpackage to a positive integer.");
-        if ( cputhreads < 1 )
-            throw std::domain_error("qmc::integrate called with cputhreads < 1. Please set cputhreads to a positive integer.");
+        if ( devices.size() == 1 && devices.count(-1) == 1 && cputhreads == 0 )
+            throw std::domain_error("qmc::evaluate called with cputhreads = 0 and devices = {-1} (CPU). Please set cputhreads to a positive integer or specify at least one non-CPU device.");
 #ifndef __CUDACC__
         if ( devices.size() != 1 || devices.count(-1) != 1)
             throw std::invalid_argument("qmc::integrate called with devices != {-1} (CPU) but CUDA not supported by compiler.");
