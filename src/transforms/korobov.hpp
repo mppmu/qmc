@@ -40,7 +40,7 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
-            void evaluate(D* x, decltype(f(x))* res, U count)
+            void operator()(D* x, decltype(f(x))* res, U count)
             {
                 auto xx = x;
                 D* wgts = new D[count];
@@ -56,7 +56,7 @@ namespace integrators
                         if (xx[s] < D(0)) xx[s] = D(0);
                     }
                 }
-                f.evaluate(x, res, count);
+                f(x, res, count);
                 for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
                     res[i] = wgts[i] * res[i];
                 }

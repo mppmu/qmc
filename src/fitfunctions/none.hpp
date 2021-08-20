@@ -20,11 +20,11 @@ namespace integrators
                 throw std::logic_error("fit_function called");
             }
         };
-        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasEvaluate(...) {
+        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasBatching(...) {
             return false;
         }
 
-        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasEvaluate(int, decltype((std::declval<T>().evaluate(DP(), RP(), U()))) = U()) {
+        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasBatching(int, decltype((std::declval<T>().operator()(DP(), RP(), U()))) = 0) {
             return true;
         }
 
@@ -46,10 +46,10 @@ namespace integrators
             {
                 return f(x);
             }
-            void evaluate(D* x, decltype(f(x))* res, U count)
+            void operator()(D* x, decltype(f(x))* res, U count)
             {
-                if constexpr (hasEvaluate<I, D*, decltype(f(x))*, U>(0)) {
-                    f.evaluate(x, res, count);
+                if constexpr (hasBatching<I, D*, decltype(f(x))*, U>(0)) {
+                    f(x, res, count);
                 } else {
                     for (U i = U(); i != count; ++i) {
                         res[i] = f(x + i * f.number_of_integration_variables);

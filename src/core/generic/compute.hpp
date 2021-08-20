@@ -48,7 +48,7 @@ namespace integrators
 
                     if (batching) {
                         T* points = new T[batch_count];
-                        func.evaluate(x.data(), points, batch_count);
+                        func(x.data(), points, batch_count);
                         D wgt = 1.;
                         for ( U i = 0; i != batch_count; ++i) {
                             r_element[k*r_size_over_m] += wgt*points[i];

@@ -22,9 +22,9 @@ namespace integrators
             {
                 return f(x);
             }
-            void evaluate(D* x, decltype(f(x))* res, U count)
+            void operator()(D* x, decltype(f(x))* res, U count)
             {
-                f.evaluate(x, res, count);
+                f(x, res, count);
             }
         };
         struct None
