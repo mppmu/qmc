@@ -4,7 +4,7 @@
 #include <cstddef> // nullptr_t
 #include <stdexcept> // logic_error
 
-#include "../core/hasBatching.hpp"
+#include "../core/has_batching.hpp"
 
 namespace integrators
 {
@@ -42,7 +42,7 @@ namespace integrators
             }
             void operator()(D* x, decltype(f(x))* res, U count)
             {
-                if constexpr (hasBatching<I, D*, decltype(f(x))*, U>(0)) {
+                if constexpr (integrators::core::has_batching<I, decltype(f(x)), D, U>) {
                     f(x, res, count);
                 } else {
                     for (U i = U(); i != count; ++i) {

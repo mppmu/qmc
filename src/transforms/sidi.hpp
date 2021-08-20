@@ -9,6 +9,7 @@
 #include "detail/ipow.hpp"
 #include "detail/sidi_coefficient.hpp"
 #include "detail/sidi_term.hpp"
+#include "../core/has_batching.hpp"
 
 namespace integrators
 {
@@ -56,7 +57,7 @@ namespace integrators
             }
             void operator()(D* x, decltype(f(x))* res, U count)
             {
-                if constexpr (hasBatching<I, D*, decltype(f(x))*, U>(0)) {
+                if constexpr (integrators::core::has_batching<I, decltype(f(x)), D, U>) {
                     auto xx = x;
                     D* wgts = new D[count];
                     for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
@@ -124,7 +125,7 @@ namespace integrators
             }
             void operator()(D* x, decltype(f(x))* res, U count)
             {
-                if constexpr (hasBatching<I, D*, decltype(f(x))*, U>(0)) {
+                if constexpr (integrators::core::has_batching<I, decltype(f(x)), D, U>) {
                     auto xx = x;
                     D* wgts = new D[count];
                     for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
