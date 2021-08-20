@@ -16,10 +16,12 @@
 #include <thrust/complex.h>
 using thrust::complex;
 #define HOSTDEVICE __host__ __device__
+#define HOST __host__
 #else
 using std::complex;
 #include <complex>
 #define HOSTDEVICE
+#define HOST
 #endif
 
 template <typename T, typename D> struct integration_functor {
@@ -30,27 +32,27 @@ template <typename T, typename D> struct integration_functor {
 
 struct zero_dim_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 0;
-    HOSTDEVICE double operator()(double x[]) override { return 1; }
+    HOSTDEVICE double operator()(double x[]) { return 1; }
 } zero_dim_function;
 
 struct too_many_dim_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 4;
-    HOSTDEVICE double operator()(double x[]) override { return 1; }
+    HOSTDEVICE double operator()(double x[]) { return 1; }
 } too_many_dim_function;
 
 struct constant_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double x[]) override { return 1; }
+    HOSTDEVICE double operator()(double x[]) { return 1; }
 } constant_function;
 
 struct multivariate_linear_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 3;
-    HOSTDEVICE double operator()(double x[]) override { return x[0]*x[1]*x[2]; }
+    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]*x[2]; }
 } multivariate_linear_function;
 
 struct nan_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double x[]) override {
+    HOSTDEVICE double operator()(double x[]) {
         if ( x[0] < 0. || x[0] > 1. )
             return std::nan("");
         else
@@ -60,49 +62,76 @@ struct nan_function_t : integration_functor<double, double> {
 
 struct univariate_real_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double x[]) override { return x[0]; }
+    HOSTDEVICE double operator()(double x[]) { return x[0]; }
 } univariate_real_function;
 
 struct univariate_complex_function_t : integration_functor<complex<double>, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE complex<double> operator()(double x[]) override { return complex<double>(x[0],x[0]); }
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]); }
 } univariate_complex_function;
+
+struct univariate_complex_function_batch_t : integration_functor<complex<double>, double> {
+    const unsigned long long int number_of_integration_variables = 1;
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]); }
+    HOST void operator()(double x[], complex<double> res[], unsigned long long int batchsize) {
+        for (unsigned long long int i = 0; i != batchsize; ++i) {res[i] = operator()(x + i * number_of_integration_variables);}
+    return;
+    }
+} univariate_complex_function_batch;
 
 struct real_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 2;
-    HOSTDEVICE double operator()(double x[]) override { return x[0]*x[1]; }
+    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]; }
 } real_function;
 
 struct complex_function_t : integration_functor<complex<double>, double> {
     const unsigned long long int number_of_integration_variables = 2;
-    HOSTDEVICE complex<double> operator()(double x[]) override { return complex<double>(x[0],x[0]*x[1]); };
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]*x[1]); };
 } complex_function;
+
+struct complex_function_batch_t : integration_functor<complex<double>, double> {
+    const unsigned long long int number_of_integration_variables = 2;
+    HOSTDEVICE complex<double> operator()(double x[]) { return complex<double>(x[0],x[0]*x[1]); };
+    HOST void operator()(double x[], complex<double> res[], unsigned long long int batchsize) {
+        for (unsigned long long int i = 0; i != batchsize; ++i) {res[i] = operator()(x + i * number_of_integration_variables);}
+    return;
+    }
+} complex_function_batch;
 
 struct poly_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
     const double a=0.6;
-    // expexted fit parameters x0: {arbitrary, arbitrary, 0, 0 a, 1-a}
-    HOSTDEVICE double operator()(double* x) override { return  1./sqrt(a*a+4.*x[0]*(1.-a));}
+    // expected fit parameters x0: {arbitrary, arbitrary, 0, 0 a, 1-a}
+    HOSTDEVICE double operator()(double* x) { return  1./sqrt(a*a+4.*x[0]*(1.-a));}
 } poly_function;
 
 struct const_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
-    HOSTDEVICE double operator()(double* x) override { return 2. ; }
+    HOSTDEVICE double operator()(double* x) { return 2. ; }
 } const_function;
 
 struct test_function_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 2;
     const double a=0.2;
-    // expexted fit parameters x0: {1.07, arbitrary, 0.3, 0, 0.7, 0}
-    // expexted fit parameters x1: {arbitrary, arbitrary, 0, 0, a, 1-a }
-    HOSTDEVICE double operator()(double* x) override { return  (0.7142857142857143*(1.+(0.728-x[0])/sqrt(-2.996*x[0]+(0.77+x[0])*(0.77+x[0]))))/sqrt(a*a+4.*x[1]*(1.-a)); }
+    // expected fit parameters x0: {1.07, arbitrary, 0.3, 0, 0.7, 0}
+    // expected fit parameters x1: {arbitrary, arbitrary, 0, 0, a, 1-a }
+    HOSTDEVICE double operator()(double* x) { return  (0.7142857142857143*(1.+(0.728-x[0])/sqrt(-2.996*x[0]+(0.77+x[0])*(0.77+x[0]))))/sqrt(a*a+4.*x[1]*(1.-a)); }
 } test_function;
 
 struct test_function2_t : integration_functor<double, double> {
     const unsigned long long int number_of_integration_variables = 1;
     // inverse CDF: (x + 1/3 x Cos[3 x] - 1/9 Sin[3 x])
-    HOSTDEVICE double operator()(double* x) override { return  1./(1-x[0]*std::sin(3.*x[0])); }
+    HOSTDEVICE double operator()(double* x) { return  1./(1-x[0]*std::sin(3.*x[0])); }
 } test_function2;
+
+struct multivariate_linear_function_batch_t : integration_functor<double, double> {
+    const unsigned long long int number_of_integration_variables = 3;
+    HOSTDEVICE double operator()(double x[]) { return x[0]*x[1]*x[2]; }
+    HOST void operator()(double x[], double res[], unsigned long long int batchsize) {
+        for (unsigned long long int i = 0; i != batchsize; ++i) {res[i] = operator()(x + i * number_of_integration_variables);}
+    return;
+    }
+} multivariate_linear_function_batch;
 
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
@@ -261,6 +290,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
         real_integrator.minm = 1;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function_batch) , std::domain_error);
 
     };
 
@@ -268,6 +298,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
         real_integrator.maxmperpackage = 1;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function_batch) , std::domain_error);
 
     };
 
@@ -275,6 +306,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
         real_integrator.maxnperpackage = 0;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function_batch) , std::domain_error);
 
     };
 
@@ -291,7 +323,8 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
         // Call integrate on function with 3 dimensions
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
-        
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function_batch) , std::domain_error);
+
     };
 
     SECTION ( "number_of_integration_variables > M", "[Qmc]")
@@ -309,6 +342,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         real_integrator.devices = {-1};
         real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error );
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function_batch) , std::domain_error );
 
     };
 
@@ -317,6 +351,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         real_integrator.devices = {-1};
         real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function) , std::domain_error );
+        REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function_batch) , std::domain_error );
 
     };
 
@@ -326,6 +361,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         //real_integrator.devices = {-1}; // default
         real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error );
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function_batch) , std::domain_error );
 
     };
 #endif
@@ -336,6 +372,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         //real_integrator.devices = {-1}; // default
         real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function) , std::domain_error );
+        REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function_batch) , std::domain_error );
 
     };
 #endif
@@ -346,6 +383,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         real_integrator.devices = {1}; // gpu
         real_integrator.evaluateminn = 0; // disable fitting
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function), std::invalid_argument);
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function_batch), std::invalid_argument);
 
     }
 #endif
@@ -355,6 +393,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
         real_integrator.devices = {1}; // gpu
         REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function), std::invalid_argument);
+        REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function_batch), std::invalid_argument);
 
     }
 #endif
@@ -454,6 +493,20 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         REQUIRE( complex_result.error.imag() < eps );
 
     };
+    
+    SECTION( "Complex Function (Default Block Size) (batching)" )
+    {
+        complex_integrator.batching = true;
+        complex_integrator.maxnperpackage = 7;
+        complex_result = complex_integrator.integrate(complex_function_batch);
+
+        REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(eps) );
+        REQUIRE( complex_result.integral.imag() == Approx(0.25).epsilon(eps) );
+
+        REQUIRE( complex_result.error.real() < eps );
+        REQUIRE( complex_result.error.imag() < eps );
+
+    };
 
     SECTION( "Complex Function (Serial)" )
     {
@@ -468,12 +521,44 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         REQUIRE( complex_result.error.imag() < eps );
         
     };
+    
+    SECTION( "Complex Function (Serial) (batching" )
+    {
+        complex_integrator.cputhreads = 1;
+        complex_integrator.batching = true;
+        complex_integrator.maxnperpackage = 7;
+
+        complex_result = complex_integrator.integrate(complex_function_batch);
+
+        REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(eps) );
+        REQUIRE( complex_result.integral.imag() == Approx(0.25).epsilon(eps) );
+
+        REQUIRE( complex_result.error.real() < eps );
+        REQUIRE( complex_result.error.imag() < eps );
+        
+    };
 
     SECTION( "Complex Function (Parallel)" )
     {
         complex_integrator.cputhreads = 2;
 
         complex_result = complex_integrator.integrate(complex_function);
+
+        REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(eps) );
+        REQUIRE( complex_result.integral.imag() == Approx(0.25).epsilon(eps) );
+
+        REQUIRE( complex_result.error.real() < eps );
+        REQUIRE( complex_result.error.imag() < eps );
+        
+    };
+    
+    SECTION( "Complex Function (Parallel) (batching)" )
+    {
+        complex_integrator.cputhreads = 2;
+        complex_integrator.batching = true;
+        complex_integrator.maxnperpackage = 7;
+
+        complex_result = complex_integrator.integrate(complex_function_batch);
 
         REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(eps) );
         REQUIRE( complex_result.integral.imag() == Approx(0.25).epsilon(eps) );
@@ -505,6 +590,30 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
     };
 
+    SECTION( "Complex Function (Block Size Larger than N) (batching)" )
+    {
+        std::vector<unsigned long long int> v1 = {1};
+        std::map< unsigned long long int, std::vector<unsigned long long int> > gv;
+        gv[3] = v1;
+        complex_integrator.generatingvectors = gv;
+
+        complex_integrator.batching = true;
+        complex_integrator.maxnperpackage = 7;
+        complex_integrator.evaluateminn = 0; // no fitting because there are too few points
+        complex_integrator.minn = 1;
+        complex_integrator.cputhreads = 5;
+
+        complex_result = complex_integrator.integrate(univariate_complex_function);
+
+        REQUIRE( complex_integrator.cputhreads == 5 );
+        REQUIRE( complex_result.integral.real() == Approx(0.5).epsilon(badeps) );
+        REQUIRE( complex_result.integral.imag() == Approx(0.5).epsilon(badeps) );
+
+        REQUIRE( complex_result.error.real() < badeps );
+        REQUIRE( complex_result.error.imag() < badeps );
+
+    };
+    
     SECTION( "Change Seed of Random Number Generator" )
     {
 
@@ -601,7 +710,28 @@ TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" ) {
         REQUIRE( real_result.error < eps );
 
     };
+    
+    SECTION( "Switch to Monte-Carlo scaling due to available lattice sizes (batching)" )
+    {
 
+        std::map<unsigned long long int,std::vector<unsigned long long int>> gv;
+        gv[1021] = {1,374,421};
+
+        real_integrator.batching = true;
+        real_integrator.maxnperpackage = 7;
+        real_integrator.evaluateminn = 0;
+        real_integrator.generatingvectors = gv;
+        real_integrator.epsrel = 1e-10;
+        real_integrator.epsabs = 1e-10;
+        real_integrator.maxeval = 1000000;
+
+        real_result = real_integrator.integrate(multivariate_linear_function_batch);
+
+        REQUIRE( real_result.integral == Approx(0.125).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
+
+    };
+    
     SECTION( "Reduce Lattice Size due to low maxeval" )
     {
 
@@ -617,6 +747,29 @@ TEST_CASE( "Integrate Monte-Carlo Scaling", "[Qmc]" ) {
         real_integrator.maxeval = 130688;
 
         real_result = real_integrator.integrate(multivariate_linear_function);
+
+        REQUIRE( real_result.integral == Approx(0.125).epsilon(eps) );
+        REQUIRE( real_result.error < eps );
+
+    };
+    
+    SECTION( "Reduce Lattice Size due to low maxeval (batching)" )
+    {
+
+        std::map<unsigned long long int,std::vector<unsigned long long int>> gv;
+        gv[1021] = {1,374,421};
+        gv[2147483647] = {1,367499618,943314825}; // too big to use due to maxeval
+        
+        real_integrator.batching = true;
+        real_integrator.maxnperpackage = 7;
+        real_integrator.minn = 1;
+        real_integrator.evaluateminn = 0;
+        real_integrator.generatingvectors = gv;
+        real_integrator.epsrel = 1e-10;
+        real_integrator.epsabs = 1e-10;
+        real_integrator.maxeval = 130688;
+
+        real_result = real_integrator.integrate(multivariate_linear_function_batch);
 
         REQUIRE( real_result.integral == Approx(0.125).epsilon(eps) );
         REQUIRE( real_result.error < eps );
