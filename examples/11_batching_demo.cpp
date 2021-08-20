@@ -36,10 +36,10 @@ int main() {
 
     const unsigned int MAXVAR = 3;
 
-    integrators::Qmc<double,double,MAXVAR,integrators::transforms::None::type> integrator;
+    integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
     integrator.batching = true; // enable batching
     integrator.maxnperpackage = 128; // set maximum batch size
-    integrators::result<double> result = integrator.integrate(my_functor);
+    integrators::result<double> result = integrator.integrate(my_functor);    
     std::cout << "integral = " << result.integral << std::endl;
     std::cout << "error    = " << result.error    << std::endl;
 
