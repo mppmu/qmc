@@ -20,6 +20,13 @@ namespace integrators
                 throw std::logic_error("fit_function called");
             }
         };
+        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasEvaluate(...) {
+            return false;
+        }
+
+        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasEvaluate(int, decltype((std::declval<T>().evaluate(DP(), RP(), U()))) = U()) {
+            return true;
+        }
 
         template<typename I, typename D, U M>
         struct NoneTransform
@@ -41,7 +48,13 @@ namespace integrators
             }
             void evaluate(D* x, decltype(f(x))* res, U count)
             {
-                f.evaluate(x, res, count);
+                if constexpr (hasEvaluate<I, D*, decltype(f(x))*, U>(0)) {
+                    f.evaluate(x, res, count);
+                } else {
+                    for (U i = U(); i != count; ++i) {
+                        res[i] = f(x + i * f.number_of_integration_variables);
+                    }
+                }
             }
         };
 
