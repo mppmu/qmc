@@ -306,7 +306,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
     SECTION( "Invalid Number of CPU Threads", "[Qmc]")
     {
-
+        real_integrator.devices = {-1};
         real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error );
 
@@ -314,11 +314,31 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
 
     SECTION( "Invalid Number of CPU Threads", "[Qmc]")
     {
-
+        real_integrator.devices = {-1};
         real_integrator.cputhreads = 0;
         REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function) , std::domain_error );
 
     };
+
+#ifndef __CUDACC__
+    SECTION( "Invalid Number of CPU Threads", "[Qmc]")
+    {
+        //real_integrator.devices = {-1}; // default
+        real_integrator.cputhreads = 0;
+        REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error );
+
+    };
+#endif
+
+#ifndef __CUDACC__
+    SECTION( "Invalid Number of CPU Threads", "[Qmc]")
+    {
+        //real_integrator.devices = {-1}; // default
+        real_integrator.cputhreads = 0;
+        REQUIRE_THROWS_AS( real_integrator.evaluate(multivariate_linear_function) , std::domain_error );
+
+    };
+#endif
 
 #ifndef __CUDACC__
     SECTION( "Device set to GPU but CUDA Disabled in sample function", "[Qmc]") {

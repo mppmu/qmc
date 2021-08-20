@@ -103,6 +103,7 @@ namespace integrators
 #include "generatingvectors/cbcpt_dn1_100.hpp"
 #include "generatingvectors/cbcpt_dn2_6.hpp"
 #include "generatingvectors/cbcpt_cfftw1_6.hpp"
+#include "generatingvectors/cbcpt_cfftw2_10.hpp"
 #include "core/cuda/compute_kernel.hpp"
 #include "core/cuda/compute.hpp"
 #include "core/cuda/setup.hpp"

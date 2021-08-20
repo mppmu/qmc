@@ -79,6 +79,7 @@ Temporary Items
 *.log
 *.trs
 *.html
+*.css
 check/*/test_*
 !check/*/test_*.cpp
 examples/cuba_demo

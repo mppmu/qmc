@@ -1,20 +1,20 @@
 [![Build Status](https://travis-ci.org/mppmu/qmc.svg?branch=master)](https://travis-ci.org/mppmu/qmc)
 [![Coverage Status](https://coveralls.io/repos/github/mppmu/qmc/badge.svg?branch=master)](https://coveralls.io/github/mppmu/qmc?branch=master)
 
-[The latest release of the single header can be downloaded directly using this link.](https://github.com/mppmu/qmc/releases/download/v1.0.4/qmc.hpp)
+[The latest release of the single header can be downloaded directly using this link.](https://github.com/mppmu/qmc/releases/download/v1.0.6/qmc.hpp)
 
 # qmc
 
 A Quasi-Monte-Carlo (QMC) integrator library with NVIDIA CUDA support.
 
-The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++11 threading library and multiple CUDA compatible accelerators are supported. A variance reduction procedure based on fitting a smooth function to the inverse cumulative distribution function of the integrand dimension-by-dimension is also implemented.
+The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++14 threading library and multiple CUDA compatible accelerators are supported. A variance reduction procedure based on fitting a smooth function to the inverse cumulative distribution function of the integrand dimension-by-dimension is also implemented.
 
 To read more about the library see [our publication](https://arxiv.org/abs/1811.11720).
 
 ## Installation
 
 Prerequisites:
-* A C++11 compatible C++ compiler.
+* A C++14 compatible C++ compiler.
 * (Optional GPU support)  A CUDA compatible compiler (typically `nvcc`).
 * (Optional GPU support) CUDA compatible hardware with Compute Capability 3.0 or greater.
 
@@ -53,12 +53,12 @@ int main() {
 
 Compile without GPU support:
 ```shell
-$ c++ -std=c++11 -pthread -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
+$ c++ -std=c++14 -pthread -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
 ```
 
 Compute with GPU support:
 ```shell
-$ nvcc -arch=<arch> -std=c++11 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
+$ nvcc -arch=<arch> -std=c++14 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
 ```
 where `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
 
@@ -78,8 +78,8 @@ The Qmc class has 7 template parameters:
 * `M` the maximum number of integration variables of any integrand that will be passed to the integrator
 * `P` an integral transform to be applied to the integrand before integration
 * `F` a function to be fitted to the inverse cumulative distribution function of the integrand in each dimension, used to reduce the variance of the integrand (default: `fitfunctions::None::template type`)
-* `G` a C++11 style pseudo-random number engine (default: `std::mt19937_64`)
-* `H` a C++11 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
+* `G` a C++14 style pseudo-random number engine (default: `std::mt19937_64`)
+* `H` a C++14 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
 
 Internally, unsigned integers are assumed to be of type `U = unsigned long long int`.
 
@@ -115,7 +115,7 @@ Default: `std::cout`.
 
 `G randomgenerator`
 
-A C++11 style pseudo-random number engine. 
+A C++14 style pseudo-random number engine. 
 
 The seed of the pseudo-random number engine can be changed via the `seed` member function of the pseudo-random number engine.
 For total reproducability you may also want to set `cputhreads = 1`  and `devices = {-1}` which disables multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
@@ -376,6 +376,7 @@ The following generating vectors are distributed with the qmc:
 | `cbcpt_dn1_100` | 100 | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 1021 - 2147483647 |
 | `cbcpt_dn2_6`     | 6     | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 65521 - 2499623531 |
 | `cbcpt_cfftw1_6` | 6     | Computed using a custom CBC tool based on FFTW | 2500000001 - 15173222401 |
+| `cbcpt_cfftw2_10` | 10     | Computed using a custom CBC tool based on FFTW | 2147483659 - 24296004011 |
 
 The above generating vectors are produced for Korobov spaces with smoothness `alpha=2` using:
 * Kernel `omega(x)=2 pi^2 (x^2 - x + 1/6)`,

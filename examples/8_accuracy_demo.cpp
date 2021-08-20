@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -O3 -pthread -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
+ *   c++ -std=c++14 -O3 -pthread -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -arch=<arch> -std=c++11 -rdc=true -O3 -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
+ *   nvcc -arch=<arch> -std=c++14 -rdc=true -O3 -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 8_accuracy_demo.cpp -o 8_accuracy_demo.out -lgsl -lgslcblas
  * Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
  */
 

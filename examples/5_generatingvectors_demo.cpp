@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++11 -pthread -I../src 5_generatingvectors_demo.cpp -o 5_generatingvectors_demo.out -lgsl -lgslcblas
+ *   c++ -std=c++14 -pthread -I../src 5_generatingvectors_demo.cpp -o 5_generatingvectors_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -arch=<arch> -std=c++11 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 5_generatingvectors_demo.cpp -o 5_generatingvectors_demo.out -lgsl -lgslcblas
+ *   nvcc -arch=<arch> -std=c++14 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 5_generatingvectors_demo.cpp -o 5_generatingvectors_demo.out -lgsl -lgslcblas
  * Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
  */
 
