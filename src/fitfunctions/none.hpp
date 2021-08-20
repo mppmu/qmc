@@ -4,6 +4,8 @@
 #include <cstddef> // nullptr_t
 #include <stdexcept> // logic_error
 
+#include "../core/hasBatching.hpp"
+
 namespace integrators
 {
     namespace fitfunctions
@@ -20,14 +22,6 @@ namespace integrators
                 throw std::logic_error("fit_function called");
             }
         };
-        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasBatching(...) {
-            return false;
-        }
-
-        template <typename T, typename DP, typename RP, typename U> static constexpr bool hasBatching(int, decltype((std::declval<T>().operator()(DP(), RP(), U()))) = 0) {
-            return true;
-        }
-
         template<typename I, typename D, U M>
         struct NoneTransform
         {
@@ -52,7 +46,7 @@ namespace integrators
                     f(x, res, count);
                 } else {
                     for (U i = U(); i != count; ++i) {
-                        res[i] = f(x + i * f.number_of_integration_variables);
+                        res[i] = operator()(x + i * f.number_of_integration_variables);
                     }
                 }
             }

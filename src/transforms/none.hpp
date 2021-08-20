@@ -24,7 +24,13 @@ namespace integrators
             }
             void operator()(D* x, decltype(f(x))* res, U count)
             {
-                f(x, res, count);
+                if constexpr (hasBatching<I, D*, decltype(f(x))*, U>(0)) {
+                    f(x, res, count);
+                } else {
+                    for (U i = U(); i != count; ++i) {
+                        res[i] = operator()(x + i * f.number_of_integration_variables);
+                    }
+                }
             }
         };
         struct None

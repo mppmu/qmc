@@ -42,25 +42,31 @@ namespace integrators
             }
             void operator()(D* x, decltype(f(x))* res, U count)
             {
-                auto xx = x;
-                D* wgts = new D[count];
-                for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
-                    wgts[i] = 1;
-                    const D prefactor = (D(r0)+D(r1)+D(1))*detail::Binomial<r0+r1,r0>::value;
-                    for(U s = 0; s<number_of_integration_variables; s++)
-                    {
-                        wgts[i] *= prefactor*detail::IPow<D,r0>::value(xx[s])*detail::IPow<D,r1>::value(D(1)-xx[s]);
-                        xx[s] = detail::IPow<D,r0+1>::value(xx[s])*detail::KorobovTerm<D,r1,r0,r1>::value(xx[s]);
-                        // loss of precision can cause x < 0 or x > 1 must keep in x \elem [0,1]
-                        if (xx[s] > D(1)) xx[s] = D(1);
-                        if (xx[s] < D(0)) xx[s] = D(0);
+                if constexpr (hasBatching<I, D*, decltype(f(x))*, U>(0)) {
+                    auto xx = x;
+                    D* wgts = new D[count];
+                    for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                        wgts[i] = 1;
+                        const D prefactor = (D(r0)+D(r1)+D(1))*detail::Binomial<r0+r1,r0>::value;
+                        for(U s = 0; s<number_of_integration_variables; s++)
+                        {
+                            wgts[i] *= prefactor*detail::IPow<D,r0>::value(xx[s])*detail::IPow<D,r1>::value(D(1)-xx[s]);
+                            xx[s] = detail::IPow<D,r0+1>::value(xx[s])*detail::KorobovTerm<D,r1,r0,r1>::value(xx[s]);
+                            // loss of precision can cause x < 0 or x > 1 must keep in x \elem [0,1]
+                            if (xx[s] > D(1)) xx[s] = D(1);
+                            if (xx[s] < D(0)) xx[s] = D(0);
+                        }
+                    }
+                    f(x, res, count);
+                    for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                        res[i] = wgts[i] * res[i];
+                    }
+                    delete[] wgts;
+                } else {
+                    for (U i = U(); i != count; ++i) {
+                        res[i] = operator()(x + i * f.number_of_integration_variables);
                     }
                 }
-                f(x, res, count);
-                for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
-                    res[i] = wgts[i] * res[i];
-                }
-                delete[] wgts;
             }
 
         };
