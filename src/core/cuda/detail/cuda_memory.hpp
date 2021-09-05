@@ -27,6 +27,10 @@ namespace integrators
                 public:
                     operator T*() { return memory; }
                     cuda_memory(std::size_t s) { QMC_CORE_CUDA_SAFE_CALL(cudaMalloc(&memory, s*sizeof(T))); };
+                    cuda_memory(int value, std::size_t s) { 
+                        QMC_CORE_CUDA_SAFE_CALL(cudaMalloc(&memory, s*sizeof(T)));
+                        QMC_CORE_CUDA_SAFE_CALL(cudaMemset(memory, value, s*sizeof(T)));
+                    };
                     ~cuda_memory() { QMC_CORE_CUDA_SAFE_CALL(cudaFree(memory)); }
                 };
             };

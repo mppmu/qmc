@@ -36,7 +36,7 @@ namespace integrators
                 d_func.reset( new integrators::core::cuda::detail::cuda_memory<I>(1) );
                 d_z.reset( new integrators::core::cuda::detail::cuda_memory<U>(z.size()) );
                 d_d.reset( new integrators::core::cuda::detail::cuda_memory<D>(d.size()) );
-                d_r.reset( new integrators::core::cuda::detail::cuda_memory<T>(d_r_size_over_m*m) );
+                d_r.reset( new integrators::core::cuda::detail::cuda_memory<T>(0,d_r_size_over_m*m) ); // allocate and set to 0
                 if(verbosity > 1) logger << "- (" << device << ") allocated d_func,d_z,d_d,d_r" << std::endl;
 
                 // copy func (initialize on new active device)
@@ -49,14 +49,11 @@ namespace integrators
                 if(verbosity > 1) logger << "- (" << device << ") copied d_func to device memory" << std::endl;
 
                 // Copy z,d,r,func to device
-                if(verbosity > 1) logger << "- (" << device << ") copying z,d,r to device memory" << std::endl;
+                if(verbosity > 1) logger << "- (" << device << ") copying z,d to device memory" << std::endl;
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<U*>(*d_z), z.data(), z.size() * sizeof(U), cudaMemcpyHostToDevice));
                 QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(static_cast<D*>(*d_d), d.data(), d.size() * sizeof(D), cudaMemcpyHostToDevice));
-                for (U k = 0; k < m; k++)
-                {
-                    QMC_CORE_CUDA_SAFE_CALL(cudaMemcpy(&(static_cast<T*>(*d_r)[k*d_r_size_over_m]), &r_element[k*r_size_over_m], d_r_size_over_m * sizeof(T), cudaMemcpyHostToDevice));
-                }
-                if(verbosity > 1) logger << "- (" << device << ") copied z,d,r to device memory" << std::endl;
+                // d_r not copied (initialised to 0 above)
+                if(verbosity > 1) logger << "- (" << device << ") copied z,d to device memory" << std::endl;
 
                 //        QMC_CORE_CUDA_SAFE_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // TODO (V2) - investigate if this helps
                 //        cudaOccupancyMaxPotentialBlockSize( &minGridSize, &blockSize, MyKernel, 0, 0); // TODO (V2) - investigate if this helps - https://devblogs.nvidia.com/cuda-pro-tip-occupancy-api-simplifies-launch-configuration/
