@@ -149,7 +149,7 @@ namespace integrators
         U extra_threads = devices.size() - devices.count(-1);
         
         // Memory required for result vector
-        U r_size_over_m = extra_threads*cudablocks*cudathreadsperblock; // non-cpu workers
+        U r_size_over_m = extra_threads; // non-cpu workers
         if (devices.count(-1) != 0 && cputhreads > 0)
         {
             r_size_over_m += cputhreads; // cpu-workers
@@ -241,7 +241,7 @@ namespace integrators
                     {
 #ifdef __CUDACC__
                         thread_pool.push_back( std::thread( &Qmc<T,D,M,P,F,G,H>::sample_worker<I>, this, thread_id, std::ref(work_queue), std::ref(work_queue_mutex), std::cref(z), std::cref(d), std::ref(r), total_work_packages, n, shifts, std::ref(func), device, std::ref(time_in_ns_per_thread[thread_number]), std::ref(points_computed_per_thread[thread_number])  ) ); // Launch non-cpu workers
-                        thread_id += cudablocks*cudathreadsperblock;
+                        thread_id += 1;
                         thread_number += 1;
 #else
                         throw std::invalid_argument("qmc::sample called with device != -1 (CPU) but CUDA not supported by compiler, device: " + std::to_string(device));
