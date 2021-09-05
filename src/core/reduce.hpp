@@ -39,13 +39,14 @@ namespace integrators
                     previous_iterations.pop_back();
                 }
             }
+            U r_size = r.size();
             for(U k = 0; k < m; k++)
             {
                 T sum = {0.};
                 T delta = {0.};
-                for (U i = 0; i<r.size()/m; i++)
+                for (U i = 0; i<r_size/m; i++)
                 {
-                    sum += r.at(k*r.size()/m+i);
+                    sum += r.at(k*r_size/m+i);
                 }
                 if (verbosity > 1) logger << "shift " << k+previous_m << " result: " << sum/static_cast<T>(n) << std::endl;
                 // Compute Variance using online algorithm (Knuth, The Art of Computer Programming)
