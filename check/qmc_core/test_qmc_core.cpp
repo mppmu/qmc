@@ -127,6 +127,15 @@ struct multivariate_linear_function_batch_t {
     }
 } multivariate_linear_function_batch;
 
+struct logintegral_function_batch_t {
+    const unsigned long long int number_of_integration_variables = 2;
+    HOSTDEVICE double operator()(double x[]) { return 1./log(1.+x[0]+x[1]); }
+    HOST void operator()(double x[], double res[], unsigned long long int batchsize) {
+        for (unsigned long long int i = 0; i != batchsize; ++i) {res[i] = operator()(x + i * number_of_integration_variables);}
+    return;
+    }
+} logintegral_function_batch;
+
 TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
 
     integrators::Qmc<double,double,3,integrators::transforms::Korobov<3>::type> real_integrator;
@@ -559,6 +568,33 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
 
         REQUIRE( complex_result.error.real() < eps );
         REQUIRE( complex_result.error.imag() < eps );
+        
+    };
+    
+    SECTION( "Log Integral Function (Parallel)" )
+    {
+        real_integrator.cputhreads = 2;
+        real_integrator.maxnperpackage = 7;
+        
+        real_result = real_integrator.integrate(logintegral_function_batch);
+
+        REQUIRE( real_result.integral == Approx(1.8308959202222008537).epsilon(eps) );
+
+        REQUIRE( real_result.error < eps );
+        
+    };
+    
+    SECTION( "Log Integral Function (Parallel) (batching)" )
+    {
+        real_integrator.cputhreads = 2;
+        real_integrator.batching = true;
+        real_integrator.maxnperpackage = 7;
+
+        real_result = real_integrator.integrate(logintegral_function_batch);
+
+        REQUIRE( real_result.integral == Approx(1.8308959202222008537).epsilon(eps) );
+
+        REQUIRE( real_result.error < eps );
         
     };
 
