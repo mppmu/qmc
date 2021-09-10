@@ -254,12 +254,18 @@ Default: `0`.
 
 `bool batching`
 
-If set to true, makes the integrator use the function member function
-void Evaluate(double * x, double * res, U count) instead of the () operator.
-Here x is the one-dimensional array first containing coordinates of point number 0, then point number 1 and so on.
-res is the array of results.
-U is the number of points passed to the Evaluate function.
-The Evaluate function should be ready to accept up to maxnperpackage points.
+If set to `true`, attempts to compute batches of points on the cpu. This allows the user to make better use of SIMD instructions on their hardware.
+
+If the user provides it, on the cpu the integrator will use the call operator:  
+```cpp
+void operator()(double* x, double* res, const U batchsize) const
+```
+This call operator should be ready to accept up to `maxnperpackage` points.
+
+The parameters are:
+* `x`  - a one-dimensional array first containing coordinates of point number `0`, then point number `1` and so on,
+* `res` - the array of results,
+* `batchsize` - the number of points passed to the function.
 
 Dafault: `false`.
 
