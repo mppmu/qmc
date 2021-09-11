@@ -15,17 +15,18 @@ namespace integrators
             void compute(const U i, const std::vector<U>& z, const std::vector<D>& d, T* r_element, const U r_size_over_m, const U total_work_packages, const U n, const U m, const bool batching, I& func)
             {
                 using std::modf;
+                
+                U batchsize = 1;
+                T* points;
+                if (batching)
+                {
+                    batchsize = (n / total_work_packages) + ((i < (n % total_work_packages)) ? 1 : 0);
+                    points = new T[batchsize];
+                }
+                std::vector<D> x(func.number_of_integration_variables * batchsize, 0);
 
                 for (U k = 0; k < m; k++)
                 {
-                    U batch_count;
-                    if (batching)
-                        batch_count = (n / total_work_packages) + ((i < (n % total_work_packages)) ? 1 : 0);
-                    else
-                        batch_count = 1;
-
-                    std::vector<D> x(func.number_of_integration_variables * batch_count, 0);
-
                     for( U offset = i; offset < n; offset += total_work_packages )
                     {
                         D mynull = 0;
@@ -46,16 +47,19 @@ namespace integrators
                         }
                     }
 
-                    if (batching) {
-                        T* points = new T[batch_count];
-                        func(x.data(), points, batch_count);
+                    if (batching)
+                    {
+                        func(x.data(), points, batchsize);
                         D wgt = 1.;
-                        for ( U i = 0; i != batch_count; ++i) {
+                        for ( U i = 0; i != batchsize; ++i)
+                        {
                             r_element[k*r_size_over_m] += wgt*points[i];
                         }
-                        delete[] points;
                     }
                 }
+                
+                if (batching)
+                    delete[] points;
             }
 
             template <typename T, typename D, typename I>
