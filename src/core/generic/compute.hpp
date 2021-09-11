@@ -20,7 +20,7 @@ namespace integrators
                 {
                     U batch_count;
                     if (batching)
-                        batch_count = (n / total_work_packages) + ((n % total_work_packages) ? 1 : 0);
+                        batch_count = (n / total_work_packages) + ((i < (n % total_work_packages)) ? 1 : 0);
                     else
                         batch_count = 1;
 
