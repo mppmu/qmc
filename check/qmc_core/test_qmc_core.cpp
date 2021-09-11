@@ -584,11 +584,41 @@ TEST_CASE( "Integrate", "[Qmc]" ) {
         
     };
     
-    SECTION( "Log Integral Function (Parallel) (batching)" )
+    SECTION( "Log Integral Function (Parallel) (batching maxnperpackage=7)" )
     {
         real_integrator.cputhreads = 2;
         real_integrator.batching = true;
         real_integrator.maxnperpackage = 7;
+
+        real_result = real_integrator.integrate(logintegral_function_batch);
+
+        REQUIRE( real_result.integral == Approx(1.8308959202222008537).epsilon(eps) );
+
+        REQUIRE( real_result.error < eps );
+        
+    };
+    
+    SECTION( "Log Integral Function (Parallel) (batching maxnperpackage=n)" )
+    {
+        real_integrator.minn = 8191;
+        real_integrator.cputhreads = 2;
+        real_integrator.batching = true;
+        real_integrator.maxnperpackage = 8191;
+
+        real_result = real_integrator.integrate(logintegral_function_batch);
+
+        REQUIRE( real_result.integral == Approx(1.8308959202222008537).epsilon(eps) );
+
+        REQUIRE( real_result.error < eps );
+        
+    };
+    
+    SECTION( "Log Integral Function (Parallel) (batching maxnperpackage>n)" )
+    {
+        real_integrator.minn = 8191;
+        real_integrator.cputhreads = 2;
+        real_integrator.batching = true;
+        real_integrator.maxnperpackage = 12007;
 
         real_result = real_integrator.integrate(logintegral_function_batch);
 
