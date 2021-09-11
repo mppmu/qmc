@@ -120,7 +120,11 @@ Assuming that the uncertainty is Gaussian distributed we would expect the true r
  Demonstrates the use of higher than double precision numbers within the qmc. Here we integrate a `boost` quadruple precision float (`cpp_bin_float_quad`). The `boost` library is required to compile this example.
  
  We integrate the function `sin(x[0]*x[1])/log(quad(1)+x[0]+x[1])` using a weight `r=10` Korobov trasnform. With a lattice size of `~10000` approximately 30 digits are obtained.
-  
+ 
+ ### 11_batching_demo
+ 
+ Demonstrates the use of the `batching` feature. This allows the user to make better use of SIMD instructions on their architecture when using the cpu. This example integrates the function `(x0+x1)^10`.
+ 
  ## Loop Integral Examples
  
  The following examples are taken from high energy physics loop integals and demonstrate the usage of the integrator on examples of interest to the authors.
