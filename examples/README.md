@@ -4,12 +4,12 @@
 
 Compile without GPU support:
 ```shell
-c++ -std=c++14 -pthread -I../src <example_name>.cpp -o <example_name>.out
+c++ -std=c++17 -pthread -I../src <example_name>.cpp -o <example_name>.out
 ```
 
 Compile with GPU support:
 ```shell
-nvcc -arch=<arch> -std=c++14 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src <example_name>.cpp -o <example_name>.out -lgsl -lgslcblas
+nvcc -arch=<arch> -std=c++17 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src <example_name>.cpp -o <example_name>.out -lgsl -lgslcblas
 ```
 Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
 
@@ -43,7 +43,7 @@ A translation of the CUBA demo file for input to the QMC. For each function in t
 
 ### 7_cuba_pointers_demo
 
-An alternative translation of the CUBA demo file for input to the QMC. In  `6_cuba_functors_demo` a new functor is declared for each function in the CUBA test suite, in particular, each functor has a different type which corresponds to the function it contains. However, in `c++14` it can sometimes be inconvenient to iterate over objects of different types. In this demo we show how a functor of a single type can be used to refer to each of the functions in the test suite. This is a 4 stage process:
+An alternative translation of the CUBA demo file for input to the QMC. In  `6_cuba_functors_demo` a new functor is declared for each function in the CUBA test suite, in particular, each functor has a different type which corresponds to the function it contains. However, in `c++17` it can sometimes be inconvenient to iterate over objects of different types. In this demo we show how a functor of a single type can be used to refer to each of the functions in the test suite. This is a 4 stage process:
 1. Declare the functions to be integrated, e.g.
 ```cpp
 __host__ __device__ func1(double x[]) { return sin(x[0])*cos(x[1])*exp(x[2]); }
@@ -120,7 +120,11 @@ Assuming that the uncertainty is Gaussian distributed we would expect the true r
  Demonstrates the use of higher than double precision numbers within the qmc. Here we integrate a `boost` quadruple precision float (`cpp_bin_float_quad`). The `boost` library is required to compile this example.
  
  We integrate the function `sin(x[0]*x[1])/log(quad(1)+x[0]+x[1])` using a weight `r=10` Korobov trasnform. With a lattice size of `~10000` approximately 30 digits are obtained.
-  
+ 
+ ### 11_batching_demo
+ 
+ Demonstrates the use of the `batching` feature. This allows the user to make better use of SIMD instructions on their architecture when using the cpu. This example integrates the function `(x0+x1)^10`.
+ 
  ## Loop Integral Examples
  
  The following examples are taken from high energy physics loop integals and demonstrate the usage of the integrator on examples of interest to the authors.

@@ -7,14 +7,14 @@
 
 A Quasi-Monte-Carlo (QMC) integrator library with NVIDIA CUDA support.
 
-The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++14 threading library and multiple CUDA compatible accelerators are supported. A variance reduction procedure based on fitting a smooth function to the inverse cumulative distribution function of the integrand dimension-by-dimension is also implemented.
+The library can be used to integrate multi-dimensional real or complex functions numerically. Multi-threading is supported via the C++17 threading library and multiple CUDA compatible accelerators are supported. A variance reduction procedure based on fitting a smooth function to the inverse cumulative distribution function of the integrand dimension-by-dimension is also implemented.
 
 To read more about the library see [our publication](https://arxiv.org/abs/1811.11720).
 
 ## Installation
 
 Prerequisites:
-* A C++14 compatible C++ compiler.
+* A C++17 compatible C++ compiler.
 * (Optional GPU support)  A CUDA compatible compiler (typically `nvcc`).
 * (Optional GPU support) CUDA compatible hardware with Compute Capability 3.0 or greater.
 
@@ -53,12 +53,12 @@ int main() {
 
 Compile without GPU support:
 ```shell
-$ c++ -std=c++14 -pthread -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
+$ c++ -std=c++17 -pthread -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
 ```
 
 Compute with GPU support:
 ```shell
-$ nvcc -arch=<arch> -std=c++14 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
+$ nvcc -arch=<arch> -std=c++17 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 1_minimal_demo.cpp -o 1_minimal_demo.out -lgsl -lgslcblas
 ```
 where `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
 
@@ -78,8 +78,8 @@ The Qmc class has 7 template parameters:
 * `M` the maximum number of integration variables of any integrand that will be passed to the integrator
 * `P` an integral transform to be applied to the integrand before integration
 * `F` a function to be fitted to the inverse cumulative distribution function of the integrand in each dimension, used to reduce the variance of the integrand (default: `fitfunctions::None::template type`)
-* `G` a C++14 style pseudo-random number engine (default: `std::mt19937_64`)
-* `H` a C++14 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
+* `G` a C++17 style pseudo-random number engine (default: `std::mt19937_64`)
+* `H` a C++17 style uniform real distribution (default: `std::uniform_real_distribution<D>`)
 
 Internally, unsigned integers are assumed to be of type `U = unsigned long long int`.
 
@@ -115,7 +115,7 @@ Default: `std::cout`.
 
 `G randomgenerator`
 
-A C++14 style pseudo-random number engine. 
+A C++17 style pseudo-random number engine. 
 
 The seed of the pseudo-random number engine can be changed via the `seed` member function of the pseudo-random number engine.
 For total reproducability you may also want to set `cputhreads = 1`  and `devices = {-1}` which disables multi-threading, this helps to ensure that the floating point operations are done in the same order each time the code is run.
@@ -251,6 +251,26 @@ Possible values: `0,1,2,3`. Controls the verbosity of the output to `logger` of 
 Default: `0`.
 
 ---
+
+`bool batching`
+
+If set to `true`, attempts to compute batches of points on the cpu. This allows the user to make better use of SIMD instructions on their hardware.
+
+If the user provides it, on the cpu the integrator will use the call operator:  
+```cpp
+void operator()(double* x, double* res, const U batchsize) const
+```
+This call operator should be ready to accept up to `maxnperpackage` points.
+
+The parameters are:
+* `x`  - a one-dimensional array first containing coordinates of point number `0`, then point number `1` and so on,
+* `res` - the array of results,
+* `batchsize` - the number of points passed to the function.
+
+Dafault: `false`.
+
+---
+
 
 `U evaluateminn`
 

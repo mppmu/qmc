@@ -74,6 +74,8 @@ namespace integrators
         std::map<U,std::vector<U>> generatingvectors;
         U verbosity;
 
+        bool batching;
+
         U evaluateminn;
 
         size_t fitstepsize;
@@ -108,6 +110,7 @@ namespace integrators
 #include "core/cuda/teardown.hpp"
 #include "core/cuda/get_device_count.hpp"
 #include "core/generic/compute.hpp"
+#include "core/has_batching.hpp"
 #include "core/least_squares.hpp"
 #include "core/reduce.hpp"
 #include "members.hpp"

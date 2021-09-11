@@ -9,6 +9,7 @@
 #include "detail/ipow.hpp"
 #include "detail/sidi_coefficient.hpp"
 #include "detail/sidi_term.hpp"
+#include "../core/has_batching.hpp"
 
 namespace integrators
 {
@@ -54,6 +55,38 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
+            void operator()(D* x, decltype(f(x))* res, U count)
+            {
+                if constexpr (integrators::core::has_batching<I, decltype(f(x)), D, U>) {
+                    auto xx = x;
+                    D* wgts = new D[count];
+                    for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                        wgts[i] = 1;
+                        const D fac1 = detail::Factorial<r>::value;
+                        const D fac2 = detail::Factorial<(r-U(1))/U(2)>::value;
+
+                        const D wgt_prefactor = pi/detail::IPow<D,r>::value(D(2))*fac1/fac2/fac2;
+                        const D transform_prefactor = D(1)/detail::IPow<D,U(2)*r-U(1)>::value(D(2))*fac1/fac2/fac2;
+                        for(U s = 0; s<number_of_integration_variables; s++)
+                        {
+                            wgts[i] *= wgt_prefactor*detail::IPow<D,r>::value(sin(pi*xx[s]));
+                            xx[s] = transform_prefactor*detail::SidiTerm<D,(r-U(1))/U(2),r>::value(xx[s],pi);
+                            // loss of precision can cause xx < 0 or xx > 1 must keep in xx \elem [0,1]
+                            if (xx[s] > D(1)) xx[s] = D(1);
+                            if (xx[s] < D(0)) xx[s] = D(0);
+                        }
+                    }
+                    f(x, res, count);
+                    for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                        res[i] = wgts[i] * res[i];
+                    }
+                    delete[] wgts;
+                } else {
+                    for (U i = U(); i != count; ++i) {
+                        res[i] = operator()(x + i * f.number_of_integration_variables);
+                    }
+                }
+            }
         };
 
         // Even r
@@ -90,6 +123,38 @@ namespace integrators
                 }
                 return wgt * f(x);
             }
+            void operator()(D* x, decltype(f(x))* res, U count)
+            {
+                if constexpr (integrators::core::has_batching<I, decltype(f(x)), D, U>) {
+                    auto xx = x;
+                    D* wgts = new D[count];
+                    for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                        wgts[i] = 1;
+                        const D fac1 = detail::Factorial<r/U(2)-U(1)>::value;
+                        const D fac2 = detail::Factorial<r-U(1)>::value;
+
+                        const D wgt_prefactor = detail::IPow<D,r-U(2)>::value(D(2))*D(r)*fac1*fac1/fac2;
+                        const D transform_prefactor = D(r)/D(2)/pi*fac1*fac1/fac2;
+                        for(U s = 0; s<number_of_integration_variables; s++)
+                        {
+                            wgts *= wgt_prefactor*detail::IPow<D,r>::value(sin(pi*xx[s]));
+                            xx[s] = transform_prefactor*detail::SidiTerm<D,r/U(2)-U(1),r>::value(xx[s],pi);
+                            // loss of precision can cause xx < 0 or xx > 1 must keep in xx \elem [0,1]
+                            if (xx[s] > D(1)) xx[s] = D(1);
+                            if (xx[s] < D(0)) xx[s] = D(0);
+                        }
+                    }
+                    f(x, res, count);
+                    for (U i = 0; i!= count; ++i, xx+=number_of_integration_variables) {
+                        res[i] = wgts[i] * res[i];
+                    }
+                    delete[] wgts;
+                } else {
+                    for (U i = U(); i != count; ++i) {
+                        res[i] = operator()(x + i * f.number_of_integration_variables);
+                    }
+                }
+            }
         };
 
         // r == 0
@@ -107,6 +172,10 @@ namespace integrators
             auto operator()(D* x) -> decltype(f(x)) const
             {
                 return f(x);
+            }
+            void operator()(D* x, decltype(f(x))* res, U count)
+            {
+                f(x, res, count);
             }
         };
 
