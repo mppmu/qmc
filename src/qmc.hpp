@@ -51,7 +51,7 @@ namespace integrators
 
         template <typename I> void sample_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U total_work_packages, const U n, const U m,  I& func, const int device, D& time_in_ns, U& points_computed) const;
         template <typename I> void evaluate_worker(const U thread_id,U& work_queue, std::mutex& work_queue_mutex, const std::vector<U>& z, const std::vector<D>& d, std::vector<T>& r, const U n, I& func, const int device, D& time_in_ns, U& points_computed) const;
-        template <typename I> result<T> sample(I& func, const U n, const U m, std::vector<result<T>> & previous_iterations);
+        template <typename I> result<T> sample(I& func, const U n, const U m, std::vector<result<T>> & previous_iterations, std::vector<U> *generating_vector=nullptr);
         void update(const result<T>& res, U& n, U& m) const;
         template <typename I> result<T> integrate_no_fit_no_transform(I& func);
 
@@ -76,6 +76,11 @@ namespace integrators
 
         bool batching;
 
+        bool useMedianQmc;
+        bool keepMedianGV;
+        U numMedianLattices;
+
+
         U evaluateminn;
 
         size_t fitstepsize;
@@ -90,6 +95,7 @@ namespace integrators
         template <typename I> result<T> integrate(I& func);
         template <typename I> samples<T,D> evaluate(I& func);
         template <typename I> typename F<I,D,M>::transform_t fit(I& func);
+        template <typename I> std::vector<U> getMedianGeneratingVector(U n, I& func);
         Qmc();
         virtual ~Qmc() {}
     };
@@ -104,6 +110,7 @@ namespace integrators
 #include "generatingvectors/cbcpt_dn2_6.hpp"
 #include "generatingvectors/cbcpt_cfftw1_6.hpp"
 #include "generatingvectors/cbcpt_cfftw2_10.hpp"
+#include "generatingvectors/none.hpp"
 #include "core/cuda/compute_kernel.hpp"
 #include "core/cuda/compute.hpp"
 #include "core/cuda/setup.hpp"

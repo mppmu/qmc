@@ -240,6 +240,31 @@ Default: `cbcpt_dn1_100()`.
 
 ---
 
+`bool useMedianQmc`
+
+If set to `true`, extend list of generating vectors using the [median quasi-Monte Carlo rules](https://arxiv.org/abs/2201.09413).
+Can be used with `generatingevectors=none()`.
+
+Default: `true`.
+
+---
+
+`bool keepMedianGV`
+
+If set to `true`, generating vectors constructed using the median QMC rules are kept in `generatingvectors` for subsequent integrations.
+
+Default: `false`.
+
+---
+
+`U numMedianLattices`
+
+Number of candidate generating vectors for the construction of the median QMC rules.
+
+Default: `11`.
+
+---
+
 `U verbosity`
 
 Possible values: `0,1,2,3`. Controls the verbosity of the output to `logger` of the qmc library.
@@ -383,6 +408,7 @@ The following generating vectors are distributed with the qmc:
 | `cbcpt_dn2_6`     | 6     | Computed using Dirk Nuyens' [fastrank1pt.m tool](https://people.cs.kuleuven.be/~dirk.nuyens/fast-cbc) | 65521 - 2499623531 |
 | `cbcpt_cfftw1_6` | 6     | Computed using a custom CBC tool based on FFTW | 2500000001 - 15173222401 |
 | `cbcpt_cfftw2_10` | 10     | Computed using a custom CBC tool based on FFTW | 2147483659 - 68719476767 |
+| `none` | inf     | Empty list of generating vectors, to be filled using median Qmc rule | arbitrary |
 
 The above generating vectors are produced for Korobov spaces with smoothness `alpha=2` using:
 * Kernel `omega(x)=2 pi^2 (x^2 - x + 1/6)`,

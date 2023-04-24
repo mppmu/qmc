@@ -39,6 +39,12 @@ namespace integrators
 
             #undef QMC_ABS_CALL
         };
+
+        template <typename T>
+        T compute_signedMax_ReIm(const result<T>& res)
+        {
+            return res.integral;
+        };
     };
 };
 

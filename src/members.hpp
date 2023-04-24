@@ -132,9 +132,10 @@ namespace integrators
 
     };
     
+    // argument generating_vector only used while constructing median qmc rule. 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     template <typename I>
-    result<T> Qmc<T,D,M,P,F,G,H>::sample(I& func, const U n, const U m, std::vector<result<T>> & previous_iterations)
+    result<T> Qmc<T,D,M,P,F,G,H>::sample(I& func, const U n, const U m, std::vector<result<T>> & previous_iterations, std::vector<U> *generating_vector)
     {
         std::vector<U> z;
         std::vector<D> d;
@@ -167,11 +168,16 @@ namespace integrators
             }
 
             // Generate z, d, r
-            init_z(z, n, func.number_of_integration_variables);
+            if (generating_vector)
+                z = *generating_vector;
+            else if (generatingvectors.find(n) != generatingvectors.end())
+                init_z(z, n, func.number_of_integration_variables);
+            else
+                z = getMedianGeneratingVector(n, func);
             init_d(d, shifts, func.number_of_integration_variables);
             init_r(r, shifts, r_size_over_m);
 
-            if (verbosity > 0)
+            if (verbosity > 0 and not generating_vector) // don't print while generating median qmc lattice
             {
                 logger << "-- qmc::sample called --" << std::endl;
                 logger << "func.number_of_integration_variables " << func.number_of_integration_variables << std::endl;
@@ -288,6 +294,13 @@ namespace integrators
             {
                 D mfeps = D(1000)*D(n*shifts)/D(std::chrono::duration_cast<std::chrono::nanoseconds>(time_after_compute - time_before_compute).count()); // million function evaluations per second
                 logger << "(Total) Million Function Evaluations/s: " << mfeps << " Mfeps" << std::endl;
+            }
+            if(generating_vector) // don't apply reduce while constructing median qmc rule
+            {
+                res.integral = 0;
+                for (T& x: r) res.integral+=x;
+                res.integral /= static_cast<T>(n);
+                return res;
             }
             res = integrators::core::reduce(r, n, shifts,  previous_iterations, verbosity, logger);
         }
@@ -652,9 +665,13 @@ namespace integrators
         U n;
         if ( generatingvectors.lower_bound(preferred_n) == generatingvectors.end() )
         {
-            n = generatingvectors.rbegin()->first;
-            if (verbosity > 0)
-                logger << "Qmc integrator does not have a generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
+            if (useMedianQmc) {
+                n = preferred_n; // use median qmc rule
+            } else {
+                n = generatingvectors.rbegin()->first;
+                if (verbosity > 0)
+                    logger << "Qmc integrator does not have a generating vector with n larger than " << std::to_string(preferred_n) << ", using largest generating vector with size " << std::to_string(n) << "." << std::endl;
+            }
         } else {
             n = generatingvectors.lower_bound(preferred_n)->first;
         }
@@ -732,8 +749,57 @@ namespace integrators
     };
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
+    template <typename I>
+    std::vector<U> Qmc<T,D,M,P,F,G,H>::getMedianGeneratingVector(U n, I& func)
+    {
+        std::vector<std::vector<U>> genVecs;
+        std::vector<D> results;
+        std::uniform_int_distribution<U> uniformDist(1, n-1);
+        if (verbosity > 0)
+            logger << "constructing lattice of size " << std::to_string(n) << " using median qmc rule " << std::endl;
+
+        if (numMedianLattices % 2 == 0) numMedianLattices++; 
+
+        std::vector<result<T>> previous_iterations;
+
+        for(U i=0; i < numMedianLattices; i++)
+        {
+            genVecs.push_back(std::vector<U>(M));
+            for (U & i :  genVecs.back())
+            {
+                do
+                    i = uniformDist(randomgenerator);
+                while (std::gcd(i, n) != 1);
+            }
+            results.push_back(overloads::compute_signedMax_ReIm(sample(func, n, 1, previous_iterations, &genVecs.back())));
+        }
+        std::vector<D> resSort;
+        for( auto r:results)
+            resSort.push_back(r);
+        std::sort(resSort.begin(), resSort.end());
+        T median = resSort[numMedianLattices/2];
+        for (U i=0; i<numMedianLattices; i++)
+            if (results[i] == median)
+            {
+                if(keepMedianGV)
+                    generatingvectors[n] = genVecs[i];
+                if (verbosity > 0)
+                {
+                    logger << "New generating vector with n= " << std::to_string(n) << " : ";
+                    bool display_timing = logger.display_timing;
+                    logger.display_timing = false;
+                    for (auto x: genVecs[i]) logger << " " << x;
+                    logger << std::endl;
+                    logger.display_timing = display_timing;
+                }
+
+                return genVecs[i];
+            }
+    }
+
+    template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     Qmc<T,D,M,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(false), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({})
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(false), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), useMedianQmc(true), keepMedianGV(false), numMedianLattices(11)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

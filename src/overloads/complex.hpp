@@ -64,6 +64,7 @@ namespace integrators
         template <typename T> std::complex<T> compute_error(const std::complex<T>& svariance) { return compute_error_complex(svariance); };
         template <typename T> std::complex<T> compute_variance_from_error(const std::complex<T>& error) { return compute_variance_from_error_complex(error); };
         template <typename T, typename D> D compute_error_ratio(const result<std::complex<T>>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode) { return compute_error_ratio_complex(res, epsrel, epsabs, errormode); };
+        template <typename T> T compute_signedMax_ReIm(const result<std::complex<T>>& res) { return (std::abs(res.integral.real()) > std::abs(res.integral.imag())) ? res.integral.real() : res.integral.imag(); };
 
 #ifdef __CUDACC__
         // Overloads (thrust::complex)
@@ -71,6 +72,7 @@ namespace integrators
         template <typename T> thrust::complex<T> compute_error(const thrust::complex<T>& svariance) { return compute_error_complex(svariance); };
         template <typename T> thrust::complex<T> compute_variance_from_error(const thrust::complex<T>& error) { return compute_variance_from_error_complex(error); };
         template <typename T, typename D> D compute_error_ratio(const result<thrust::complex<T>>& res, const D& epsrel, const D& epsabs, const ErrorMode errormode) { return compute_error_ratio_complex(res, epsrel, epsabs, errormode); };
+        template <typename T> T compute_signedMax_ReIm(const result<thrust::complex<T>>& res) { return (std::abs(res.integral.real()) > std::abs(res.integral.imag())) ? res.integral.real() : res.integral.imag(); };
 #endif
     };
 };
