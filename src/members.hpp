@@ -795,6 +795,7 @@ namespace integrators
 
                 return genVecs[i];
             }
+        throw std::logic_error("unexpected median");
     }
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
