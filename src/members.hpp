@@ -665,7 +665,7 @@ namespace integrators
         U n;
         if ( generatingvectors.lower_bound(preferred_n) == generatingvectors.end() )
         {
-            if (useMedianQmc) {
+            if (lattice_candidates > 0) {
                 n = preferred_n; // use median qmc rule
             } else {
                 n = generatingvectors.rbegin()->first;
@@ -758,11 +758,11 @@ namespace integrators
         if (verbosity > 0)
             logger << "constructing lattice of size " << std::to_string(n) << " using median qmc rule " << std::endl;
 
-        if (numMedianLattices % 2 == 0) numMedianLattices++; 
+        if (lattice_candidates % 2 == 0) lattice_candidates++; 
 
         std::vector<result<T>> previous_iterations;
 
-        for(U i=0; i < numMedianLattices; i++)
+        for(U i=0; i < lattice_candidates; i++)
         {
             genVecs.push_back(std::vector<U>(M));
             for (U & i :  genVecs.back())
@@ -777,11 +777,11 @@ namespace integrators
         for( auto r:results)
             resSort.push_back(r);
         std::sort(resSort.begin(), resSort.end());
-        T median = resSort[numMedianLattices/2];
-        for (U i=0; i<numMedianLattices; i++)
+        T median = resSort[lattice_candidates/2];
+        for (U i=0; i<lattice_candidates; i++)
             if (results[i] == median)
             {
-                if(keepMedianGV)
+                if(keep_lattices)
                     generatingvectors[n] = genVecs[i];
                 if (verbosity > 0)
                 {
@@ -800,7 +800,7 @@ namespace integrators
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     Qmc<T,D,M,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(false), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), useMedianQmc(true), keepMedianGV(false), numMedianLattices(11)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(false), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), lattice_candidates(11), keep_lattices(false)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

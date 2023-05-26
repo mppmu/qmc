@@ -76,10 +76,8 @@ namespace integrators
 
         bool batching;
 
-        bool useMedianQmc;
-        bool keepMedianGV;
-        U numMedianLattices;
-
+        bool keep_lattices;
+        U lattice_candidates;
 
         U evaluateminn;
 
