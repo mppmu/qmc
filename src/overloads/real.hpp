@@ -41,7 +41,7 @@ namespace integrators
         };
 
         template <typename T>
-        T compute_signedMax_ReIm(const result<T>& res)
+        T compute_signed_max_re_im(const result<T>& res)
         {
             return res.integral;
         };

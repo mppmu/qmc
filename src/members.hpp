@@ -173,11 +173,11 @@ namespace integrators
             else if (generatingvectors.find(n) != generatingvectors.end())
                 init_z(z, n, func.number_of_integration_variables);
             else
-                z = getMedianGeneratingVector(n, func);
+                z = get_median_z(n, func);
             init_d(d, shifts, func.number_of_integration_variables);
             init_r(r, shifts, r_size_over_m);
 
-            if (verbosity > 0 and not generating_vector) // don't print while generating median qmc lattice
+            if (verbosity > 0 && !generating_vector) // don't print while generating median qmc lattice
             {
                 logger << "-- qmc::sample called --" << std::endl;
                 logger << "func.number_of_integration_variables " << func.number_of_integration_variables << std::endl;
@@ -198,6 +198,9 @@ namespace integrators
                     logger << i << " ";
                 logger << std::endl;
                 logger.display_timing = display_timing;
+                logger << "batching " << batching << std::endl;
+                logger << "keeplattices " << keeplattices << std::endl;
+                logger << "latticecandidates " << latticecandidates << std::endl;
                 logger << "n " << n << std::endl;
                 logger << "m " << m << std::endl;
                 logger << "shifts " << shifts << std::endl;
@@ -409,7 +412,7 @@ namespace integrators
         // allocate memory
         samples<T,D> res;
         U& n = res.n;
-        n = get_next_n(evaluateminn); // get next available n >= evaluateminn
+        n = get_next_n(evaluateminn, false); // get next available n >= evaluateminn
         std::vector<U>& z = res.z;
         std::vector<D>& d = res.d;
         std::vector<T>& r = res.r;
@@ -436,6 +439,7 @@ namespace integrators
                 logger << i << " ";
             logger << std::endl;
             logger.display_timing = display_timing;
+            logger << "batching " << batching << std::endl;
             logger << "n " << n << std::endl;
         }
 
@@ -660,12 +664,12 @@ namespace integrators
     };
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
-    U Qmc<T,D,M,P,F,G,H>::get_next_n(U preferred_n) const
+    U Qmc<T,D,M,P,F,G,H>::get_next_n(U preferred_n, bool allow_median_lattices) const
     {
         U n;
         if ( generatingvectors.lower_bound(preferred_n) == generatingvectors.end() )
         {
-            if (lattice_candidates > 0) {
+            if (latticecandidates > 0 && allow_median_lattices) {
                 n = preferred_n; // use median qmc rule
             } else {
                 n = generatingvectors.rbegin()->first;
@@ -750,7 +754,7 @@ namespace integrators
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     template <typename I>
-    std::vector<U> Qmc<T,D,M,P,F,G,H>::getMedianGeneratingVector(U n, I& func)
+    std::vector<U> Qmc<T,D,M,P,F,G,H>::get_median_z(U n, I& func)
     {
         std::vector<std::vector<U>> genVecs;
         std::vector<D> results;
@@ -758,11 +762,11 @@ namespace integrators
         if (verbosity > 0)
             logger << "constructing lattice of size " << std::to_string(n) << " using median qmc rule " << std::endl;
 
-        if (lattice_candidates % 2 == 0) lattice_candidates++; 
+        if (latticecandidates % 2 == 0) latticecandidates++; 
 
         std::vector<result<T>> previous_iterations;
 
-        for(U i=0; i < lattice_candidates; i++)
+        for(U i=0; i < latticecandidates; i++)
         {
             genVecs.push_back(std::vector<U>(M));
             for (U & i :  genVecs.back())
@@ -771,17 +775,17 @@ namespace integrators
                     i = uniformDist(randomgenerator);
                 while (std::gcd(i, n) != 1);
             }
-            results.push_back(overloads::compute_signedMax_ReIm(sample(func, n, 1, previous_iterations, &genVecs.back())));
+            results.push_back(overloads::compute_signed_max_re_im(sample(func, n, 1, previous_iterations, &genVecs.back())));
         }
         std::vector<D> resSort;
         for( auto r:results)
             resSort.push_back(r);
         std::sort(resSort.begin(), resSort.end());
-        T median = resSort[lattice_candidates/2];
-        for (U i=0; i<lattice_candidates; i++)
+        T median = resSort[latticecandidates/2];
+        for (U i=0; i<latticecandidates; i++)
             if (results[i] == median)
             {
-                if(keep_lattices)
+                if(keeplattices)
                     generatingvectors[n] = genVecs[i];
                 if (verbosity > 0)
                 {
@@ -800,7 +804,7 @@ namespace integrators
 
     template <typename T, typename D, U M, template<typename,typename,U> class P, template<typename,typename,U> class F, typename G, typename H>
     Qmc<T,D,M,P,F,G,H>::Qmc() :
-    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(false), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), lattice_candidates(11), keep_lattices(false)
+    logger(std::cout), randomgenerator( G( std::random_device{}() ) ), minn(8191), minm(32), epsrel(0.01), epsabs(1e-7), maxeval(1000000), maxnperpackage(1), maxmperpackage(1024), errormode(integrators::ErrorMode::all), cputhreads(std::thread::hardware_concurrency()), cudablocks(1024), cudathreadsperblock(256), devices({-1}), generatingvectors(integrators::generatingvectors::cbcpt_dn1_100()), verbosity(0), batching(false), evaluateminn(100000), fitstepsize(10), fitmaxiter(40), fitxtol(3e-3), fitgtol(1e-8), fitftol(1e-8), fitparametersgsl({}), latticecandidates(11), keeplattices(false)
     {
         // Check U satisfies requirements of mod_mul implementation
         static_assert( std::numeric_limits<U>::is_modulo, "Qmc integrator constructed with a type U that is not modulo. Please use a different unsigned integer type for U.");

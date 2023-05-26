@@ -26,7 +26,7 @@ int main() {
 
     integrators::Qmc<double,double,MAXVAR,integrators::transforms::Korobov<3>::type> integrator;
     integrator.generatingvectors = integrators::generatingvectors::none();
-    integrator.keep_lattices = true; // keep newly generating vector for subsequent integrations, only recommended if integrands are similar
+    integrator.keeplattices = true; // keep newly generating vector for subsequent integrations, only recommended if integrands are similar
     integrator.minn = 100;
     integrator.epsrel = 1e-6;
 
@@ -41,7 +41,7 @@ int main() {
     std::cout << std::endl;
 
 
-    // repeat integration; no new generating vectors are constructed if integrator.keep_lattices is set
+    // repeat integration; no new generating vectors are constructed if integrator.keeplattices is set
     result = integrator.integrate(my_functor);
     std::cout << "integral = " << result.integral << std::endl;
     std::cout << "error    = " << result.error    << std::endl;

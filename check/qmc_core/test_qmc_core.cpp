@@ -166,6 +166,9 @@ TEST_CASE( "Qmc Constructor", "[Qmc]" ) {
         REQUIRE( real_integrator.devices.size() > 0 );
         REQUIRE( real_integrator.generatingvectors.size() > 0 );
         REQUIRE( real_integrator.verbosity >= 0 );
+        REQUIRE( real_integrator.batching == false);
+        REQUIRE( real_integrator.latticecandidates > 0);
+        REQUIRE( real_integrator.keeplattices == false);
         REQUIRE( real_integrator.evaluateminn >= 0);
         REQUIRE( real_integrator.fitstepsize > 0);
         REQUIRE( real_integrator.fitmaxiter > 0);
@@ -205,6 +208,9 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         real_integrator.devices = {1};
         real_integrator.generatingvectors = gv;
         real_integrator.verbosity = 0;
+        real_integrator.batching = true;
+        real_integrator.latticecandidates = 1;
+        real_integrator.keeplattices = true;
         real_integrator.evaluateminn = 1;
         real_integrator.fitstepsize = 1;
         real_integrator.fitmaxiter =1;
@@ -228,6 +234,9 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
         REQUIRE( real_integrator.generatingvectors[2] == v2 );
         REQUIRE( real_integrator.generatingvectors[3] == v3 );
         REQUIRE( real_integrator.verbosity == 0  );
+        REQUIRE( real_integrator.batching == true);
+        REQUIRE( real_integrator.latticecandidates == 1);
+        REQUIRE( real_integrator.keeplattices == true);
         REQUIRE( real_integrator.evaluateminn == 1 );
         REQUIRE( real_integrator.fitstepsize == 1 );
         REQUIRE( real_integrator.fitmaxiter == 1 );
@@ -245,17 +254,17 @@ TEST_CASE( "Alter Fields", "[Qmc]" ) {
 
         // minn less than any generating vector
         REQUIRE( real_integrator.minn == 1 );
-        REQUIRE( real_integrator.get_next_n(1) == 2 ); // Increased to smallest generating vector
+        REQUIRE( real_integrator.get_next_n(1,false) == 2 ); // Increased to smallest generating vector
 
         real_integrator.minn = 2;
         // minn matches a generating vector
         REQUIRE( real_integrator.minn == 2 );
-        REQUIRE( real_integrator.get_next_n(2) == 2 );
+        REQUIRE( real_integrator.get_next_n(2,false) == 2 );
 
         real_integrator.minn = 4;
         // minn larger than any generating vector
         REQUIRE( real_integrator.minn == 4 );
-        REQUIRE( real_integrator.get_next_n(4) == 3 ); // fall back to largest available generating vector
+        REQUIRE( real_integrator.get_next_n(4,false) == 3 ); // fall back to largest available generating vector
 
         // n larger than representable in signed version of 'U' (invalid)
         real_integrator.generatingvectors[std::numeric_limits<unsigned long long int>::max()] = {1,2,3};
@@ -323,6 +332,7 @@ TEST_CASE( "Exceptions", "[Qmc]" ) {
         gv[2] = v2;
 
         real_integrator.generatingvectors = gv;
+        real_integrator.latticecandidates = 0;
 
         // Call integrate on function with 3 dimensions
         REQUIRE_THROWS_AS( real_integrator.integrate(multivariate_linear_function) , std::domain_error);
@@ -858,7 +868,7 @@ TEST_CASE( "Evaluate", "[qmc]") {
     
     integrators::Qmc<complex<double>,double,3,integrators::transforms::Korobov<3>::type> complex_integrator;
     std::ostringstream complex_stream; complex_integrator.logger = integrators::Logger(complex_stream);
-    real_integrator.evaluateminn = 100;
+    complex_integrator.evaluateminn = 100;
     complex_integrator.verbosity = 3;
     complex_integrator.generatingvectors = test_generating_vectors;
     

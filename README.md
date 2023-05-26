@@ -240,8 +240,8 @@ Default: `cbcpt_dn1_100()`.
 
 ---
 
-`U lattice_candidates`
-If `lattice_candidates>0`, the list of generating vectors is extended using the [median quasi-Monte Carlo rules](https://arxiv.org/abs/2201.09413), 
+`U latticecandidates`
+If `latticecandidates>0`, the list of generating vectors is extended using the [median quasi-Monte Carlo rules](https://arxiv.org/abs/2201.09413), 
 using the given number of candidate generating vectors.
 Can be used together with `generatingevectors=none()` to always use the median QMC rule.
 
@@ -249,7 +249,7 @@ Default: `11`.
 
 ---
 
-`bool keep_lattices`
+`bool keeplattices`
 
 If set to `true`, generating vectors constructed using the median QMC rules are kept in `generatingvectors` for subsequent integrations.
 
