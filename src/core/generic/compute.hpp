@@ -47,13 +47,15 @@ namespace integrators
                         }
                     }
 
-                    if (batching)
-                    {
-                        func(x.data(), points, batchsize);
-                        D wgt = 1.;
-                        for ( U i = 0; i != batchsize; ++i)
+                    if constexpr (integrators::core::has_batching<I, T, D, U>) {
+                        if (batching)
                         {
-                            r_element[k*r_size_over_m] += wgt*points[i];
+                            func(x.data(), points, batchsize);
+                            D wgt = 1.;
+                            for ( U i = 0; i != batchsize; ++i)
+                            {
+                                r_element[k*r_size_over_m] += wgt*points[i];
+                            }
                         }
                     }
                 }
