@@ -241,6 +241,7 @@ Default: `cbcpt_dn1_100()`.
 ---
 
 `U latticecandidates`
+
 If `latticecandidates>0`, the list of generating vectors is extended using the [median quasi-Monte Carlo rules](https://arxiv.org/abs/2201.09413), 
 using the given number of candidate generating vectors.
 Can be used together with `generatingevectors=none()` to always use the median QMC rule.
