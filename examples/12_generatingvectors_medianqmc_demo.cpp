@@ -1,8 +1,8 @@
 /*
  * Compile without GPU support:
- *   c++ -std=c++17 -pthread -I../src 12_generatingvectors_medianQmc_demo.cpp -o 12_generatingvectors_medianQmc_demo.out -lgsl -lgslcblas
+ *   c++ -std=c++17 -pthread -I../src 12_generatingvectors_medianqmc_demo.cpp -o 12_generatingvectors_medianqmc_demo.out -lgsl -lgslcblas
  * Compile with GPU support:
- *   nvcc -arch=<arch> -std=c++17 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 12_generatingvectors_medianQmc_demo.cpp -o 12_generatingvectors_medianQmc_demo.out -lgsl -lgslcblas
+ *   nvcc -arch=<arch> -std=c++17 -rdc=true -x cu -Xptxas -O0 -Xptxas --disable-optimizer-constants -I../src 12_generatingvectors_medianqmc_demo.cpp -o 12_generatingvectors_medianqmc_demo.out -lgsl -lgslcblas
  * Here `<arch>` is the architecture of the target GPU or `compute_30` if you are happy to use Just-in-Time compilation (See the Nvidia `nvcc` manual for more details).
  */
 
